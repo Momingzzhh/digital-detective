@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>数字神探 · 案件研究工作台</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+<aside class="sidebar">
+  <a class="brand" href="/" aria-label="数字神探首页"><span class="brand-icon">◈</span><span>数字神探<small>DIGITAL DETECTIVE</small></span></a>
+  <button class="primary new-case" id="new-case">＋ 新建案件</button>
+  <p class="nav-label">研究空间</p>
+  <button class="nav-item active" id="workspace-nav"><span>▦</span> 案件工作台</button>
+  <button class="nav-item" id="dataset-nav"><span>▤</span> 数据与评测</button>
+  <div class="recent-heading"><span class="nav-label">最近案件</span><span id="case-count">0</span></div>
+  <nav id="case-list" aria-label="案件列表"></nav>
+  <div class="sidebar-bottom"><div class="model-status"><i id="model-dot"></i><span id="model-label">Qwen3.8-Flash</span></div><p>北京百炼 · 本地工作空间</p><div class="account"><span class="avatar">研</span><span id="username">研究人员</span><button id="logout" aria-label="退出登录">↪</button></div></div>
+</aside>
+<main>
+  <header><div class="breadcrumb">研究空间 <span>/</span> 案件工作台</div><div class="header-right"><span class="local-label">● 本地运行</span><button id="help" class="plain">使用说明 ↗</button></div></header>
+  <section id="welcome">
+    <div class="eyebrow">EVIDENCE FIRST, CONCLUSIONS SECOND</div>
+    <h1>让每一个结论，<br><span>都有证据可循。</span></h1>
+    <p class="intro">导入案情，梳理线索。与智能体一起核对矛盾、补充证据，<br>逐步形成可追溯的案件分析。</p>
+    <form id="case-form" class="new-panel">
+      <div class="panel-heading"><h2>开启一次案件研究</h2><span>01 / 案情输入</span></div>
+      <label for="case-title">案件名称</label><input id="case-title" required maxlength="120" placeholder="为这次研究起一个名称">
+      <label for="case-text">已知案情与线索</label><textarea id="case-text" required minlength="5" maxlength="40000" rows="7" placeholder="描述案件背景、时间地点、已知人物和现有证据。未知或无法取得的线索请直接说明。"></textarea>
+      <div class="form-footer"><label class="upload" for="case-file">↥ 导入材料 <small>TXT / DOCX / PDF</small></label><input type="file" id="case-file" accept=".txt,.md,.docx,.pdf" hidden><button class="primary" type="submit">创建研究案件 <span>↗</span></button></div>
+      <div class="fineprint">材料保存在本机；点击分析后，案件文字将发送至你配置的阿里云模型。</div>
+    </form>
+    <div class="workflow"><div><b>01</b><span>整理证据<small>每条线索定位到原文</small></span></div><div><b>02</b><span>交互核查<small>追问缺口，核对矛盾</small></span></div><div><b>03</b><span>形成分析<small>展示依据与未解问题</small></span></div></div>
+  </section>
+  <section id="workspace" hidden>
+    <div class="case-header"><div><div class="eyebrow">CASE RESEARCH</div><h1 id="current-title"></h1><p id="case-meta"></p></div><div class="case-actions"><button id="export" class="secondary">↥ 导出记录</button><button id="delete" class="plain danger">删除</button></div></div>
+    <div id="job-status" class="job" hidden role="status"></div>
+    <div class="work-grid"><div class="analysis-panel">
+      <div class="tabs" role="tablist"><button data-tab="overview" class="selected" role="tab">案情概览</button><button data-tab="evidence" role="tab">证据库 <span id="evidence-count">0</span></button><button data-tab="graph" role="tab">证据图谱</button><button data-tab="conclusion" role="tab">分析结论</button></div>
+      <div class="tab-body" id="tab-overview"></div><div class="tab-body" id="tab-evidence" hidden></div><div class="tab-body" id="tab-graph" hidden><div class="graph-key"><span>● 证据</span><span>● 实体</span><span>● 分析</span></div><svg id="evidence-graph" viewBox="0 0 760 560" role="img" aria-label="证据与实体关系图"></svg><p id="graph-detail">点击节点查看原文或依据。可滚动浏览图谱。</p></div><div class="tab-body" id="tab-conclusion" hidden></div>
+    </div><aside class="conversation"><div class="conversation-title"><span class="agent-icon">◈</span><div><h2>案情分析助手</h2><p>核对线索 · 主动追问</p></div></div><div id="messages" aria-live="polite"></div><div id="questions"></div><form id="message-form"><label for="message" class="sr-only">补充线索或回答问题</label><textarea id="message" rows="3" placeholder="回答问题、补充证据，或提出质疑…" required maxlength="20000"></textarea><div class="message-actions"><span>未知线索可回答“不清楚”</span><button class="primary" type="submit">发送 ↗</button></div></form><button id="analyze" class="secondary full">开始分析现有材料</button></aside></div>
+  </section>
+  <section id="dataset" hidden><div class="eyebrow">RESEARCH QUALITY</div><h1>数据与评测</h1><p class="intro">真实案源、证据可追溯与独立测试，分别核验。</p><div id="dataset-content" class="new-panel"></div><div class="new-panel"><h2>评测口径</h2><p>罪名准确率：预测罪名集合与隐藏标签完全一致的案件比例。</p><p>作案者识别：预测人物集合与隐藏标签完全一致。经过还原须按已核验的关键事实逐项评分，并另报整案完全正确率。</p><p>所有拒答、失败与超时均保留在分母中。置信度不是准确率。未运行独立测试前，不宣称达到 90%。</p></div></section>
+  <footer><span>数字神探 / 研究工作台</span><span>证据可溯源 · 分析可复核</span></footer>
+</main>
+<dialog id="auth-dialog"><form id="auth-form"><div class="brand-icon">◈</div><h2>进入研究工作空间</h2><p>创建本机账户，独立保存你的案件与分析。</p><label for="auth-name">用户名</label><input id="auth-name" autocomplete="username" required minlength="2" maxlength="60"><label for="auth-password">密码（至少 10 位）</label><input id="auth-password" type="password" autocomplete="current-password" minlength="10" maxlength="200" required><p id="auth-error" role="alert"></p><button type="submit" class="primary full">登录</button><button type="button" id="register" class="secondary full">首次使用：注册并登录</button></form></dialog>
+<dialog id="help-dialog"><h2>如何开展案件研究</h2><ol><li>输入案件文字，或导入文字版 PDF、DOCX、TXT。</li><li>点击分析，助手将提取原文证据并检查矛盾。</li><li>根据助手问题补充线索；不存在或未知的信息请明确说明。</li><li>查看证据图谱及结论，点击引用回到证据原文。</li><li>导出 JSON 记录，供研究复核。</li></ol><p>第一版只处理文字，不进行指纹图像、视频或 DNA 原始数据鉴定。输出是研究分析；证据不足时可以不作确定判断。</p><p>模型密钥：在项目 .env 中填写 DASHSCOPE_API_KEY，保存后无需重启。账号数据只保存在本机。</p><form method="dialog"><button class="primary">知道了</button></form></dialog>
+<div id="toast" role="alert" hidden></div><script src="/static/app.js" defer></script>
+</body></html>

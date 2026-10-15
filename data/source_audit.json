@@ -1,0 +1,67 @@
+{
+  "dataset": "LeCaRD v1",
+  "repository": "https://github.com/myx666/LeCaRD",
+  "revision": "b1a4b72b2050a4aa643e6360d5ff3a6b1fd221e3",
+  "upstream_license": "MIT (repository); underlying judgments require separate rights/privacy assessment",
+  "license_url": "https://github.com/myx666/LeCaRD/blob/b1a4b72b2050a4aa643e6360d5ff3a6b1fd221e3/LICENSE",
+  "original_provenance": "China Judgments Online per upstream README; writId/ajId retained",
+  "provenance_limit": "Original court URLs are not supplied or live-verified; dataset archive is the reproducible source.",
+  "artifacts": [
+    {
+      "filename": "candidates1.zip",
+      "url": "https://raw.githubusercontent.com/myx666/LeCaRD/b1a4b72b2050a4aa643e6360d5ff3a6b1fd221e3/data/candidates/candidates1.zip",
+      "bytes": 54875800,
+      "sha256": "18210ff9cdddbb04957ae28c3fc80d2b762ac73281026afae0dd5df603a71514",
+      "git_blob_sha1": "d67d7c5eb0f6934c64db8adbcfc183451c1ce5f3",
+      "json_records": 5008
+    },
+    {
+      "filename": "candidates2.zip",
+      "url": "https://raw.githubusercontent.com/myx666/LeCaRD/b1a4b72b2050a4aa643e6360d5ff3a6b1fd221e3/data/candidates/candidates2.zip",
+      "bytes": 67985309,
+      "sha256": "ad96d44012b1aea83a7119e12e4d94830586fefd01daf2e4df229783a6be2a0a",
+      "git_blob_sha1": "5c5be213e5fac875af4a378fcd04e031d6e2313a",
+      "json_records": 5710
+    }
+  ],
+  "unique_writ_ids": 9088,
+  "duplicate_writ_ids": 1630,
+  "statistics": {
+    "nonempty_ajId": 9088,
+    "nonempty_ajName": 9088,
+    "nonempty_ajjbqk": 9088,
+    "nonempty_cpfxgc": 9081,
+    "nonempty_pjjg": 9086,
+    "nonempty_qw": 9088,
+    "nonempty_writId": 9088,
+    "nonempty_writName": 9088,
+    "mentions_证据": 9061,
+    "mentions_证言": 8170,
+    "mentions_供述": 8805,
+    "mentions_鉴定": 5816,
+    "mentions_监控": 1235,
+    "mentions_指纹": 136,
+    "mentions_DNA": 525,
+    "detailed_evidence_marker_heuristic": 6756,
+    "judgment_crime_regex": 8920
+  },
+  "human_verified_solvable_cases": 0,
+  "meets_1000_fully_verified_investigation_cases": false,
+  "limitations": [
+    "This is a legal retrieval corpus, not an investigation or culprit-identification benchmark.",
+    "Keyword counts and detailed-evidence regex are structural screening only, not a finding of sufficient evidence.",
+    "Facts, titles, procedural history and evidence confessions may directly reveal the perpetrator or charge.",
+    "Judicially found facts are retrospective conclusions; removing judgment fields alone does not prevent leakage.",
+    "Some documents list evidence names without the evidence contents; do not invent missing contents.",
+    "Candidate records repeat across queries; writId deduplication does not eliminate all same-case appeals/retrials.",
+    "No human-adjudicated clue spans, perpetrator labels or chronology labels are supplied.",
+    "Public pretraining contamination cannot be ruled out, even with a held-out downstream split."
+  ],
+  "required_next_steps": [
+    "Identify source-backed evidence spans and preserve exact document offsets.",
+    "Separate initial observations, available evidence and hidden judicial outcome.",
+    "Human review at least 1000 cases for evidence sufficiency, contradictory evidence and label correctness.",
+    "Group related case numbers and proceedings before train/dev/test splitting.",
+    "Publish code, checksums and source identifiers; keep raw sensitive judgments local."
+  ]
+}

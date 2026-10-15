@@ -1,0 +1,9 @@
+.env
+.git
+.venv
+runtime
+data/raw
+data/processed
+data/review
+__pycache__
+.pytest_cache

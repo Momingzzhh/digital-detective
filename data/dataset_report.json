@@ -1,0 +1,71 @@
+{
+  "status": "质量抽查发现泄漏与标签口径问题，机器通过样本已隔离，尚未完成1000例验收",
+  "candidates": 3000,
+  "qualified": 0,
+  "human_reviewed": 0,
+  "source_unique_documents": 9088,
+  "screening_passed_documents": 5211,
+  "split": {
+    "train": 2100,
+    "dev": 450,
+    "test": 450
+  },
+  "target_split": {
+    "train": 0.7,
+    "dev": 0.15,
+    "test": 0.15
+  },
+  "groups_selected": 2936,
+  "source_groups": 8845,
+  "largest_source_group": 8,
+  "grouping": [
+    "writId",
+    "ajId",
+    "case number references scoped to issuing court",
+    "normalized fulltext exact hash",
+    "normalized facts exact hash",
+    "sampled fact shingle SimHash, Hamming <=3 and length ratio >0.9"
+  ],
+  "limitations": [
+    "These are source judgments selected by structural heuristics, not proven-solvable mysteries.",
+    "No document has undergone human sufficient-evidence or ground-truth review.",
+    "Raw fields contain outcomes and must NEVER be provided directly to a blind-test agent.",
+    "Regex gold can omit actors or misparse compound charges; it is not trusted evaluation truth.",
+    "Case numbers scoped to issuing court avoid nationwide short-number collisions; cross-court appeals/retrials, missing references and SimHash misses can still cross splits.",
+    "Case grouping must be reviewed before a definitive held-out evaluation.",
+    "Public source documents may already exist in model pretraining.",
+    "Raw and processed texts are local-only and must not be committed to a public repository."
+  ],
+  "qualified_definition": "满足全部要求的已验收案例；机器通过数不计入",
+  "machine_qualified": 98,
+  "build_attempted": 329,
+  "build_status_counts": {
+    "machine_qualified": 98,
+    "validation_or_api_error": 79,
+    "machine_rejected": 130,
+    "skipped_source_length_or_missing": 21,
+    "extractor_insufficient": 1
+  },
+  "pipeline_version": "source-evidence-v2",
+  "target": 1000,
+  "budget": {
+    "cost": 7.7937818000000005,
+    "reserved": 1.5556048,
+    "calls": 590
+  },
+  "review_limitations": [
+    "Two independent calls use the same foundation model; correlated review mistakes remain possible.",
+    "Machine-qualified is not human-certified or guaranteed solvable.",
+    "No tested agent answers are used to select cases.",
+    "Public pretrained-model contamination cannot be excluded.",
+    "All source text, hidden gold and checkpoints remain local-only."
+  ],
+  "machine_screening_passed_before_audit": 98,
+  "audit_required": true,
+  "machine_screening_split": {
+    "train": 62,
+    "test": 23,
+    "dev": 13
+  },
+  "qualified_split": {}
+}

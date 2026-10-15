@@ -1,0 +1,60 @@
+{
+  "dataset_sha256": "6794a551279e4a732891dad664f4a089d54b959b843cd041fb047fc7d44f895b",
+  "split": "pilot",
+  "mode": "full",
+  "evaluated_cases": 1,
+  "metrics": {
+    "charge_correct": {
+      "correct": 1,
+      "total": 1,
+      "accuracy": 1.0,
+      "wilson_95": [
+        0.20654329147389294,
+        1
+      ]
+    },
+    "perpetrator_correct": {
+      "correct": 1,
+      "total": 1,
+      "accuracy": 1.0,
+      "wilson_95": [
+        0.20654329147389294,
+        1
+      ]
+    },
+    "reconstruction_correct": {
+      "correct": 0,
+      "total": 1,
+      "accuracy": 0.0,
+      "wilson_95": [
+        0,
+        0.7934567085261071
+      ]
+    },
+    "all_correct": {
+      "correct": 0,
+      "total": 1,
+      "accuracy": 0.0,
+      "wilson_95": [
+        0,
+        0.7934567085261071
+      ]
+    }
+  },
+  "errors": 0,
+  "abstentions": 0,
+  "pilot_only": true,
+  "target_point_estimate_met": false,
+  "target_95_lower_bound_met": false,
+  "budget": {
+    "cost": 7.840367100000001,
+    "reserved": 1.5556048,
+    "calls": 596
+  },
+  "limitations": [
+    "Gold and chronology scores are model-assisted, not independently human-certified.",
+    "Pilot record was inspected during development; not an independent held-out test.",
+    "Only verified visible evidence is sent to the acting agent. All failures and refusals stay in the denominator.",
+    "Progressive mode uses a deterministic evidence oracle, not a human dialogue-quality evaluation."
+  ]
+}
