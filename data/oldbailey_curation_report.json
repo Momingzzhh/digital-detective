@@ -1,0 +1,34 @@
+{
+  "generated_at": "2026-10-16T09:35:17.235372+00:00",
+  "pipeline_version": "oldbailey-transcript-zh-v1.5",
+  "candidate_groups": 7252,
+  "selection": "admission-priority",
+  "selection_details": "At most one per normalized defendant-name group; admission-priority ranks lexical markers before fixed trial hash. No acting-agent predictions used.",
+  "selected": 3000,
+  "status_counts": {
+    "machine_pass_translated_unverified": 234,
+    "machine_rejected": 403,
+    "machine_error": 31,
+    "provider_deferred": 2332
+  },
+  "qualified": 0,
+  "human_reviewed": 0,
+  "accuracy_90_verified": false,
+  "budget": {
+    "cost": 255.7038229,
+    "reserved": 90.2936776,
+    "calls": 8557
+  },
+  "limitations": [
+    "Machine translation and same-family model audit can share errors.",
+    "Admission-priority is a lexical clue-strength heuristic with false positives and selection bias; it is not proof of confession or representative sampling.",
+    "Only single-defendant, unqualified guilty historical trials; no general criminal accuracy claim.",
+    "A fixed-name culprit baseline is trivial in this selected stratum; report it explicitly.",
+    "Defendant-name grouping can merge homonyms and miss related cases with different names.",
+    "Original testimony, translations and all outcomes remain private local files.",
+    "Provider denied access after arrearage. Original failed checkpoints retained; uncertain reservations are not released without billing reconciliation. Added batch circuit breaker prevents queued requests after account/auth/rate rejection."
+  ],
+  "provider_blocked": true,
+  "provider_error_code": "Arrearage",
+  "provider_rejected_attempts": 2332
+}

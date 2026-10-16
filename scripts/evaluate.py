@@ -53,6 +53,21 @@ def wilson(success,total):
     return [max(0,center-delta),min(1,center+delta)]
 
 
+def eligible_for_target_claim(rows, args, tested_count):
+    """Prevent a pilot or tiny test slice from being reported as 90% success."""
+    if args.pilot or args.split != 'test' or args.limit is not None:
+        return False
+    if any(r.get('stratum','modern_chinese').startswith('england_historical') for r in rows):
+        return False
+    if len(rows)<1000 or tested_count<150:
+        return False
+    if len({r['group_id'] for r in rows})<1000:
+        return False
+    if any(r.get('status')!='independently_verified' or not r.get('audit',{}).get('human_reviewed') for r in rows):
+        return False
+    return True
+
+
 async def assess(record,mode):
     if mode=='full':
         result=await analyze(visible_case(record))
@@ -99,7 +114,12 @@ async def run(args):
     raw=path.read_bytes()
     fingerprint=hashlib.sha256(raw).hexdigest()
     rows=[json.loads(l) for l in raw.decode().splitlines() if l]
-    if not args.pilot and any(r.get('status') != 'independently_verified' for r in rows):
+    strata={r.get('stratum','modern_chinese') for r in rows}
+    if len(strata)>1:raise ValueError('Historical and modern strata must be evaluated separately')
+    if any(s.startswith('england_historical') for s in strata):
+        raise ValueError('Historical stratum needs its own historical-class evaluator; modern-law evaluator cannot score it')
+    full_rows=rows
+    if not args.pilot and any(r.get('status') != 'independently_verified' or not r.get('audit',{}).get('human_reviewed') for r in rows):
         raise ValueError('Benchmark requires independent source verification; machine passes are insufficient')
     groups={}
     for row in rows:
@@ -125,14 +145,16 @@ async def run(args):
             print(json.dumps({'completed':len(results),'total':len(rows),'errors':sum(bool(x.get('error')) for x in results)},ensure_ascii=False),flush=True)
     await asyncio.gather(*(one(r) for r in rows))
     n=len(results)
+    target_eligible=eligible_for_target_claim(full_rows,args,n)
     metrics={k:{'correct':sum(bool(r[k]) for r in results),'total':n,
                 'accuracy':sum(bool(r[k]) for r in results)/n,'wilson_95':wilson(sum(bool(r[k]) for r in results),n)}
              for k in ('charge_correct','perpetrator_correct','reconstruction_correct','all_correct')}
     report={'dataset_sha256':fingerprint,'split':'pilot' if args.pilot else args.split,'mode':args.mode,'evaluated_cases':n,
             'metrics':metrics,'errors':sum(bool(r.get('error')) for r in results),'abstentions':sum(bool(r['abstained']) for r in results),
             'pilot_only':args.pilot,
-            'target_point_estimate_met':not args.pilot and all(v['accuracy']>=.9 for v in metrics.values()),
-            'target_95_lower_bound_met':not args.pilot and all(v['wilson_95'][0]>=.9 for v in metrics.values()),
+            'target_claim_eligible':target_eligible,
+            'target_point_estimate_met':target_eligible and all(v['accuracy']>=.9 for v in metrics.values()),
+            'target_95_lower_bound_met':target_eligible and all(v['wilson_95'][0]>=.9 for v in metrics.values()),
             'budget':budget_status(),'limitations':['Gold and chronology scores are model-assisted, not independently human-certified.',
              'Pilot records may have been inspected during development; only a separately frozen test set can support a held-out claim. Pretraining contamination cannot be excluded.',
              'Only verified visible evidence is sent to the acting agent. All failures and refusals stay in the denominator.',

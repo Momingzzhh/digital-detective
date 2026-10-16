@@ -1,0 +1,30 @@
+{
+  "method": "Transitive source group, normalized full/fact exact hash, modern court-coded case references and court-scoped old references",
+  "counts": {
+    "source_documents": 47558,
+    "linked_groups": 47244,
+    "cross_split_conflict_groups": 76,
+    "quarantined_documents": 177,
+    "cluster_size_distribution": {
+      "1": 46965,
+      "2": 254,
+      "3": 21,
+      "4": 2,
+      "9": 1,
+      "5": 1
+    }
+  },
+  "source_files_sha256": {
+    "candidates.jsonl": "c8b7e29fe1d0c32486d63fc5eecd1fe838be2d66212c708f2a5d6ab94c95e77e",
+    "lecardv2_candidates.jsonl": "4b8d9848802ca95d5fd4533716e71816b91285cc235a3a6495941e933f5131de",
+    "lecardv2_mteb_candidates.jsonl": "f19af5eb5e49cbcb4d254ddf3a4954095bf7208c03e0cfec1a1425ad83a2fab8",
+    "mnbvc_candidates.jsonl": "ab5c01f8cd45806a671256fca755941f54cd97b2cd2b2a52ffd2dd05f56c8d9b"
+  },
+  "limitations": [
+    "Old references use a nearby explicit court or issuing-court scope; missing/cross-court references can escape.",
+    "Prior convictions and shared references can falsely merge independent events.",
+    "Unmentioned related proceedings and paraphrased duplicates can still escape.",
+    "Conflicting frozen splits are quarantined, never silently reassigned.",
+    "No unflagged case is thereby certified independent."
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "source": "https://huggingface.co/datasets/wormtooth/MNBVC-judgment",
+  "revision": "dcbbb633b313eb9270e32cee763bb1dfc0702718",
+  "files": {
+    "mnbvc-000.jsonl.gz": {
+      "bytes": 120699838,
+      "sha256": "f231056da3aaeffe4ab0cf01226b940d955f87dc5c9591be541a2fcd8048876d"
+    },
+    "mnbvc-050.jsonl.gz": {
+      "bytes": 137172267,
+      "sha256": "5d76dd0fdc47872266c47f6e1769e918f3c907a9201da4d162941113bbce5895"
+    },
+    "mnbvc-150.jsonl.gz": {
+      "bytes": 139115027,
+      "sha256": "36a133c5ed530bbf0599c3a6cac0645061c90a3a6970bf5fb8dacf137749e20e"
+    },
+    "mnbvc-250.jsonl.gz": {
+      "bytes": 139108818,
+      "sha256": "9293dc7106f3c0b554e747ee76f695efa1199a0ecca37f8ccd350613b698f11f"
+    },
+    "mnbvc-350.jsonl.gz": {
+      "bytes": 139913778,
+      "sha256": "0b8407de0ef96a4b260a65100dd43c26fb4b334bc8d16a1a62b4ef9178e54778"
+    },
+    "mnbvc-450.jsonl.gz": {
+      "bytes": 119775771,
+      "sha256": "fdd47a86f8789b2167c0ee5a6ab732f339ee6270e3567120b0d7db72d7a0ab41"
+    },
+    "mnbvc-500.jsonl.gz": {
+      "bytes": 119363508,
+      "sha256": "b74a737a21dd034a1a3a3733a110e18e5fc28850c45a55a10cee4d4a20cda57f"
+    },
+    "mnbvc-650.jsonl.gz": {
+      "bytes": 121650618,
+      "sha256": "a131015b1260c37821dc856643823b7f1b0fc2da2ab9e6d0c17610c54552139f"
+    },
+    "mnbvc-750.jsonl.gz": {
+      "bytes": 120355236,
+      "sha256": "dd6f11ca6705bca238bc6204e348917aea14677b9fe799c586c3b83d970a162b"
+    },
+    "mnbvc-850.jsonl.gz": {
+      "bytes": 123072164,
+      "sha256": "23f1d958f5ac5481a0d019559107fd4a0b736f9ca008a464024c3c0439b6cce0"
+    },
+    "mnbvc-950.jsonl.gz": {
+      "bytes": 127378038,
+      "sha256": "392c1a17629b4d646058868c173e6f7dbd137406904494814511a6682ec0f791"
+    }
+  },
+  "counts": {
+    "documents": 868929,
+    "not_criminal_verdict": 808733,
+    "criminal_verdict_marker": 60196,
+    "new_source_candidates": 31457,
+    "missing_sections": 21888,
+    "already_imported_or_duplicate": 2698,
+    "missing_primary_number": 180,
+    "flagged_or_suspected_corruption": 3973
+  },
+  "per_shard": {
+    "mnbvc-000.jsonl.gz": {
+      "documents": 91066,
+      "not_criminal_verdict": 89428,
+      "criminal_verdict_marker": 1638,
+      "new_source_candidates": 683,
+      "missing_sections": 662,
+      "already_imported_or_duplicate": 283,
+      "missing_primary_number": 6,
+      "flagged_or_suspected_corruption": 4
+    },
+    "mnbvc-050.jsonl.gz": {
+      "documents": 127522,
+      "criminal_verdict_marker": 6654,
+      "missing_sections": 2877,
+      "not_criminal_verdict": 120868,
+      "new_source_candidates": 3742,
+      "missing_primary_number": 16,
+      "already_imported_or_duplicate": 16,
+      "flagged_or_suspected_corruption": 3
+    },
+    "mnbvc-150.jsonl.gz": {
+      "documents": 76429,
+      "not_criminal_verdict": 71915,
+      "criminal_verdict_marker": 4514,
+      "new_source_candidates": 2662,
+      "missing_sections": 1832,
+      "flagged_or_suspected_corruption": 3,
+      "missing_primary_number": 5,
+      "already_imported_or_duplicate": 12
+    },
+    "mnbvc-250.jsonl.gz": {
+      "documents": 110076,
+      "not_criminal_verdict": 103917,
+      "criminal_verdict_marker": 6159,
+      "missing_sections": 2601,
+      "new_source_candidates": 3548,
+      "flagged_or_suspected_corruption": 3,
+      "missing_primary_number": 7
+    },
+    "mnbvc-350.jsonl.gz": {
+      "documents": 107775,
+      "not_criminal_verdict": 102210,
+      "criminal_verdict_marker": 5565,
+      "new_source_candidates": 3327,
+      "missing_sections": 2211,
+      "already_imported_or_duplicate": 15,
+      "flagged_or_suspected_corruption": 4,
+      "missing_primary_number": 8
+    },
+    "mnbvc-450.jsonl.gz": {
+      "documents": 54659,
+      "not_criminal_verdict": 48308,
+      "criminal_verdict_marker": 6351,
+      "new_source_candidates": 3065,
+      "already_imported_or_duplicate": 622,
+      "flagged_or_suspected_corruption": 762,
+      "missing_sections": 1880,
+      "missing_primary_number": 22
+    },
+    "mnbvc-500.jsonl.gz": {
+      "documents": 61998,
+      "not_criminal_verdict": 55111,
+      "criminal_verdict_marker": 6887,
+      "missing_sections": 2215,
+      "flagged_or_suspected_corruption": 724,
+      "new_source_candidates": 3288,
+      "already_imported_or_duplicate": 644,
+      "missing_primary_number": 16
+    },
+    "mnbvc-650.jsonl.gz": {
+      "documents": 60926,
+      "not_criminal_verdict": 54639,
+      "criminal_verdict_marker": 6287,
+      "missing_sections": 2056,
+      "flagged_or_suspected_corruption": 726,
+      "new_source_candidates": 3051,
+      "already_imported_or_duplicate": 437,
+      "missing_primary_number": 17
+    },
+    "mnbvc-750.jsonl.gz": {
+      "documents": 60561,
+      "not_criminal_verdict": 54514,
+      "criminal_verdict_marker": 6047,
+      "new_source_candidates": 2932,
+      "missing_sections": 1985,
+      "flagged_or_suspected_corruption": 747,
+      "already_imported_or_duplicate": 368,
+      "missing_primary_number": 15
+    },
+    "mnbvc-850.jsonl.gz": {
+      "documents": 59221,
+      "not_criminal_verdict": 53463,
+      "criminal_verdict_marker": 5758,
+      "new_source_candidates": 2831,
+      "missing_sections": 1990,
+      "already_imported_or_duplicate": 289,
+      "flagged_or_suspected_corruption": 628,
+      "missing_primary_number": 20
+    },
+    "mnbvc-950.jsonl.gz": {
+      "documents": 58696,
+      "not_criminal_verdict": 54360,
+      "criminal_verdict_marker": 4336,
+      "flagged_or_suspected_corruption": 369,
+      "missing_primary_number": 48,
+      "missing_sections": 1579,
+      "new_source_candidates": 2328,
+      "already_imported_or_duplicate": 12
+    }
+  },
+  "qualified": 0,
+  "limitations": [
+    "Source publisher reports corruption and restoration; regex filtering cannot prove every character is correct.",
+    "Evidence sufficiency, actor scope, effective verdict and related proceedings are unverified.",
+    "Files are a fixed corpus shard sample, not a random sample of criminal cases.",
+    "All original and derived case text remains private local-only."
+  ]
+}

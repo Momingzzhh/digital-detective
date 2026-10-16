@@ -1,0 +1,19 @@
+{
+  "source": "MTEB LeCaRDv2 corpus",
+  "revision": "566865fc50a566db1635307496e46c5a1a118cb2",
+  "file_sha256": "f112eb82ff3b7cbc1e97e44d96ae9e520746df3858b77a0028115f1436454c0c",
+  "download_url": "https://hf-mirror.com/datasets/mteb/LeCaRDv2/resolve/566865fc50a566db1635307496e46c5a1a118cb2/corpus.jsonl",
+  "counts": {
+    "documents": 3795,
+    "new_source_candidates": 2311,
+    "missing_sections": 901,
+    "already_imported_or_duplicate": 578,
+    "missing_case_number": 5
+  },
+  "qualified": 0,
+  "limitations": [
+    "Source evidence, all actors and outcomes still require review.",
+    "Related proceedings can remain undetected despite primary number deduplication.",
+    "Fulltext and all derived case content are private local files."
+  ]
+}

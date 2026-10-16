@@ -1,0 +1,30 @@
+{
+  "source": "LeCaRDv2 triplet-all derivative",
+  "source_revision": "84ebcf30a342b044e4c99c3510e34bb8830356da",
+  "files": {
+    "lecardv2-triplet-all-0.parquet": {
+      "bytes": 41025182,
+      "sha256": "c9cb05e8c53ab58144409695e150c67c79d4778f7dd003b00cc723fc9db7b59f"
+    },
+    "lecardv2-triplet-all-1.parquet": {
+      "bytes": 42285421,
+      "sha256": "69ec6e3dcf4093f9fce0869b9c194897ae2fc7d1c576b635a1832e4e2e669941"
+    }
+  },
+  "counts": {
+    "missing_fact_reason_or_verdict_section": 3151,
+    "new_source_candidates": 8590,
+    "repeated_triplet_document": 23649,
+    "also_in_lecard_v1": 48,
+    "missing_or_repeated_primary_case_number": 22
+  },
+  "output_records": 8590,
+  "qualified": 0,
+  "limitations": [
+    "Triplets repeat documents; no relevance labels are used as case truth.",
+    "Legal retrieval source is not an investigation benchmark.",
+    "Fact sections can contain court findings; only exact source evidence may be released.",
+    "Primary case-number and court grouping can still miss related proceedings.",
+    "Underlying judgments remain local-only pending rights/privacy review."
+  ]
+}

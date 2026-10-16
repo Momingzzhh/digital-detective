@@ -1,0 +1,40 @@
+{
+  "dataset": "https://huggingface.co/datasets/biglam/old_bailey_proceedings",
+  "revision": "8caa27eb4445098598d38ef8df04a79dd9d88903",
+  "original_source": "https://doi.org/10.15131/shef.data.4775434.v2",
+  "original_project": "https://www.oldbaileyonline.org/",
+  "license": "CC-BY-NC-4.0",
+  "stratum": "England historical trials 1674–1913; separately reported from modern Chinese cases",
+  "files": {
+    "trials/train-00000-of-00006.parquet": {
+      "bytes": 57743360,
+      "sha256": "2eedca50e5277bb6d2218ad972a0743ecaa5d13d92744463babb525d464839d3"
+    },
+    "trials/train-00001-of-00006.parquet": {
+      "bytes": 102484245,
+      "sha256": "562f7c30dceb588b44581d0e1435c0d5dbac5017d372ae0ee58d3c1537cbb7e9"
+    },
+    "trials/train-00002-of-00006.parquet": {
+      "bytes": 72977789,
+      "sha256": "0e3bb17e70fd12e15929e92f462286ebec25bf224ce2c359109b9b1f4f09766e"
+    },
+    "trials/train-00003-of-00006.parquet": {
+      "bytes": 74899894,
+      "sha256": "c1dbc263b826b35fb69e45c0083a58cead914010067814693a8ee07f2cdd8ee1"
+    },
+    "trials/train-00004-of-00006.parquet": {
+      "bytes": 105293938,
+      "sha256": "9250a50e11396a8ca0057852b22c5e3cccbe06b811255c15c8b9c2c1f64584ae"
+    },
+    "trials/train-00005-of-00006.parquet": {
+      "bytes": 133381765,
+      "sha256": "4b63c9a5ac97aeb0acafeaf27139be43556c40986679a955aaa569e210dc25dd"
+    }
+  },
+  "limitations": [
+    "Upstream records historical verdicts, not objective guilt or modern Chinese legal charges.",
+    "Source XML contains ambiguous reused IDs and unresolved joins; reject ambiguous labels.",
+    "Preserve source English and translate evidence only, without hidden outcomes in translation prompts.",
+    "Academic/noncommercial source license is separate from the code MIT license."
+  ]
+}

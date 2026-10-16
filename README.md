@@ -42,7 +42,7 @@ SQLite 账本在请求前按 UTF-8 字节上界和输出上限预占预算，返
 
 数据源与核验规则见 [docs/data_sources.md](docs/data_sources.md)，下载审计见 [data/source_audit.json](data/source_audit.json)。
 
-LeCaRD 的真实裁判文书为候选案源，**不是现成的破案测试集**。文书事实段、标题、判决和“经审理查明”会直接泄露答案，不能直接传入被测 agent。
+LeCaRD、LeCaRDv2衍生全文与MNBVC的裁判文书为候选案源，**不是现成的破案测试集**。文书事实段、标题、判决和“经审理查明”会直接泄露答案，不能直接传入被测 agent。
 
 ```bash
 .venv/bin/python scripts/fetch_data.py
@@ -75,19 +75,34 @@ Docker 默认只映射本机端口。当前交付为本地运行及部署配置�
 
 代码采用 MIT 许可。第三方数据遵循各自来源条款，代码许可不授予案件材料的重新分发权。
 
-## 当前验收结果（2026-10-15）
+## 数据工作状态（2026-10-16）
 
-已取得 9,088 份去重后的真实来源文书，并筛出 3,000 份候选文书；这些数字不代表独立且线索充分的案件数量。329 份机器处理记录中有 98 份机器通过，但固定抽查的 10 份均存在至少一项不满足完整基准要求的问题，已全部隔离。**当前严格验收合格案件数为 0；1000+ 要求尚未完成，90% 准确率尚未验证。** 详见 [质量审计](docs/quality_audit.md) 与 [状态统计](data/dataset_report.json)。
+本机来源候选已扩展到 **47,558份**，v3.7结构筛查通过5,056个初步分组。新增可访问的MTEB LeCaRDv2全文及MNBVC裁判文书分片，下载均固定版本并校验SHA-256。候选、结构筛查、机器审查与正式验收分别统计；最新数量和费用见[dataset_report.json](data/dataset_report.json)。
 
-机器处理脚本只输出 `benchmark.v2.unverified.jsonl`，不会生成可宣称合格的基准。正式评测要求逐例独立核验后的 `independently_verified` 状态；设置这个字段本身不能替代实际审查。
+**1000个线索充分的独立案件尚未完成正式验收，90%准确率尚未验证。** MNBVC作者披露过乱码清洗还原，原文一致性仍须核查。跨来源关联检查会先隔离已知跨集合冲突，其他同组最多保留一例。未检出的关联和预训练污染仍可能存在。
+
+v3.7从带具体内容的证言、供述、勘验、鉴定等原始证据条目提取连续引文；不静默截断长供述。Flash只选择原文句子ID作经过标签，Max独立检查证据、结局泄漏、作案者范围、罪名、经过与替代解释。同系列模型审查可能有相关错误，机器通过不等于已验收。
 
 ```bash
-# 有费用：机器筛选，不代表验收
-.venv/bin/python scripts/build_benchmark.py --limit 20
-# 仅本地已有修复示范时使用；结果不属于独立盲测
-.venv/bin/python scripts/evaluate.py --dataset data/processed/audited_pilot.jsonl --pilot --limit 1
+# 下载、导入、跨来源检查的完整顺序见 docs/data_sources.md
+.venv/bin/python scripts/audit_case_groups.py
+.venv/bin/python scripts/build_v3.py --preflight
+# 有费用；按固定分组哈希选1000个待审样本，不按agent答题选案
+.venv/bin/python scripts/build_v3.py --limit 1000 --selection hash --concurrency 8
+.venv/bin/python scripts/export_review_bundle.py --source-version v3_8
+.venv/bin/python scripts/refresh_dataset_status.py
 ```
 
-当前没有训练或微调产物。完整研究验收仍需要完成逐案来源、结局泄漏、同案分组、人物范围与证据充分性复核，冻结数据划分，再分别开展完整证据与渐进交互盲测。现有软件可以用于这一研究流程，但不能替代尚未完成的数据与效果验收。
+可见证据和隐藏结局分别导出到本地 `data/processed/review_bundle/v3_7/visible/` 与 `hidden/`，并按train/dev/test分文件。再次校验来源与句子偏移；公开仅发布[导出统计和哈希](data/curation_report.json)。文件明确未验收，不自动生成正式benchmark。
 
-一次真实案件软件示范中，罪名和所列经营主体匹配参考，经过还原未完全匹配，整案判定未通过；这只有1例且经过开发期检查，不能推算准确率。见 [示范报告](reports/pilot-full.json)。
+完整[案源与复现说明](docs/data_sources.md)记录了使用与拒绝的来源。旧v2机器通过98例，但固定抽查10例原样通过0例，已隔离；详见[质量审计](docs/quality_audit.md)。一次开发期真实案件软件示范的整案判定未通过，只有1例，不能推算准确率；见[示范报告](reports/pilot-full.json)。
+
+正式冻结采用[独立审核规程](docs/human_review_protocol.md)：双人逐项核验，审核单绑定来源、证据、隐藏标签及分组划分；程序再次验证偏移和关联冲突，满1000个独立组才生成私有正式基准。双人机制是项目质量控制要求，不代表已有人员完成审核。当前人工审核为0，不以模型审查冒充人工。
+
+正式评测要求至少1000个已核验独立组、完整运行不少于150个隐藏测试案件，分别报告完整证据与渐进交互结果；错误、超时和拒答计入分母。只有整案全部正确率实际达到90%才触发达标声明。当前没有训练或微调产物，仍需完成数据核验和独立效果验收。
+
+英国历史庭审已作为独立分组加入：全部197,751份记录已下载，1834—1913年初筛留下9,411份候选、7,252个姓名组。中英证言、起诉裁决及翻译审计分开保存，详见[历史案源说明](docs/data_sources.md#英国历史案件独立分组)。单一被告有罪案件存在明显基线偏差，不以历史结果代替现代案件验证。
+
+[数据集卡](docs/dataset_card.md)说明两类研究材料的字段、划分、许可和局限。历史构建v1.5由Max进行翻译及质检，Flash选择句子；含承认表述的候选优先级不代表已通过审核。
+
+当前已导出170组现代中文、234组英国历史中文机器整理材料，分别保存；历史分组另提供可直接上传网页的TXT。百炼账户出现`Arrearage`，扩充任务已保存断点，等待账户恢复及预占对账。详见[当前处理说明](docs/data_sources.md#当前账户阻塞与断点恢复2026-10-16)。这些数量不等于正式验收数量，1000案及90%目标仍未达成。

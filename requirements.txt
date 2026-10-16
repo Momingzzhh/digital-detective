@@ -5,3 +5,4 @@ python-multipart>=0.0.20,<1
 python-docx>=1.1,<2
 pypdf>=5,<7
 pytest>=8,<10
+pyarrow>=26,<27

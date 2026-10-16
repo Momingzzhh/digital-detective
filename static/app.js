@@ -23,6 +23,13 @@ async function refreshStatus() {
   const ds=statusData.dataset;
   for(const text of [ds.status||'数据核验中',`符合完整验收条件的案件：${ds.qualified||0}`,`目标：至少 1000 个真实案件，关键证据全部可追溯`, `本机模型调用已记账：¥${statusData.budget.cost.toFixed(3)}；预占：¥${statusData.budget.reserved.toFixed(3)}；上限：¥${statusData.limit}`]) d.append(el('p',text));
   if(ds.candidates) d.append(el('p',`原始去重候选：${ds.candidates}；候选数不等于合格数。`));
+  const historical=ds.separate_historical_stratum;
+  if(historical) {
+    d.append(el('h3','英国历史案件 · 独立分组'));
+    d.append(el('p',`1834—1913年结构候选：${historical.candidates}；姓名分组：${historical.candidate_groups}；已核对来源并导出的中文机器材料：${historical.machine_curated_cases}。均待独立复核。`));
+    d.append(el('p','历史庭审的原始类别和裁决单独保存。当前单一被告有罪案件有明显基线偏差，不能用其成绩代表现代案件能力。'));
+    if(historical.provider_blocked) d.append(el('p',`历史扩充任务已保存进度，等待百炼账户恢复可用额度（${historical.provider_error_code||'账户受限'}）。预占费用须对账，不能当作实际支出。`));
+  }
   d.append(el('p','账本只统计本项目通过此实例发出的请求。云账号的其他调用及价格变化请在百炼控制台核对。'));
 }
 function empty(node, text) { node.replaceChildren(); const d=el('div',undefined,'empty');d.append(el('div','◇','empty-symbol'),el('p',text));node.append(d); }

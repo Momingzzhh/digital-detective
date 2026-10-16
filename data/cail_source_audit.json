@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/china-ai-law-challenge/CAIL2019",
+  "revision": "010ebcedb4a1faf0ae25576254d134fa518e4830",
+  "file": "阅读理解/data/big_train_data.json",
+  "git_blob_sha1": "095b52bc59491240fd349e3ffe46abc6b4c12a0b",
+  "bytes": 21565270,
+  "sha256": "da5d236c94c9150c03aba54da02548f6f458eaeb39b8ea29e7897351d2a7b56e",
+  "paragraphs": 8000,
+  "criminal_paragraphs": 4041,
+  "with_verdict": 0,
+  "accepted_as_case_candidates": 0,
+  "qualified": 0,
+  "reason": "Reading-comprehension fact fragments omit complete verdicts and source-level case identifiers; unsuitable as hidden-outcome complete case benchmarks."
+}

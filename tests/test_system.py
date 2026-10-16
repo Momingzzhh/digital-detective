@@ -55,6 +55,25 @@ def test_budget_reserves_before_request(client):
     assert budget_status()['reserved']==0
 
 
+def test_provider_denial_is_typed_and_keeps_unreconciled_reservation(tmp_path,monkeypatch):
+    import httpx
+    monkeypatch.setenv('RUNTIME_DIR',str(tmp_path));initialize()
+    monkeypatch.setattr(llm,'settings',lambda:{'DASHSCOPE_API_KEY':'synthetic-test-key'})
+    class FakeClient:
+        def __init__(self,**kwargs):pass
+        async def __aenter__(self):return self
+        async def __aexit__(self,*args):pass
+        async def post(self,*args,**kwargs):
+            return httpx.Response(400,headers={'x-request-id':'test-request'},
+                json={'error':{'code':'Arrearage','message':'sensitive-echo-must-not-be-returned'}})
+    monkeypatch.setattr(llm.httpx,'AsyncClient',FakeClient)
+    with pytest.raises(llm.ProviderAccessError) as info:
+        asyncio.run(llm.structured('test',{},Review,'test',100))
+    assert info.value.code=='Arrearage' and info.value.request_id=='test-request'
+    assert 'sensitive-echo' not in str(info.value) and 'synthetic-test-key' not in str(info.value)
+    assert budget_status()['reserved']>0 and budget_status()['cost']==0
+
+
 def sample_result():
     return Conclusion(status='暂定结论', summary='甲涉嫌盗窃。', charges=['盗窃罪'],perpetrators=['甲'],
                       reconstruction=[],findings=[],conflicts=[],hypotheses=[],questions=['有监控吗？'],missing_information=[],confidence=.95)

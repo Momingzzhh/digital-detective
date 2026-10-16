@@ -1,49 +1,88 @@
-# 数据来源与候选准备
+# 数据来源与复现
 
-来源为 [LeCaRD v1](https://github.com/myx666/LeCaRD)，固定版本
-`b1a4b72b2050a4aa643e6360d5ff3a6b1fd221e3`。原作者说明文书来自中国裁判文书网。
-仓库提供 MIT 许可，但这不能替代对原始文书隐私、使用和再分发条件的审核。
-本项目只公开下载脚本、校验信息和统计；原文及含原文的处理文件保留本地。
+截至2026-10-16，本机有47,558份来源候选：LeCaRD v1 5,200份、LeCaRDv2 triplet 衍生全文8,590份、MTEB LeCaRDv2新增2,311份、MNBVC新增31,457份。候选数量不能视作独立且线索充分的案件数量。机器处理、分组、费用与验收状态见[统计](../data/dataset_report.json)。
+
+原文、证据、隐藏答案、模型检查点及研究者身份只保存本地。公开仓库发布代码、来源版本、校验和与统计，不重新分发案件内容。上游许可不能替代对原始文书使用、隐私和再分发条件的判断。
+
+## 已取得的来源
+
+| 来源 | 固定版本 | 本机结果 | 审计 |
+|---|---|---|---|
+| [LeCaRD v1](https://github.com/myx666/LeCaRD) | `b1a4b72b2050a4aa643e6360d5ff3a6b1fd221e3` | 两个ZIP共10,718条记录，9,088个不同writId；筛选5,200份候选 | [source_audit.json](../data/source_audit.json) |
+| [sentence-transformers/lecard-v2](https://huggingface.co/datasets/sentence-transformers/lecard-v2) | `84ebcf30a342b044e4c99c3510e34bb8830356da` | 两个Parquet，重复三元组去重、分段后新增8,590份 | [lecardv2_source_audit.json](../data/lecardv2_source_audit.json) |
+| [MTEB LeCaRDv2](https://huggingface.co/datasets/mteb/LeCaRDv2) | `566865fc50a566db1635307496e46c5a1a118cb2` | 3,795篇全文；与已有来源及自身去重后新增2,311份 | [mteb_source_audit.json](../data/mteb_source_audit.json) |
+| [MNBVC-judgment](https://huggingface.co/datasets/wormtooth/MNBVC-judgment) | `dcbbb633b313eb9270e32cee763bb1dfc0702718` | 11个分片868,929篇各类文书，60,196篇含刑事判决标记；筛掉乱码标记、缺段及重复后新增31,457份 | [mnbvc_source_audit.json](../data/mnbvc_source_audit.json) |
+
+LeCaRDv2官方55,192篇全文的Google Drive地址在本机命令行及浏览器均超时。上表使用可访问的固定衍生版本，没有将无法下载的全文计入本机数量。镜像仅用于传输，下载后必须匹配固定版本SHA-256。
+
+MNBVC作者[披露](https://github.com/wormtooth/MNBVC-judgment)来源存在随机字符乱码，并通过重复文书清洗还原。当前拒绝作者标记待查/低质量以及可疑字符的材料，但正则不能证明每个汉字正确，也不能证明每案已对照法院原件。这一来源只能作为待核验候选。11个分片约1.4GB，没有下载完整约125GB语料。
+
+## 英国历史案件独立分组
+
+按用户确认，历史案件单独保存和报告，不用这一分组的成绩代表现代案件分析能力。[Old Bailey官方数据说明](https://www.dhi.ac.uk/blogs/old-bailey/data/)记载原始庭审报告覆盖1674—1913年；[原始XML数据存档](https://doi.org/10.15131/shef.data.4775434.v2)与可访问的[BigLAM衍生数据](https://huggingface.co/datasets/biglam/old_bailey_proceedings)分别记录。
+
+本机已取得全部6个庭审Parquet，固定BigLAM版本`8caa27eb4445098598d38ef8df04a79dd9d88903`，共197,751份报告。下载大小和SHA-256见[下载清单](../data/oldbailey_download_manifest.json)。只从1834—1913年、单一被告、单一原始类别、无减等裁决及完整标签连接的报告开始筛查；必须至少两名标注证人，保留质询、交叉询问和辩解，起诉段、裁决、量刑和程序概述不进入线索。含指控罪名或结局的证言整案排除。当前9,411份结构候选、7,252个按规范化当事人姓名形成的保守分组，尚非线索充分认证；见[来源审计](../data/oldbailey_source_audit.json)。
+
+Flash从英文原始证言选择经过句子ID，Max审计可见线索对原始历史类别与参与者范围的支持。历史v1.5用Max执行来源审核、翻译和双语质检，Flash负责选择句子与明确参与者。译者仅看到允许的证言和中性人物对应，不接收起诉、裁决或隐藏答案。中文每句保留英文ID，隐藏经过同时绑定中英文偏移。分句或来源变化会使旧标注、审计和翻译失效，格式重试保留历史检查点。导出重新读取并校验全部固定Parquet、逐案原始XML段、连接标签与双语句子。
 
 ```bash
-python scripts/fetch_data.py
-python scripts/prepare_candidates.py --limit 3000
+.venv/bin/python scripts/fetch_oldbailey.py
+.venv/bin/python scripts/prepare_oldbailey.py
+# 有费用；按预先固定哈希顺序、每姓名组最多一例
+.venv/bin/python scripts/build_oldbailey.py --limit 500 --selection admission-priority --concurrency 24 --budget-ceiling 400
+.venv/bin/python scripts/export_oldbailey.py
+.venv/bin/python scripts/refresh_dataset_status.py
 ```
 
-两个 ZIP 共 10,700 条候选记录，按 `writId` 去重为 9,088 篇文书。
-下载脚本固定版本并校验 Git blob SHA1，另外记录 SHA256。
-`data/source_audit.json` 给出完整结构审计。
+私有文件为`data/processed/review_bundle/oldbailey_v1/visible/{train,dev,test}.jsonl`和`hidden/{train,dev,test}.jsonl`。**这些是机器整理的研究材料，尚未通过独立验收。** 历史类别使用来源的`category/subcategory`，不伪装成中国现行罪名。全是单一被告有罪裁决，因此固定猜被告人的作案者基线很高，不能据此证明破案能力。姓名分组可能合并同名者或漏掉不同姓名的关联案，仍需核验。原始印刷报告经过历史编辑，原始有罪记录也不是客观真实有罪的保证。
 
-## 候选不等于合格评测样本
+来源及衍生译文遵循CC-BY-NC-4.0，需要署名且限非商业使用；MIT仅适用于项目代码。公共仓库只发布方法、版本与统计，不发布这些庭审原文或中文译文。
 
-`data/processed/candidates.jsonl` 中的 3,000 篇来自真实原始材料，没有新增或补造决定性证据。
-筛选要求事实段至少 300 字、至少两个详细证据文本标记、判决可解析罪名；优先事实段
-3,000–15,000 字与证据陈述较多的文书。排序不使用任何模型的答题结果，也不按罪名易难筛选。
-当前有 2,727 篇位于优先长度范围。证据文本标记只是一种检索启发式，不能证明证据充分。
+## 不纳入的来源
 
-每行含以下字段：
+- [CLEG](https://github.com/NowYouSeeMeNot/CLEG)：本机核查后发现证据计划有“包括但不限于”等生成内容，不是案件的完整原始证据，不计入合格数。
+- [CAIL2019阅读理解](https://github.com/china-ai-law-challenge/CAIL2019)：官方大训练集已下载并匹配Git blob SHA1。8,000段中4,041段含“被告人”，均没有完整“判决如下”，且缺少来源案号及独立完整结局。不用罪名标题或问答替代完整案件。见[cail_source_audit.json](../data/cail_source_audit.json)。
+- LeCaRD-Elem：候选仍为LeCaRD的9,088篇，不重复计作新增案源。
+- 用户样例JSONL：没有逐案来源证明，不计入真实案例数量。
 
-- `case_id`、`group_id`、`split`：来源文书和初步分组拆分。
-- `status`：恒为 `candidate_unreviewed`。
-- `source`：仓库、commit、ZIP 文件及成员路径、writId、全文 SHA256、识别出的案号。
-- `raw_record`：原始字段完整保留。`qw` 为全文，`ajjbqk` 为事实，`cpfxgc` 为裁判理由，`pjjg` 为判决。
-- `provisional_gold`：从判决正则提取的罪名和作案者，`verified=false`。49 条未解析出作案者，其他结果也需核验。
-- `screening`：证据标记计数、排序分数，以及未审查状态。
+## 本机复现
 
-初步分组在整个 9,088 篇文书池上执行，再挑选候选。分组利用文书/案件 ID、同法院范围内的案号引用、
-全文与事实精确哈希、事实字符片段 SimHash。旧式案号在不同法院会重复，因此不能只凭短案号全国归并。
-初步候选划分为 train 2,100 / dev 450 / test 450，同一已识别组不会跨集合。
-跨法院二审、再审和缺少案号的关联文书仍可能漏识别；近重复筛查也可能漏检。正式盲测前须继续复核分组。
+先下载和导入，再检查跨来源关联，最后执行有费用的标注。新增分片时保留已有MNBVC候选的来源和划分。不要删除处理文件来绕过冻结记录。
 
-## 后续审核边界
+```bash
+.venv/bin/python scripts/fetch_data.py
+.venv/bin/python scripts/prepare_candidates.py --limit 5200 --preserve-splits
+.venv/bin/python scripts/fetch_lecardv2.py --include-mteb
+.venv/bin/python scripts/prepare_lecardv2.py
+.venv/bin/python scripts/prepare_mteb.py
+.venv/bin/python scripts/fetch_mnbvc.py --shards 000,050,150,250,350,450,500,650,750,850,950 --max-download-gb 2
+.venv/bin/python scripts/prepare_mnbvc.py
+.venv/bin/python scripts/audit_case_groups.py
+.venv/bin/python scripts/build_v3.py --preflight
+# 以下调用付费模型，仍不生成正式合格基准
+.venv/bin/python scripts/build_v3.py --limit 1000 --selection hash --concurrency 8
+.venv/bin/python scripts/export_review_bundle.py --source-version v3_8
+.venv/bin/python scripts/refresh_dataset_status.py
+```
 
-原文及事实段直接包含作案者、裁判结论、认罪内容和罪名，**不能直接作为盲测输入**。
-须另行抽取可追溯的线索、保留原文字符位置，并将最终裁判与事实经过作为隐藏答案。
-只有证据名称而无内容的材料不能补造其内容。能否独立推断作案者、还原经过以及罪名标签是否正确，
-都尚未逐条核验。模型审核和人工审核应分别统计；模型自评不能记作人工审核。
+## v3.7与v3.8材料边界
 
-`data/dataset_report.json` 因此记录 `qualified=0`、`human_reviewed=0`。
-此候选池不能用于声称已有 1,000+ 合格破案评测案例，亦不能用于声称达到 90% 准确率。
-公开文书可能进入基础模型预训练；下游未用于训练的测试集并不能排除预训练污染。
+结构筛查只接受含具体内容的编号证言、供述、鉴定、勘验等条目，保留连续原始引文与字符偏移。后续未重复写“证人”的证言可识别；长条目不在1500字处静默截断，超过处理上限则整条拒绝。法院查明、判决、裁判理由和罪名标题不能作为可见证据。唯一文字转换是将“被告人/犯罪嫌疑人”中性化为“当事人”，保留转换日志。
 
-补充检索：CLEG（https://github.com/NowYouSeeMeNot/CLEG）公开说明包含56,582条刑事样本，但其任务为“诉求与事实→证据名称及证明目的”，不是隐藏结局的完整破案材料；未将其样本量计入本项目合格数量。PIJ、EvidenceBench 等数据的获取限制或数量也未解决本项目的1000例完整证据要求。
+Flash标注员只选择可见证据的句子ID，隐藏事实段只供标注时核对冲突。Max审计员检查来源区段、泄漏、全部参与者、罪名要件、经过覆盖及一致性、替代解释与身份映射。隐藏事实不会进入被测agent。固定分组哈希决定审查顺序，没有使用答题对错来选案。同系列基础模型的错误可能相关，机器通过仍须独立复核。
+
+`audit_case_groups.py`连接已有组、全文/事实精确哈希、现代法院编码案号和法院范围内的旧案号引用。跨冻结集合的已知冲突先隔离，其他同组最多保留一条，不偷偷重新分配划分。未引用的二审、再审及近似改写仍可能漏识别；“未报警”不等于独立案件已验收。
+
+现有v3.7批次保留为历史版本。v3.8另加指控罪名、法院概括和证据句子ID检查，审计结果不从旧版本继承；运行新版本须显式使用`--source-version v3_8`导出。`export_review_bundle.py`再次校验引文及gold句子的偏移，输出本地 `data/processed/review_bundle/v3_7/visible/{train,dev,test}.jsonl` 与 `hidden/{train,dev,test}.jsonl`。可见文件只含案ID、分组、划分及证据ID/文本/类型，隐藏文件另存结局、来源和审计。文件哈希见[curation_report.json](../data/curation_report.json)。这些文件仍未验收，不作为正式benchmark。
+
+正式验收与冻结见[审核规程](human_review_protocol.md)。逐案独立审核和完整隐藏测试完成前，`qualified=0`与90%未验证保持不变。公开旧案可能进入基础模型预训练，下游未参与训练不等于排除预训练污染。
+
+完整[数据集卡](dataset_card.md)说明字段、开发样本隔离、选择偏差、用途与许可。
+
+## 当前账户阻塞与断点恢复（2026-10-16）
+
+历史v1.5预定3000组处理中，百炼返回HTTP 400 `Arrearage`。当前导出234组历史材料；3000组内234组机器暂通过、403组拒绝、31组格式/调用错误、2332组因账户拒绝待恢复。旧失败检查点已归档，并单独标记为`provider_deferred`，不计入通过或有效来源审查数。具体状态见[历史处理报告](../data/oldbailey_curation_report.json)和[导出报告](../data/oldbailey_export_report.json)。
+
+本地账本按供应商用量与已核对单价记账约255.70元，另90.29元为未对账预占；这不是阿里云官方账单。旧失败未保留可逐笔对应的供应商Request ID，不能直接删除预占。账户恢复后须先核对云端账单，仍遵守500元总上限。新代码保留账户错误的请求/预占标识，并在欠费、授权或限流拒绝后停止同批次排队请求。真正超时仍保留预占。
+
+恢复账户后，同一条构建命令会继续`provider_deferred`记录，跳过已有通过和拒绝项；`--retry-errors`仅用于一次有归档的格式错误重试。无需删除数据或账本，不应循环重复尝试欠费请求。现代评测和历史评测仍需独立验收。

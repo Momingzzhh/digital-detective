@@ -1,0 +1,36 @@
+{
+  "version": "independent-agent-reading-v1",
+  "source_version": "v3_7",
+  "method": "Fixed hash selection of three completed MNBVC machine passes; original evidence, hidden facts and verdict read independently of Qwen reviewers; no acting-agent predictions used",
+  "sample_size": 3,
+  "unchanged_passes": 0,
+  "human_reviewed": 0,
+  "entries": [
+    {
+      "case_id": "mnbvc-b0ddfbd26a7792b7170f396243b677b0",
+      "source_sha256": "55edbfc134319c06838efa99ddead627914b760871eac7fc916b0a6098ccec76",
+      "evidence_sha256": "dd578e25db4de7e76187daafb45fe991fe7d579321391fe7dab0af06f25f4be4",
+      "decision": "reject_current_record",
+      "reason": "E1保留涉嫌故意伤害罪的警方立案标签，直接提示隐藏目标罪名。其余证言与鉴定可以支持另行修复，但当前记录不能原样盲测。"
+    },
+    {
+      "case_id": "mnbvc-7d9e643b0dd58f445149f61b948a2c93",
+      "source_sha256": "7523981d18f5d943332cd77b37e0b4f8bb60658376f42f45555fe36cb7b17714",
+      "evidence_sha256": "7f63e710730e758d91f0d0e878680d14d154c098aac9bff05a81b8bfec77474f",
+      "decision": "reject_current_record",
+      "reason": "E1把车辆照片描述为能够证实醉酒驾驶，缺少照片具体观察内容且照片本身不能证明酒精浓度。这是证据证明目的的司法归纳；其余供述、道路和血检材料可供另行修复。"
+    },
+    {
+      "case_id": "mnbvc-954e895ab46ec5daec7065c88a7cb3f7",
+      "source_sha256": "df8d0ded9ea920a4739e0b101240b2de7f9cc2cef9f4f965cddb436fc1991c1f",
+      "evidence_sha256": "009ed17c9a786d83f381a452313cbd980221f9dc77dc1540fff952f1f8bce4c7",
+      "decision": "reject_current_record",
+      "reason": "E3是供认不讳且与证言印证的法院概括，未载录供述具体内容；E4包含证实案件相关事实及证据确实充分足以认定，不能作为独立原始线索。"
+    }
+  ],
+  "limitations": [
+    "Small diagnostic sample, not an estimate of population quality.",
+    "Agent reading is not expert human review or court-original authenticity verification.",
+    "A rejected current record may be repaired in a new version, never silently counted as passed."
+  ]
+}

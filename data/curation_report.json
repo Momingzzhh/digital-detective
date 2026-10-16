@@ -1,0 +1,62 @@
+{
+  "generated_at": "2026-10-16T07:52:14.879207+00:00",
+  "source_version": "v3_7",
+  "reviewed": 1000,
+  "status_counts": {
+    "machine_rejected": 641,
+    "machine_error": 185,
+    "machine_pass_unverified": 174
+  },
+  "machine_curated_cases": 170,
+  "machine_curated_groups": 170,
+  "excluded_after_export_audit": {
+    "exact_hidden_charge_in_visible_evidence": 1,
+    "independent_agent_source_rejection": 3
+  },
+  "split_counts": {
+    "train": 115,
+    "dev": 27,
+    "test": 28
+  },
+  "source_offsets_verified": true,
+  "qualified": 0,
+  "human_reviewed": 0,
+  "target_1000_complete": false,
+  "accuracy_90_verified": false,
+  "artifacts": {
+    "hidden/dev.jsonl": {
+      "sha256": "980dc4c0a3e8bc3e2ba7566f62e29f216910a52f5cbce40abf70920f70900bf4",
+      "bytes": 422520
+    },
+    "hidden/test.jsonl": {
+      "sha256": "1c589f7760ab2933ee8c06d20e5dc8e9a616eec7e06192e024091a82cecfef8f",
+      "bytes": 381410
+    },
+    "hidden/train.jsonl": {
+      "sha256": "fad5fe4de94351968b1a5e1af33f60e3d45f8ec372017f81b007d5794d31819a",
+      "bytes": 2469185
+    },
+    "machine_curated.unverified.jsonl": {
+      "sha256": "88c16abbcee9eb29b5efa66eda9d888331f481217179b1a3a56e5d08d74b200b",
+      "bytes": 6427691
+    },
+    "visible/dev.jsonl": {
+      "sha256": "c44ee92246f63c253ac9bcd8c153436cb27bc07f0ee66871492e6ce61b8f64c2",
+      "bytes": 173991
+    },
+    "visible/test.jsonl": {
+      "sha256": "5678d87345852148cd8945718df6363cad5395460bf600068b46229ff17e192a",
+      "bytes": 141579
+    },
+    "visible/train.jsonl": {
+      "sha256": "6f767c4ddf4254b8ff02b6ad73a7a2e216130c1ffa720e857300e850a71d666c",
+      "bytes": 813115
+    }
+  },
+  "limitations": [
+    "Machine passes are provisional, not sufficient-evidence certification.",
+    "Related proceeding grouping and final outcomes still require source review.",
+    "Visible views contain no hidden fields, but semantic leakage needs review.",
+    "Raw judgments and all derived text must remain private local files."
+  ]
+}

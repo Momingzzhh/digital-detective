@@ -56,5 +56,6 @@
     "Pilot record was inspected during development; not an independent held-out test.",
     "Only verified visible evidence is sent to the acting agent. All failures and refusals stay in the denominator.",
     "Progressive mode uses a deterministic evidence oracle, not a human dialogue-quality evaluation."
-  ]
+  ],
+  "target_claim_eligible": false
 }

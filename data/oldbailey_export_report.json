@@ -1,0 +1,112 @@
+{
+  "generated_at": "2026-10-16T09:43:16.120145+00:00",
+  "stratum": "england_historical_1834_1913",
+  "dataset": "https://huggingface.co/datasets/biglam/old_bailey_proceedings",
+  "revision": "8caa27eb4445098598d38ef8df04a79dd9d88903",
+  "license": "CC-BY-NC-4.0",
+  "checkpoints": 3072,
+  "status_counts": {
+    "provider_deferred": 2332,
+    "machine_rejected": 451,
+    "machine_pass_translated_unverified": 256,
+    "machine_error": 33
+  },
+  "checkpoint_versions": {
+    "oldbailey-transcript-zh-v1.5": 3000,
+    "oldbailey-transcript-zh-v1.4": 53,
+    "oldbailey-transcript-zh-v1.1": 9,
+    "oldbailey-transcript-zh-v1.2": 5,
+    "oldbailey-transcript-zh-v1": 5
+  },
+  "exported_pipeline_versions": {
+    "oldbailey-transcript-zh-v1.5": 234
+  },
+  "machine_curated_cases": 234,
+  "machine_curated_groups": 234,
+  "excluded_after_export_audit": {
+    "integrity_or_stale_binding": 14,
+    "current_source_filter:possible_multiple_actors": 2,
+    "current_source_filter:insufficient_or_oversized_transcript": 1,
+    "current_source_filter:outcome_or_cross_case_inside_testimony": 3,
+    "current_source_filter:exact_historical_label_inside_evidence": 2
+  },
+  "split_counts": {
+    "dev": 38,
+    "train": 160,
+    "test": 36
+  },
+  "historical_class_counts": {
+    "theft/pocketpicking": 24,
+    "theft/burglary": 11,
+    "theft/simpleLarceny": 52,
+    "theft/embezzlement": 2,
+    "kill/manslaughter": 2,
+    "theft/stealingFromMaster": 9,
+    "deception/fraud": 14,
+    "theft/housebreaking": 8,
+    "royalOffences/coiningOffences": 37,
+    "theft/animalTheft": 3,
+    "theft/theftFromPlace": 22,
+    "breakingPeace/wounding": 22,
+    "theft/shoplifting": 1,
+    "sexual/bigamy": 3,
+    "violentTheft/robbery": 5,
+    "breakingPeace/assault": 2,
+    "deception/forgery": 7,
+    "theft/mail": 4,
+    "theft/extortion": 1,
+    "miscellaneous/pervertingJustice": 1,
+    "deception/perjury": 1,
+    "damage/arson": 1,
+    "breakingPeace/threateningBehaviour": 1,
+    "damage/other": 1
+  },
+  "qualified": 0,
+  "human_reviewed": 0,
+  "target_1000_complete": false,
+  "accuracy_90_verified": false,
+  "uploadable_text_bundle": {
+    "directory": "visible_text/de6e713c36e5beba",
+    "cases": 234,
+    "bytes": 878940,
+    "tree_sha256": "84f9b0a42202539a69b757a09602666e975cef3fe0ea55c960a96779f1e20916"
+  },
+  "artifacts": {
+    "hidden/dev.jsonl": {
+      "sha256": "49d16fb36f6937b009cdb30d697024f9f3a22968f7e45aca3b7d4935e5c4b3de",
+      "bytes": 757667
+    },
+    "hidden/test.jsonl": {
+      "sha256": "31bb14c8420918280bd9b06356e3ffa5b0912ce66824265cb65185de28a534e1",
+      "bytes": 683679
+    },
+    "hidden/train.jsonl": {
+      "sha256": "00a3e2f702e26661adcbec80a596de130a883308f7ab348182499e03df2ae2be",
+      "bytes": 3141926
+    },
+    "machine_curated.unverified.jsonl": {
+      "sha256": "0a4e25e8c0ae26bff7b3254b37903df30c354836efff07f14441e72aec817c86",
+      "bytes": 7656285
+    },
+    "visible/dev.jsonl": {
+      "sha256": "4b119cea30f22b7de5cfca2641bc007bb24f356eb6a6c9297862198b8f715c90",
+      "bytes": 175461
+    },
+    "visible/test.jsonl": {
+      "sha256": "f98d7fecef17d4ee263793e0f43a09b7e07a91b7daa90dcbcd6c10d7ff087028",
+      "bytes": 156227
+    },
+    "visible/train.jsonl": {
+      "sha256": "8980f6587b5f0f4c8c821fccd2613a85c6d13524a0a48dca1ae8a76455363c5d",
+      "bytes": 736949
+    }
+  },
+  "limitations": [
+    "Machine curation and translation require independent source review.",
+    "Single-defendant guilty-only selection makes a fixed accused-person culprit baseline trivial.",
+    "Historical verdicts and classes are recorded source labels, not objective guilt or modern Chinese law.",
+    "Report this stratum separately; never combine its score into modern criminal investigation accuracy.",
+    "Name grouping cannot guarantee all related cases are separated; pretrained-model memorization is unknown.",
+    "CC-BY-NC-4.0 source and derived translations are for attributed noncommercial use; MIT applies only to code."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "source_version": "oldbailey-transcript-zh-v1.2",
+  "audited_cases": 3,
+  "unchanged_valid": 0,
+  "human_reviewed": 0,
+  "acting_agent_answers_consulted": false,
+  "selection": "Fixed SHA256 sample after 100-case pilot completion, not actor success selection",
+  "findings": [
+    "Translation moved dates across sentence IDs or added an employer relationship.",
+    "Unresolved co-actors omitted from gold despite both model audits passing.",
+    "Multiple witness turns in one XML paragraph attributed to one person; translation duplicated a name."
+  ],
+  "response": "v1.3 preserves multiple-speaker scope, conservatively excludes explicit multi-actor phrases and uses Max for bilingual fidelity audit. All six diagnostic problem cases quarantined. No formal qualification or accuracy claim.",
+  "followup_v1_5": {
+    "selection": "First three SHA256 independent-historical-v1.5:case_id among non-test passes of predetermined first100 admission-priority candidates",
+    "audited_cases": 3,
+    "diagnostic_acceptable": 3,
+    "human_reviewed": 0,
+    "acting_agent_answers_consulted": false,
+    "scope": "Source/translation diagnostic only, non-test cases from a clue-prioritized development slice; not a population estimate or formal qualification."
+  }
+}

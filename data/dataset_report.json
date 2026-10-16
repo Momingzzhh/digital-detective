@@ -1,71 +1,147 @@
 {
-  "status": "质量抽查发现泄漏与标签口径问题，机器通过样本已隔离，尚未完成1000例验收",
-  "candidates": 3000,
+  "generated_at": "2026-10-16T09:45:08.668376+00:00",
+  "status": "本地来源候选47,558份，结构筛查5,056组；当前版本机器暂通过并导出170组，正式验收和90%盲测尚未完成",
+  "candidates": 47558,
+  "candidate_sources": {
+    "candidates.jsonl": {
+      "candidates": 5200,
+      "sha256": "c8b7e29fe1d0c32486d63fc5eecd1fe838be2d66212c708f2a5d6ab94c95e77e"
+    },
+    "lecardv2_candidates.jsonl": {
+      "candidates": 8590,
+      "sha256": "4b8d9848802ca95d5fd4533716e71816b91285cc235a3a6495941e933f5131de"
+    },
+    "lecardv2_mteb_candidates.jsonl": {
+      "candidates": 2311,
+      "sha256": "f19af5eb5e49cbcb4d254ddf3a4954095bf7208c03e0cfec1a1425ad83a2fab8"
+    },
+    "mnbvc_candidates.jsonl": {
+      "candidates": 31457,
+      "sha256": "ab5c01f8cd45806a671256fca755941f54cd97b2cd2b2a52ffd2dd05f56c8d9b"
+    }
+  },
+  "pipeline_version": "source-sections-v3.8",
   "qualified": 0,
   "human_reviewed": 0,
-  "source_unique_documents": 9088,
-  "screening_passed_documents": 5211,
-  "split": {
-    "train": 2100,
-    "dev": 450,
-    "test": 450
-  },
-  "target_split": {
-    "train": 0.7,
-    "dev": 0.15,
-    "test": 0.15
-  },
-  "groups_selected": 2936,
-  "source_groups": 8845,
-  "largest_source_group": 8,
-  "grouping": [
-    "writId",
-    "ajId",
-    "case number references scoped to issuing court",
-    "normalized fulltext exact hash",
-    "normalized facts exact hash",
-    "sampled fact shingle SimHash, Hamming <=3 and length ratio >0.9"
-  ],
-  "limitations": [
-    "These are source judgments selected by structural heuristics, not proven-solvable mysteries.",
-    "No document has undergone human sufficient-evidence or ground-truth review.",
-    "Raw fields contain outcomes and must NEVER be provided directly to a blind-test agent.",
-    "Regex gold can omit actors or misparse compound charges; it is not trusted evaluation truth.",
-    "Case numbers scoped to issuing court avoid nationwide short-number collisions; cross-court appeals/retrials, missing references and SimHash misses can still cross splits.",
-    "Case grouping must be reviewed before a definitive held-out evaluation.",
-    "Public source documents may already exist in model pretraining.",
-    "Raw and processed texts are local-only and must not be committed to a public repository."
-  ],
-  "qualified_definition": "满足全部要求的已验收案例；机器通过数不计入",
-  "machine_qualified": 98,
-  "build_attempted": 329,
-  "build_status_counts": {
-    "machine_qualified": 98,
-    "validation_or_api_error": 79,
-    "machine_rejected": 130,
-    "skipped_source_length_or_missing": 21,
-    "extractor_insufficient": 1
-  },
-  "pipeline_version": "source-evidence-v2",
+  "current_export_version": "v3_7",
+  "qualified_definition": "逐案完成来源、证据充分性、全部作案者、有效结局及独立分组核验；机器审查不计入",
   "target": 1000,
+  "target_1000_complete": false,
+  "accuracy_90_verified": false,
+  "v3_source_section_preflight": 5056,
+  "v3_preflight_groups": 5056,
+  "preflight_source_counts": {
+    "https://github.com/myx666/LeCaRD": 1205,
+    "https://github.com/THUIR/LeCaRDv2": 1356,
+    "https://github.com/wormtooth/MNBVC-judgment": 2495
+  },
+  "machine_review_versions": {
+    "v3_1": {
+      "reviewed": 10,
+      "status_counts": {
+        "machine_rejected": 2,
+        "machine_error": 8
+      }
+    },
+    "v3_2": {
+      "reviewed": 10,
+      "status_counts": {
+        "machine_rejected": 5,
+        "machine_error": 5
+      }
+    },
+    "v3_3": {
+      "reviewed": 10,
+      "status_counts": {
+        "machine_error": 10
+      }
+    },
+    "v3_4": {
+      "reviewed": 10,
+      "status_counts": {
+        "machine_rejected": 8,
+        "machine_pass_unverified": 1,
+        "machine_error": 1
+      }
+    },
+    "v3_5": {
+      "reviewed": 10,
+      "status_counts": {
+        "machine_rejected": 6,
+        "machine_pass_unverified": 4
+      }
+    },
+    "v3_6": {
+      "reviewed": 200,
+      "status_counts": {
+        "machine_rejected": 135,
+        "machine_error": 27,
+        "machine_pass_unverified": 38
+      }
+    },
+    "v3_7": {
+      "reviewed": 1000,
+      "status_counts": {
+        "machine_rejected": 641,
+        "machine_error": 185,
+        "machine_pass_unverified": 174
+      }
+    }
+  },
+  "current_machine_curated_cases": 170,
+  "current_machine_curated_split": {
+    "train": 115,
+    "dev": 27,
+    "test": 28
+  },
+  "separate_historical_stratum": {
+    "stratum": "england_historical_1834_1913",
+    "candidates": 9411,
+    "candidate_groups": 7252,
+    "machine_curated_cases": 234,
+    "pipeline_version": "oldbailey-transcript-zh-v1.5",
+    "machine_status_counts": {
+      "provider_deferred": 2332,
+      "machine_rejected": 403,
+      "machine_error": 31,
+      "machine_pass_translated_unverified": 234
+    },
+    "provider_blocked": true,
+    "provider_error_code": "Arrearage",
+    "split_counts": {
+      "dev": 38,
+      "train": 160,
+      "test": 36
+    },
+    "qualified": 0,
+    "accuracy_90_verified": false
+  },
+  "cross_source_linkage": {
+    "source_documents": 47558,
+    "linked_groups": 47244,
+    "cross_split_conflict_groups": 76,
+    "quarantined_documents": 177,
+    "cluster_size_distribution": {
+      "1": 46965,
+      "2": 254,
+      "3": 21,
+      "4": 2,
+      "9": 1,
+      "5": 1
+    }
+  },
   "budget": {
-    "cost": 7.7937818000000005,
-    "reserved": 1.5556048,
-    "calls": 590
+    "cost": 255.7038229,
+    "reserved": 90.2936776,
+    "calls": 8557
   },
-  "review_limitations": [
-    "Two independent calls use the same foundation model; correlated review mistakes remain possible.",
-    "Machine-qualified is not human-certified or guaranteed solvable.",
-    "No tested agent answers are used to select cases.",
-    "Public pretrained-model contamination cannot be excluded.",
-    "All source text, hidden gold and checkpoints remain local-only."
-  ],
-  "machine_screening_passed_before_audit": 98,
-  "audit_required": true,
-  "machine_screening_split": {
-    "train": 62,
-    "test": 23,
-    "dev": 13
-  },
-  "qualified_split": {}
+  "limitations": [
+    "Downloaded documents, structurally screened groups and machine passes are separate counts.",
+    "Source judgments are public-corpus reproductions; original court authenticity is not live-verified.",
+    "MNBVC publisher reports corruption/restoration; character filtering cannot prove authenticity.",
+    "Related proceedings and public-model pretraining contamination can remain undetected.",
+    "Raw judgments, evidence, hidden answers and reviewer identities remain private local files.",
+    "No model answers have been used to select the curation cohort.",
+    "No formal benchmark or downstream accuracy claim is generated by this status script."
+  ]
 }

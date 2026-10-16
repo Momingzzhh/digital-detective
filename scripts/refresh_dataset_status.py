@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""Publish counts and costs, never case text or model self-certification."""
+from collections import Counter
+from datetime import datetime,timezone
+import hashlib
+import json
+from pathlib import Path
+import sys
+
+ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT))
+from app.store import initialize,budget_status
+from audit_case_groups import INPUTS
+from build_v3 import VERSION
+from build_oldbailey import VERSION as HISTORICAL_VERSION
+
+
+def main():
+    initialize();sources={};total=0
+    for name in INPUTS:
+        path=ROOT/'data/processed'/name
+        if not path.exists():continue
+        count=sum(1 for line in path.open() if line.strip())
+        sources[name]={'candidates':count,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()}
+        total+=count
+    preflight=ROOT/'data/processed/v3_preflight.jsonl'
+    rows=[json.loads(line) for line in preflight.open()] if preflight.exists() else []
+    versions={}
+    for directory in sorted((ROOT/'data/review').glob('v3_*')):
+        records=[json.loads(p.read_text()) for p in directory.glob('*.json')]
+        records=[r for r in records if 'case_id' in r and 'status' in r]
+        if records:
+            versions[directory.name]={'reviewed':len(records),
+                       'status_counts':dict(Counter(r['status'] for r in records))}
+    curation_path=ROOT/'data/curation_report.json'
+    curation=json.loads(curation_path.read_text()) if curation_path.exists() else {}
+    linkage_path=ROOT/'data/case_group_audit.json'
+    linkage=json.loads(linkage_path.read_text()) if linkage_path.exists() else {}
+    curated=curation.get('machine_curated_cases',0)
+    historical_source_path=ROOT/'data/oldbailey_source_audit.json'
+    historical_export_path=ROOT/'data/oldbailey_export_report.json'
+    historical_source=json.loads(historical_source_path.read_text()) if historical_source_path.exists() else {}
+    historical_export=json.loads(historical_export_path.read_text()) if historical_export_path.exists() else {}
+    historical_curation_path=ROOT/'data/oldbailey_curation_report.json'
+    historical_curation=json.loads(historical_curation_path.read_text()) if historical_curation_path.exists() else {}
+    historical_checkpoints=[json.loads(p.read_text()) for p in (ROOT/'data/review/oldbailey_v1').glob('oldbailey-*.json')]
+    historical_counts=Counter(r['status'] for r in historical_checkpoints if r.get('pipeline_version')==HISTORICAL_VERSION)
+    historical={'stratum':'england_historical_1834_1913',
+        'candidates':historical_source.get('counts',{}).get('structural_candidates',0),
+        'candidate_groups':historical_source.get('candidate_groups',0),
+        'machine_curated_cases':historical_export.get('machine_curated_cases',0),
+        'pipeline_version':HISTORICAL_VERSION,'machine_status_counts':dict(historical_counts),
+        'provider_blocked':historical_curation.get('provider_blocked',False),
+        'provider_error_code':historical_curation.get('provider_error_code'),
+        'split_counts':historical_export.get('split_counts',{}),'qualified':0,'accuracy_90_verified':False}
+    report={'generated_at':datetime.now(timezone.utc).isoformat(),
+            'status':f'本地来源候选{total:,}份，结构筛查{len(rows):,}组；当前版本机器暂通过并导出{curated}组，正式验收和90%盲测尚未完成',
+            'candidates':total,'candidate_sources':sources,
+            'pipeline_version':VERSION,'qualified':0,'human_reviewed':0,
+            'current_export_version':curation.get('source_version'),
+            'qualified_definition':'逐案完成来源、证据充分性、全部作案者、有效结局及独立分组核验；机器审查不计入',
+            'target':1000,'target_1000_complete':False,'accuracy_90_verified':False,
+            'v3_source_section_preflight':len(rows),
+            'v3_preflight_groups':len({r['group_id'] for r in rows}),
+            'preflight_source_counts':dict(Counter(r['source']['repository'] for r in rows)),
+            'machine_review_versions':versions,
+            'current_machine_curated_cases':curated,
+            'current_machine_curated_split':curation.get('split_counts',{}),
+            'separate_historical_stratum':historical,
+            'cross_source_linkage':linkage.get('counts',{}),'budget':budget_status(),
+            'limitations':['Downloaded documents, structurally screened groups and machine passes are separate counts.',
+                           'Source judgments are public-corpus reproductions; original court authenticity is not live-verified.',
+                           'MNBVC publisher reports corruption/restoration; character filtering cannot prove authenticity.',
+                           'Related proceedings and public-model pretraining contamination can remain undetected.',
+                           'Raw judgments, evidence, hidden answers and reviewer identities remain private local files.',
+                           'No model answers have been used to select the curation cohort.',
+                           'No formal benchmark or downstream accuracy claim is generated by this status script.']}
+    (ROOT/'data/dataset_report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+    print(json.dumps({k:report[k] for k in ('status','budget','qualified')},ensure_ascii=False,indent=2))
+
+
+if __name__=='__main__':main()

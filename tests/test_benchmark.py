@@ -35,3 +35,22 @@ def test_wilson_interval_does_not_claim_ninety_with_one_success():
     assert e.wilson(1,1)[0]<.9
     assert e.wilson(90,100)[0]<.9
     assert e.normalized(['盗窃罪',' 诈骗 '],True)=={'盗窃','诈骗'}
+
+
+def test_target_claim_requires_thousand_reviewed_groups_and_full_test():
+    from types import SimpleNamespace
+    e=module('evaluate')
+    args=SimpleNamespace(pilot=False,split='test',limit=None)
+    rows=[{'group_id':str(i),'status':'independently_verified','audit':{'human_reviewed':True}}
+          for i in range(1000)]
+    assert e.eligible_for_target_claim(rows,args,150)
+    rows[-1]['stratum']='england_historical_1834_1913'
+    assert not e.eligible_for_target_claim(rows,args,150)
+    rows[-1].pop('stratum')
+    assert not e.eligible_for_target_claim(rows[:-1],args,150)
+    assert not e.eligible_for_target_claim(rows,args,149)
+    rows[-1]['audit']['human_reviewed']=False
+    assert not e.eligible_for_target_claim(rows,args,150)
+    rows[-1]['audit']['human_reviewed']=True
+    args.limit=150
+    assert not e.eligible_for_target_claim(rows,args,150)
