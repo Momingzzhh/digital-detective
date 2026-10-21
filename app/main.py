@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 from .agent import analyze
 from .auth import hash_password, verify_password, session
 from .config import ROOT, settings
+from .local_model import available as local_available, adapter_path
 from .store import initialize, db, save_case, load_case, budget_status
 
 tasks = {}
@@ -38,6 +39,8 @@ async def lifespan(app):
 
 app = FastAPI(title='数字神探 · 研究工作台', lifespan=lifespan, docs_url=None, redoc_url=None)
 app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
+from .research import router as research_router
+app.include_router(research_router)
 
 
 @app.middleware('http')
@@ -61,6 +64,11 @@ async def protections(request, call_next):
 @app.get('/')
 def home():
     return FileResponse(ROOT / 'static/index.html')
+
+
+@app.get('/research')
+def research_home():
+    return FileResponse(ROOT / 'static/research.html')
 
 
 @app.get('/health')
@@ -122,9 +130,16 @@ def logout(response: Response, user=Depends(session)):
 def status(user=Depends(session)):
     cfg = settings()
     report = ROOT / 'data/dataset_report.json'
-    return {'model': cfg.get('QWEN_MODEL', 'qwen3.8-flash'), 'configured': bool(cfg.get('DASHSCOPE_API_KEY')),
+    five = ROOT / 'data/five_dimensions_report.json'
+    five_status = json.loads(five.read_text()) if five.exists() else None
+    if five_status:
+        from .research import records, approved
+        five_status['human_reviewed'] = sum(bool(approved(row)) for row in records())
+    return {'model': '本地Qwen3 4B' + (' · 已配置适配器' if adapter_path() else ' · 基座模型'),
+            'configured': local_available(), 'backend': 'local', 'external_api_enabled': False,
             'budget': budget_status(), 'limit': min(float(cfg.get('BUDGET_CNY', '500')), 500),
             'dataset': json.loads(report.read_text()) if report.exists() else {'qualified': 0, 'status': '案源核验中'},
+            'five_dimensions': five_status,
             'registration': cfg.get('ALLOW_REGISTRATION', 'true') == 'true'}
 
 
@@ -185,6 +200,8 @@ def delete_case(cid: str, user=Depends(session)):
 def message(cid: str, value: MessageInput, user=Depends(session)):
     case = owned(user, cid)
     assert_idle(cid)
+    if case.get('research'):
+        raise HTTPException(409, '验收会话请在五维复核页面释放原始证据；自由输入请新建普通案件。')
     if sum(len(s['text']) for s in case['sources']) + len(value.text) > 100000:
         raise HTTPException(413, '单案累计材料上限为 10 万字，请拆分案件。')
     case['messages'].append({'role': 'user', 'text': value.text, 'time': time.time()})
@@ -197,10 +214,21 @@ def message(cid: str, value: MessageInput, user=Depends(session)):
 async def start_analysis(cid: str, user=Depends(session)):
     case = owned(user, cid)
     assert_idle(cid)
-    if not settings().get('DASHSCOPE_API_KEY'):
-        raise HTTPException(503, '请在本机 .env 配置阿里云 API Key 后重试。')
-    if sum(not t.done() for t in tasks.values()) >= 2:
-        raise HTTPException(429, '已有两个分析任务运行，请稍后重试。')
+    if not local_available():
+        raise HTTPException(503, '请先下载并校验本地模型后重试。')
+    if sum(not t.done() for t in tasks.values()) >= 1:
+        raise HTTPException(429, '本地模型已有分析任务运行，请稍后重试。')
+    if case.get('research'):
+        from .research import model_binding, get_record, approved
+        if case['research']['model_binding'] != model_binding():
+            raise HTTPException(409, '验收会话绑定的模型已改变。')
+        row = get_record(case['research']['case_id'])
+        if case['research']['record_binding'] != row['record_binding'] or not approved(row):
+            raise HTTPException(409, '验收材料或人工复核状态已改变。')
+        if case['research']['analysis_attempts'] >= 12:
+            raise HTTPException(409, '验收每案最多12轮分析，请结束评分。')
+        case['research']['analysis_attempts'] += 1
+        save_case(user['user_id'], case)
     jobs[cid] = {'state': 'running', 'stage': '准备材料'}
 
     async def run():

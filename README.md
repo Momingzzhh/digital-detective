@@ -1,110 +1,94 @@
-# 数字神探 · Digital Detective
+# 数字神探 Digital Detective
 
-面向研究人员的中文案件分析工作台。输入或上传案件文字，agent 提取原文证据、选择核查工具、提出竞争假设、询问关键缺口，并在独立复核后给出暂定分析或“证据不足”。
+面向研究人员的中文刑事案件研究工作台。输入或上传文字材料，Agent从原文提取线索、核查证据、提出关键问题，并形成可引用依据的暂定结论或“证据不足”。
 
-**研究状态：系统实现不等于准确率达标。** 90% 是独立测试目标；没有完成且通过盲测时，不宣称达成。数据的下载数、候选数、机器审核数与人工审核数分别记录。
+**2026年10月21日起采用本地离线方案。外部模型API已停用。** 本轮目标为500+复杂刑案、五维标注、实际权重微调，首轮完整验证与独立测试的整案准确率门槛为70%。尚未达到的指标不会因代码完成或训练损失下降而宣称通过。
 
-## 本地运行
+## Mac离线运行
 
-需要 Python 3.12+。Mac Apple Silicon 可直接运行；推理由阿里云提供，不需要本地 GPU。
+当前实现优先支持Apple Silicon Mac，按24GB统一内存设计。Win11兼容尚未实现。MLX在普通Mac终端访问Metal GPU；容器内或受限沙箱可能不能访问GPU。
+
+一次联网准备：
 
 ```bash
 git clone https://github.com/Momingzzhh/digital-detective.git
 cd digital-detective
 python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.lock
+.venv/bin/python -m pip install -r requirements-mac.lock
 cp .env.example .env
 chmod 600 .env
-# 使用文本编辑器在 .env 填写 DASHSCOPE_API_KEY
-sh run.sh
+.venv/bin/python scripts/download_local_model.py
 ```
 
-打开 http://127.0.0.1:8765 ，首次注册一个本机账户。密钥只在服务器读取，不发给浏览器，不写入 Git。保存 `.env` 后下一次模型请求自动生效。
-
-功能：
-
-- 支持 TXT、Markdown、DOCX、有文字层的 PDF；单文件 10MB、提取 4 万字上限，单案累计 10 万字。
-- 账户登录、独立案件列表、持久化对话与补充材料、JSON 导出和删除。
-- 每条证据必须是来源材料的连续引文，记录来源与字符偏移；对不上原文的提取会被丢弃。
-- 有界工具循环：搜索证据、查看证据、选择冲突核对材料，然后形成分析并独立复核。
-- 展示证据、人物实体、结论之间的可点击关系图；展示竞争假设、反证和缺失信息。
-- 置信度仅为未校准的模型估计，不能代替实测准确率。复核仍可能犯错。
-
-## 模型与费用
-
-默认 `qwen3.8-flash`，北京百炼 OpenAI 兼容接口。2026-10-15 核对官方价格为输入 ¥0.8 / 百万 tokens，输出 ¥2.7 / 百万 tokens；见[官方模型说明](https://help.aliyun.com/zh/model-studio/qwen3-8-flash)。接口与价格可随供应商变动，变更前更新配置和核验。
-
-本项目没有训练基础模型。agent 的能力来自外部模型、工具和验证流程；不会把提示词编排称为“自主训练”。模型官方当前不支持该型号微调。
-
-SQLite 账本在请求前按 UTF-8 字节上界和输出上限预占预算，返回后以用量结算。异常请求保留预占，避免超时重复收费后漏记。默认和硬上限为 500 元。该控制只覆盖本项目账本，不覆盖同一云账号的其他程序；还需在百炼控制台设置账户预算。不要删除账本来重置额度。
-
-## 数据
-
-数据源与核验规则见 [docs/data_sources.md](docs/data_sources.md)，下载审计见 [data/source_audit.json](data/source_audit.json)。
-
-LeCaRD、LeCaRDv2衍生全文与MNBVC的裁判文书为候选案源，**不是现成的破案测试集**。文书事实段、标题、判决和“经审理查明”会直接泄露答案，不能直接传入被测 agent。
+此后断网也可启动，不自动安装或下载文件：
 
 ```bash
-.venv/bin/python scripts/fetch_data.py
-.venv/bin/python scripts/prepare_candidates.py
+sh run_offline.sh
 ```
 
-原始文书、加工后的证据、隐藏标签只在本地 `data/raw/`、`data/processed/`、`data/review/` 保存。公开仓库只包含下载和处理工具、审计及统计。用户提供的样例 JSONL 没有逐案来源证明，未计入真实案例数量。
+打开 http://127.0.0.1:8765 ，首次注册本机账户。无需任何模型API Key。准备阶段只下载公开文件；标注、训练、推理均使用本地权重，禁止云端回退。断网检查见[data/offline_smoke_report.json](data/offline_smoke_report.json)，它是软件机制测试，不计入真实案件数量或准确率。
 
-## 测试与部署
+基座采用Apache-2.0许可的[Qwen3 4B Instruct 2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507)及固定修订的[MLX四位转换](https://huggingface.co/mlx-community/Qwen3-4B-Instruct-2507-4bit)。模型文件逐一校验Git blob或LFS SHA-256，见[本地模型清单](data/local_model_manifest.json)。网页明确显示基座或已配置适配器，不能把基座推理冒充微调成果。
+
+## 五维复杂案件与实际训练
+
+完整要求、字段含义和复现顺序见[离线训练及验收规程](docs/local_training_protocol.md)，字段结构见[五维Schema](data/five_dimensions_schema.json)，实时阶段统计见[data/five_dimensions_report.json](data/five_dimensions_report.json)。
+
+计划冻结600个不同案件组，训练420、验证90、测试90，严格70/15/15。每案至少6条有效线索、3类证据，具有真实矛盾或多个待排查对象，且至少需要3层证据关联。标注证据层级、逻辑链、矛盾点、推理深度和对话轮次。来源、语义充分性与人工验收状态分别记录。
+
+训练集的多轮对话只能从原始材料释放证据，轮次标记为模拟；验证、测试和新案记录真实研究人员的交互，未发生时为null。训练变体包含证据顺序扰动、缺失证据时拒绝定论、合成提示注入及模拟证据追问；变体不增加真实案件数量，验证和测试案件禁止生成训练变体。
+
+```bash
+# 须先有来源材料和跨来源关联审计，案源获取见docs/data_sources.md
+.venv/bin/python scripts/prepare_five_dimensions.py
+.venv/bin/python scripts/annotate_five_dimensions_batch.py --limit 1980 --batch-size 4
+.venv/bin/python scripts/assemble_five_dimensions.py
+# 完整数据未准备好时，正式训练会被阻止
+.venv/bin/python scripts/train_local.py
+```
+
+QLoRA会实际更新适配器权重，记录参数、数据及权重哈希，检查学习后的LoRA B矩阵。超长训练样例不会静默截断；所有训练组必须有可用样例。小样本pilot只验证训练工程，不能进入正式验收。token级验证损失不等于整案准确率。
+
+2026-10-21已完成一次8个微批次、2次优化器更新的工程试训：56个LoRA B张量发生非零更新，记录峰值内存7.093GB。见[真实训练记录](data/latest_training_report.json)及[训练后断网检查](data/pilot_offline_smoke_report.json)。这是小样本pilot，尚无500+合格数据集、正式训练完成或70%整案准确率的证据。
+
+长任务可脱离当前终端续跑；Mac运行期间暂时阻止自动休眠，任务退出后解除。默认4案批次，实测8案批次发生Metal内存不足，见[资源边界记录](data/local_resource_probe.json)。
+
+```bash
+.venv/bin/python scripts/run_local_pipeline.py --launch
+.venv/bin/python scripts/run_local_pipeline.py --status
+# 如需停止，等当前标注批次保存后退出
+.venv/bin/python scripts/run_local_pipeline.py --stop
+```
+
+流水线先续标、导出并检查600案配额；不足时保留失败原因，不降低门槛补数。完整材料导出后，须先由研究人员核验全部验证/测试来源，再次续跑才会进行正式训练及断网检查。最终真人验证和独立测试仍由网页完成。日志保存在本机runtime/local_pipeline.log。
+
+## 人工复核与独立验收
+
+在.env设置RESEARCH_REVIEW_ENABLED=true，登录后打开 http://127.0.0.1:8765/research 。该页面向复核人员显示原文、隐藏答案及五维标注，至少验证与测试集合必须逐案人工核验；acting Agent只收到研究人员选择释放的原始证据。
+
+正式训练后将.env中的LOCAL_ADAPTER_PATH设置为run.json记录的适配器目录。完成真人验证集交互、评分后运行：
+
+```bash
+.venv/bin/python scripts/summarize_acceptance.py
+```
+
+完整验证集达到70%后才开启测试集。首次测试冻结模型和数据版本；同一测试案不选择多次运行中的最好结果。测试集打开后禁止继续同周期训练调参。拒答、失败、超时及未完成案件保留在分母，报告Wilson 95%区间。只有数据人工核验、实际权重训练、完整验证与独立测试均通过，才能标记训练完成。
+
+## 功能与使用边界
+
+- TXT、Markdown、DOCX及有文字层的PDF上传；本机账户和案件隔离、持续对话、导出与删除。
+- 原文连续引句及字符偏移检查；证据工具、矛盾核对、竞争解释、关系图及待补线索。
+- 仅处理文字证据，不鉴定原始指纹、DNA或视频，不连接警务数据库。
+- 模型自检可能产生相关错误，主观置信度不是已校准概率；70%是有限测试指标，不是对任意新案的保证。
+- 公开旧案预训练污染和漏检的关联案件仍可能存在，需要在研究报告中披露。
+
+原始文书、证据、答案、人工审核身份和权重保留本地忽略目录。公开仓库包含代码、配置、版本清单与汇总；代码MIT许可不授予第三方材料再分发权。案源、许可及历史审计见[数据来源](docs/data_sources.md)、[数据集卡](docs/dataset_card.md)和[质量审计](docs/quality_audit.md)。旧版云端1000案90%流程及404案包保留为[历史记录](docs/legacy_readme_20261016.md)，不并入本轮达标统计。旧账本保留待对账，不新增云端预占。
+
+## 工程验证
 
 ```bash
 .venv/bin/python -m pytest -q
-# 真实 API 小额联通测试，虚构场景不计入 benchmark：
-.venv/bin/python scripts/smoke_model.py
-# 可选 Docker 本机部署：
-docker compose up --build -d
+.venv/bin/python scripts/smoke_offline.py
 ```
 
-Docker 默认只映射本机端口。当前交付为本地运行及部署配置，不包含公网托管。其他研究人员可以 clone 后用自己的密钥与本机账户运行。若自行部署公网，应使用 HTTPS 反向代理，将 `COOKIE_SECURE=true`，完成账户创建后关闭 `ALLOW_REGISTRATION`，并配置网关访问控制和速率限制。请保持单个应用进程，后台任务和限流状态保存在内存中；SQLite 数据落盘，重启中断的任务可由用户重试。
-
-## 研究边界
-
-第一版处理文字证据，不鉴定原始指纹、DNA 或监控视频，不连接警务数据库。用户输入和模型输出均需复核，系统允许拒答。展示的是可核验的证据摘要与工具记录，不是模型私密思维链。
-
-独立测试须按同案分组、去重并隐藏罪名/作案者/真实结局。罪名与作案者采用集合完全匹配；经过还原报告关键事实覆盖以及整案全部正确率。拒答与失败留在分母中。公开旧案可能已存在于基础模型训练数据，不能宣称已经排除预训练污染。
-
-## 代码结构
-
-`app/` 后端、模型适配与 agent；`static/` 中文网页；`scripts/` 数据获取与实验；`tests/` 机制和隔离测试；`data/` 来源审计；`runtime/` 私有账户、案件、调用账本。
-
-代码采用 MIT 许可。第三方数据遵循各自来源条款，代码许可不授予案件材料的重新分发权。
-
-## 数据工作状态（2026-10-16）
-
-本机来源候选已扩展到 **47,558份**，v3.7结构筛查通过5,056个初步分组。新增可访问的MTEB LeCaRDv2全文及MNBVC裁判文书分片，下载均固定版本并校验SHA-256。候选、结构筛查、机器审查与正式验收分别统计；最新数量和费用见[dataset_report.json](data/dataset_report.json)。
-
-**1000个线索充分的独立案件尚未完成正式验收，90%准确率尚未验证。** MNBVC作者披露过乱码清洗还原，原文一致性仍须核查。跨来源关联检查会先隔离已知跨集合冲突，其他同组最多保留一例。未检出的关联和预训练污染仍可能存在。
-
-v3.7从带具体内容的证言、供述、勘验、鉴定等原始证据条目提取连续引文；不静默截断长供述。Flash只选择原文句子ID作经过标签，Max独立检查证据、结局泄漏、作案者范围、罪名、经过与替代解释。同系列模型审查可能有相关错误，机器通过不等于已验收。
-
-```bash
-# 下载、导入、跨来源检查的完整顺序见 docs/data_sources.md
-.venv/bin/python scripts/audit_case_groups.py
-.venv/bin/python scripts/build_v3.py --preflight
-# 有费用；按固定分组哈希选1000个待审样本，不按agent答题选案
-.venv/bin/python scripts/build_v3.py --limit 1000 --selection hash --concurrency 8
-.venv/bin/python scripts/export_review_bundle.py --source-version v3_8
-.venv/bin/python scripts/refresh_dataset_status.py
-```
-
-可见证据和隐藏结局分别导出到本地 `data/processed/review_bundle/v3_7/visible/` 与 `hidden/`，并按train/dev/test分文件。再次校验来源与句子偏移；公开仅发布[导出统计和哈希](data/curation_report.json)。文件明确未验收，不自动生成正式benchmark。
-
-完整[案源与复现说明](docs/data_sources.md)记录了使用与拒绝的来源。旧v2机器通过98例，但固定抽查10例原样通过0例，已隔离；详见[质量审计](docs/quality_audit.md)。一次开发期真实案件软件示范的整案判定未通过，只有1例，不能推算准确率；见[示范报告](reports/pilot-full.json)。
-
-正式冻结采用[独立审核规程](docs/human_review_protocol.md)：双人逐项核验，审核单绑定来源、证据、隐藏标签及分组划分；程序再次验证偏移和关联冲突，满1000个独立组才生成私有正式基准。双人机制是项目质量控制要求，不代表已有人员完成审核。当前人工审核为0，不以模型审查冒充人工。
-
-正式评测要求至少1000个已核验独立组、完整运行不少于150个隐藏测试案件，分别报告完整证据与渐进交互结果；错误、超时和拒答计入分母。只有整案全部正确率实际达到90%才触发达标声明。当前没有训练或微调产物，仍需完成数据核验和独立效果验收。
-
-英国历史庭审已作为独立分组加入：全部197,751份记录已下载，1834—1913年初筛留下9,411份候选、7,252个姓名组。中英证言、起诉裁决及翻译审计分开保存，详见[历史案源说明](docs/data_sources.md#英国历史案件独立分组)。单一被告有罪案件存在明显基线偏差，不以历史结果代替现代案件验证。
-
-[数据集卡](docs/dataset_card.md)说明两类研究材料的字段、划分、许可和局限。历史构建v1.5由Max进行翻译及质检，Flash选择句子；含承认表述的候选优先级不代表已通过审核。
-
-当前已导出170组现代中文、234组英国历史中文机器整理材料，分别保存；历史分组另提供可直接上传网页的TXT。百炼账户出现`Arrearage`，扩充任务已保存断点，等待账户恢复及预占对账。详见[当前处理说明](docs/data_sources.md#当前账户阻塞与断点恢复2026-10-16)。这些数量不等于正式验收数量，1000案及90%目标仍未达成。
-
-按用户要求暂停新增付费调用后，现有404案已整理为本地研究包：两组均提供逐案中文TXT、按原划分保存的可见JSONL，以及隔离的原始记录、隐藏答案和机器审核记录。公开[研究包汇总](data/research_bundle_report.json)仅含数量及哈希；本地包和案件正文不推送GitHub。复现命令及使用边界见[现有材料整理说明](docs/existing_materials.md)。
+Linux CI验证与数据/账户隔离有关的机制，不验证Mac GPU性能或真实案件准确率。旧Docker配置不提供本轮Mac Metal推理环境。当前交付为本地系统与GitHub源码，未提供公网托管服务。

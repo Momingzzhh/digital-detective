@@ -1,0 +1,181 @@
+{
+  "$defs": {
+    "Contradiction": {
+      "additionalProperties": false,
+      "properties": {
+        "left_id": {
+          "title": "Left Id",
+          "type": "string"
+        },
+        "right_id": {
+          "title": "Right Id",
+          "type": "string"
+        },
+        "left_quote": {
+          "title": "Left Quote",
+          "type": "string"
+        },
+        "right_quote": {
+          "title": "Right Quote",
+          "type": "string"
+        },
+        "issue": {
+          "title": "Issue",
+          "type": "string"
+        },
+        "resolution": {
+          "title": "Resolution",
+          "type": "string"
+        },
+        "resolution_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Resolution Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "left_id",
+        "right_id",
+        "left_quote",
+        "right_quote",
+        "issue",
+        "resolution",
+        "resolution_evidence_ids"
+      ],
+      "title": "Contradiction",
+      "type": "object"
+    },
+    "Step": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "enum": [
+            "L1",
+            "L2",
+            "L3",
+            "L4",
+            "L5"
+          ],
+          "title": "Id",
+          "type": "string"
+        },
+        "claim": {
+          "title": "Claim",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "depends_on_steps": {
+          "items": {
+            "enum": [
+              "L1",
+              "L2",
+              "L3",
+              "L4",
+              "L5"
+            ],
+            "type": "string"
+          },
+          "title": "Depends On Steps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "claim",
+        "evidence_ids",
+        "depends_on_steps"
+      ],
+      "title": "Step",
+      "type": "object"
+    },
+    "Tier": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "tier": {
+          "enum": [
+            "直接观察或原始记录",
+            "间接印证",
+            "转述或背景"
+          ],
+          "title": "Tier",
+          "type": "string"
+        },
+        "reason": {
+          "default": "",
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "tier"
+      ],
+      "title": "Tier",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "evidence_hierarchy": {
+      "items": {
+        "$ref": "#/$defs/Tier"
+      },
+      "title": "Evidence Hierarchy",
+      "type": "array"
+    },
+    "logic_chain": {
+      "items": {
+        "$ref": "#/$defs/Step"
+      },
+      "maxItems": 5,
+      "minItems": 3,
+      "title": "Logic Chain",
+      "type": "array"
+    },
+    "contradictions": {
+      "items": {
+        "$ref": "#/$defs/Contradiction"
+      },
+      "title": "Contradictions",
+      "type": "array"
+    },
+    "candidate_names": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Candidate Names",
+      "type": "array"
+    },
+    "event_sentence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 10,
+      "minItems": 3,
+      "title": "Event Sentence Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "evidence_hierarchy",
+    "logic_chain",
+    "contradictions",
+    "candidate_names",
+    "event_sentence_ids"
+  ],
+  "title": "FiveDimensions",
+  "type": "object"
+}

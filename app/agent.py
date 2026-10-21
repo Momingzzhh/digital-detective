@@ -78,6 +78,12 @@ def graph_of(evidence, result):
     return {'nodes': nodes, 'edges': edges}
 
 
+def model_evidence(evidence):
+    # Keep each original quote exactly once. Summaries and extracted entities
+    # are presentation aids, not an additional independent source of evidence.
+    return [{'id': e['id'], 'kind': e['kind'], 'text': e['quote']} for e in evidence]
+
+
 async def analyze(case, stage=None):
     async def progress(name):
         if stage:
@@ -93,7 +99,15 @@ async def analyze(case, stage=None):
         source['extracted'] = True
         trace.append({'action': 'extract', 'summary': f'提取 {len(new)} 条有原文定位的证据；丢弃 {len(rejected)} 条无法对齐的提取。'})
     case['evidence'] = evidence
-    context = {'evidence': evidence, 'history': case.get('messages', [])[-12:], 'previous': case.get('analysis'), 'observations': []}
+    history = case.get('messages', [])[-12:]
+    if case.get('research', {}).get('source_only'):
+        # Release messages repeat the exact quotes already in evidence. Only
+        # previous agent questions are needed to avoid asking them again.
+        history = [m for m in history if m['role'] == 'assistant']
+    previous = case.get('analysis') or {}
+    context = {'evidence': model_evidence(evidence), 'history': history,
+        'previous': {k: previous[k] for k in ('status','questions','missing_information') if k in previous},
+        'observations': []}
     await progress('规划证据核查')
     for _ in range(3):
         decision = await structured(SYSTEM + '\n选择下一步工具。search_evidence 按关键词找线索；inspect_evidence 查看指定证据；check_conflicts 汇总需核对的证据；finish 表示已可形成暂定分析。不重复同一动作。',
@@ -108,13 +122,16 @@ async def analyze(case, stage=None):
         else:
             selected = [e for e in evidence if e['id'] in decision.evidence_ids] or evidence[:20]
             observation = {'instruction': '逐项检查下列引文的主体、时间、位置和否定关系，不将缺失等同矛盾。', 'evidence': selected}
-        context['observations'].append({'tool': decision.action, 'result': observation})
+        # All full quotes remain in context.evidence. Tool selections reference
+        # those IDs instead of multiplying the same material in a local window.
+        selected = observation['evidence'] if isinstance(observation, dict) else observation
+        context['observations'].append({'tool': decision.action, 'evidence_ids': [e['id'] for e in selected]})
     await progress('分析假设、矛盾与待补线索')
     result = await structured(SYSTEM + '\n输出案件分析。findings 和 reconstruction 每一项都必须引用实际证据 ID。列出竞争假设与反证。questions 优先提出一个最关键的问题，不重复已回答的问题。没有依据的罪名/作案者留空。',
-                              context, Conclusion, 'reason', 6500)
+                              context, Conclusion, 'reason', 4096)
     await progress('独立复核结论依据')
     review = await structured(SYSTEM + '\n独立核查候选分析：每个罪名、作案者和经过是否被引用原文支持？是否把指控当认定？是否遗漏严重反证？只有全部有充分支持时 supported 才为 true。',
-                              {'evidence': evidence, 'candidate': result.model_dump()}, Review, 'verify', 2200)
+                              {'evidence': model_evidence(evidence), 'candidate': result.model_dump()}, Review, 'verify', 2200)
     problems = citations_valid(result, evidence) + review.unsupported_claims
     if not review.supported or problems:
         result.status = '证据不足'

@@ -21,16 +21,11 @@ async function refreshStatus() {
   statusData=await api('/status'); $('#model-label').textContent=statusData.model; $('#model-dot').classList.toggle('ready',statusData.configured);
   const d=$('#dataset-content');d.replaceChildren(el('h2','数据状态'));
   const ds=statusData.dataset;
-  for(const text of [ds.status||'数据核验中',`符合完整验收条件的案件：${ds.qualified||0}`,`目标：至少 1000 个真实案件，关键证据全部可追溯`, `本机模型调用已记账：¥${statusData.budget.cost.toFixed(3)}；预占：¥${statusData.budget.reserved.toFixed(3)}；上限：¥${statusData.limit}`]) d.append(el('p',text));
-  if(ds.candidates) d.append(el('p',`原始去重候选：${ds.candidates}；候选数不等于合格数。`));
-  const historical=ds.separate_historical_stratum;
-  if(historical) {
-    d.append(el('h3','英国历史案件 · 独立分组'));
-    d.append(el('p',`1834—1913年结构候选：${historical.candidates}；姓名分组：${historical.candidate_groups}；已核对来源并导出的中文机器材料：${historical.machine_curated_cases}。均待独立复核。`));
-    d.append(el('p','历史庭审的原始类别和裁决单独保存。当前单一被告有罪案件有明显基线偏差，不能用其成绩代表现代案件能力。'));
-    if(historical.provider_blocked) d.append(el('p',`历史扩充任务已保存进度，等待百炼账户恢复可用额度（${historical.provider_error_code||'账户受限'}）。预占费用须对账，不能当作实际支出。`));
-  }
-  d.append(el('p','账本只统计本项目通过此实例发出的请求。云账号的其他调用及价格变化请在百炼控制台核对。'));
+  const f=statusData.five_dimensions;
+  for(const text of ['推理方式：本地离线模型；外部模型API已停用。', `五维复杂案件目标：600案，训练420／验证90／测试90；首轮整案准确率目标70%。`, `机器标注材料：${f?.machine_annotated||0}；人工复核通过：${f?.human_reviewed||0}；整体验收：${f?.training_complete?'已通过':'未完成'}。`, '候选数、机器标注数、人工复核数和验收成绩分别记录。']) d.append(el('p',text));
+  if(f) d.append(el('p',`当前结构候选：${f.pool_cases||0}；数据集完整导出：${f.dataset_target_assembled?'是':'否'}；验证集通过：${f.validation_passed?'是':'否'}。`));
+  d.append(el('p','历史分组与旧版1000案90%目标记录作为历史实验保留，不并入本轮复杂刑案评测。'));
+
 }
 function empty(node, text) { node.replaceChildren(); const d=el('div',undefined,'empty');d.append(el('div','◇','empty-symbol'),el('p',text));node.append(d); }
 function refs(parent, ids) { for(const id of ids) {const b=el('button',id,'citation'); b.onclick=()=>{tab('evidence'); const n=document.getElementById(id); n?.scrollIntoView({behavior:'smooth',block:'center'});};parent.append(b);} }

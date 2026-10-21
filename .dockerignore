@@ -7,3 +7,5 @@ data/processed
 data/review
 __pycache__
 .pytest_cache
+models
+artifacts

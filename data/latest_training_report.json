@@ -1,0 +1,38 @@
+{
+  "run_id": "20261021T151617Z",
+  "dataset_sha256": "598d99382f7b463d56d3c2f296f4651dd694d9e445e12146bdbe008add78ac86",
+  "dataset_binding": "e228276057d5af23a413111797f3497b2f3c805b4a2c2fd2b52adce822cdecfa",
+  "base_manifest_binding": "c8d59f8fef532011156c61f60f511ad185907a2547e3977ee43ee21db980d644",
+  "model_path": "models/qwen3-4b-instruct-2507-4bit",
+  "pilot": true,
+  "train_groups": 13,
+  "train_examples": 20,
+  "validation_kind": "heldout_dev_token_loss_not_accuracy",
+  "iters": 8,
+  "minimum_iters_for_full_example_coverage": 20,
+  "boundary_examples_per_variant": 1,
+  "excluded_overlength_examples": [],
+  "excluded_overlength_dev": [],
+  "test_examples_in_training_directory": 0,
+  "actual_weight_update_verified": true,
+  "training_complete": false,
+  "validation_accuracy_verified": false,
+  "test_accuracy_verified": false,
+  "config_sha256": "88c68de000bdef8a984638e99239dd8d523b578e558c2fc0c45169d5ad6b498c",
+  "nonzero_lora_b_tensors": 56,
+  "adapter_sha256": "ba3fe40b68f9d22dcd9eb17de7912e0ebb460e0295b4f4d8559c5ffadf7c94ba",
+  "adapter_path": "artifacts/training/20261021T151617Z/adapters",
+  "observed_peak_memory_gb": 7.093,
+  "observed_validation_token_losses": [
+    {
+      "micro_iteration": 1,
+      "token_loss": 0.735
+    },
+    {
+      "micro_iteration": 8,
+      "token_loss": 0.723
+    }
+  ],
+  "completed_micro_iterations": 8,
+  "optimizer_updates": 2
+}

@@ -9,7 +9,7 @@
   <button class="nav-item" id="dataset-nav"><span>▤</span> 数据与评测</button>
   <div class="recent-heading"><span class="nav-label">最近案件</span><span id="case-count">0</span></div>
   <nav id="case-list" aria-label="案件列表"></nav>
-  <div class="sidebar-bottom"><div class="model-status"><i id="model-dot"></i><span id="model-label">Qwen3.8-Flash</span></div><p>北京百炼 · 本地工作空间</p><div class="account"><span class="avatar">研</span><span id="username">研究人员</span><button id="logout" aria-label="退出登录">↪</button></div></div>
+  <div class="sidebar-bottom"><div class="model-status"><i id="model-dot"></i><span id="model-label">本地 Qwen3 4B</span></div><p>离线推理 · 本地工作空间</p><div class="account"><span class="avatar">研</span><span id="username">研究人员</span><button id="logout" aria-label="退出登录">↪</button></div></div>
 </aside>
 <main>
   <header><div class="breadcrumb">研究空间 <span>/</span> 案件工作台</div><div class="header-right"><span class="local-label">● 本地运行</span><button id="help" class="plain">使用说明 ↗</button></div></header>
@@ -22,7 +22,7 @@
       <label for="case-title">案件名称</label><input id="case-title" required maxlength="120" placeholder="为这次研究起一个名称">
       <label for="case-text">已知案情与线索</label><textarea id="case-text" required minlength="5" maxlength="40000" rows="7" placeholder="描述案件背景、时间地点、已知人物和现有证据。未知或无法取得的线索请直接说明。"></textarea>
       <div class="form-footer"><label class="upload" for="case-file">↥ 导入材料 <small>TXT / DOCX / PDF</small></label><input type="file" id="case-file" accept=".txt,.md,.docx,.pdf" hidden><button class="primary" type="submit">创建研究案件 <span>↗</span></button></div>
-      <div class="fineprint">材料保存在本机；点击分析后，案件文字将发送至你配置的阿里云模型。</div>
+      <div class="fineprint">材料及推理均在本机完成，不调用外部模型API。</div>
     </form>
     <div class="workflow"><div><b>01</b><span>整理证据<small>每条线索定位到原文</small></span></div><div><b>02</b><span>交互核查<small>追问缺口，核对矛盾</small></span></div><div><b>03</b><span>形成分析<small>展示依据与未解问题</small></span></div></div>
   </section>
@@ -34,7 +34,7 @@
       <div class="tab-body" id="tab-overview"></div><div class="tab-body" id="tab-evidence" hidden></div><div class="tab-body" id="tab-graph" hidden><div class="graph-key"><span>● 证据</span><span>● 实体</span><span>● 分析</span></div><svg id="evidence-graph" viewBox="0 0 760 560" role="img" aria-label="证据与实体关系图"></svg><p id="graph-detail">点击节点查看原文或依据。可滚动浏览图谱。</p></div><div class="tab-body" id="tab-conclusion" hidden></div>
     </div><aside class="conversation"><div class="conversation-title"><span class="agent-icon">◈</span><div><h2>案情分析助手</h2><p>核对线索 · 主动追问</p></div></div><div id="messages" aria-live="polite"></div><div id="questions"></div><form id="message-form"><label for="message" class="sr-only">补充线索或回答问题</label><textarea id="message" rows="3" placeholder="回答问题、补充证据，或提出质疑…" required maxlength="20000"></textarea><div class="message-actions"><span>未知线索可回答“不清楚”</span><button class="primary" type="submit">发送 ↗</button></div></form><button id="analyze" class="secondary full">开始分析现有材料</button></aside></div>
   </section>
-  <section id="dataset" hidden><div class="eyebrow">RESEARCH QUALITY</div><h1>数据与评测</h1><p class="intro">真实案源、证据可追溯与独立测试，分别核验。</p><div id="dataset-content" class="new-panel"></div><div class="new-panel"><h2>评测口径</h2><p>罪名准确率：预测罪名集合与隐藏标签完全一致的案件比例。</p><p>作案者识别：预测人物集合与隐藏标签完全一致。经过还原须按已核验的关键事实逐项评分，并另报整案完全正确率。</p><p>所有拒答、失败与超时均保留在分母中。置信度不是准确率。未运行独立测试前，不宣称达到 90%。</p></div></section>
+  <section id="dataset" hidden><div class="eyebrow">RESEARCH QUALITY</div><h1>数据与评测</h1><p class="intro">真实案源、证据可追溯与独立测试，分别核验。</p><p><a href="/research">进入五维标注复核与真人验收</a></p><div id="dataset-content" class="new-panel"></div><div class="new-panel"><h2>评测口径</h2><p>罪名准确率：预测罪名集合与隐藏标签完全一致的案件比例。</p><p>作案者识别：预测人物集合与隐藏标签完全一致。经过还原须按已核验的关键事实逐项评分，并另报整案完全正确率。</p><p>所有拒答、失败与超时均保留在分母中。置信度不是准确率。首轮目标为整案准确率70%；完整独立验收通过前不宣称达标。</p></div></section>
   <footer><span>数字神探 / 研究工作台</span><span>证据可溯源 · 分析可复核</span></footer>
 </main>
 <dialog id="auth-dialog"><form id="auth-form"><div class="brand-icon">◈</div><h2>进入研究工作空间</h2><p>创建本机账户，独立保存你的案件与分析。</p><label for="auth-name">用户名</label><input id="auth-name" autocomplete="username" required minlength="2" maxlength="60"><label for="auth-password">密码（至少 10 位）</label><input id="auth-password" type="password" autocomplete="current-password" minlength="10" maxlength="200" required><p id="auth-error" role="alert"></p><button type="submit" class="primary full">登录</button><button type="button" id="register" class="secondary full">首次使用：注册并登录</button></form></dialog>

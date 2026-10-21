@@ -1,0 +1,18 @@
+{
+  "recorded_at": "2026-10-21T15:35:25.231389+00:00",
+  "model": "Qwen3-4B-Instruct-2507-4bit",
+  "inference_allocation_limit_gib": 17,
+  "annotation_batch_4": {
+    "completed_previously": true,
+    "observed_peak_mlx_memory_gb": 11.529032052
+  },
+  "annotation_batch_8": {
+    "completed": false,
+    "elapsed_generation_attempt_seconds": 444.04,
+    "failure": "Metal command buffer Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory)",
+    "failed_outputs_counted_as_qualified": 0
+  },
+  "default_annotation_batch_size": 4,
+  "fallback": "On a recorded Metal insufficient-memory failure, retry at half batch size; never relax source or complexity validation.",
+  "accuracy_claim": false
+}

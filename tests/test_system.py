@@ -12,6 +12,7 @@ from app.store import initialize, reserve, settle, budget_status
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv('RUNTIME_DIR', str(tmp_path))
     monkeypatch.setenv('DASHSCOPE_API_KEY', '')
+    monkeypatch.setenv('LOCAL_MODEL_PATH',str(tmp_path/'missing-local-model'))
     with TestClient(app) as c:
         yield c
 
@@ -55,23 +56,28 @@ def test_budget_reserves_before_request(client):
     assert budget_status()['reserved']==0
 
 
-def test_provider_denial_is_typed_and_keeps_unreconciled_reservation(tmp_path,monkeypatch):
-    import httpx
+def test_offline_model_does_not_reserve_or_spend_cloud_budget(tmp_path,monkeypatch):
     monkeypatch.setenv('RUNTIME_DIR',str(tmp_path));initialize()
-    monkeypatch.setattr(llm,'settings',lambda:{'DASHSCOPE_API_KEY':'synthetic-test-key'})
-    class FakeClient:
-        def __init__(self,**kwargs):pass
-        async def __aenter__(self):return self
-        async def __aexit__(self,*args):pass
-        async def post(self,*args,**kwargs):
-            return httpx.Response(400,headers={'x-request-id':'test-request'},
-                json={'error':{'code':'Arrearage','message':'sensitive-echo-must-not-be-returned'}})
-    monkeypatch.setattr(llm.httpx,'AsyncClient',FakeClient)
-    with pytest.raises(llm.ProviderAccessError) as info:
-        asyncio.run(llm.structured('test',{},Review,'test',100))
-    assert info.value.code=='Arrearage' and info.value.request_id=='test-request'
-    assert 'sensitive-echo' not in str(info.value) and 'synthetic-test-key' not in str(info.value)
-    assert budget_status()['reserved']>0 and budget_status()['cost']==0
+    monkeypatch.setattr(llm,'settings',lambda:{'MODEL_BACKEND':'local','DASHSCOPE_API_KEY':'synthetic-test-key'})
+    calls=[]
+    def complete(messages,max_tokens,schema):
+        calls.append(messages)
+        return json.dumps({'supported':True,'unsupported_claims':[],'unresolved_issues':[]})
+    monkeypatch.setattr(llm,'complete',complete)
+    before=budget_status()
+    result=asyncio.run(llm.structured('test',{},Review,'test',100))
+    assert result.supported and len(calls)==1
+    assert 'synthetic-test-key' not in str(calls)
+    assert budget_status()==before
+
+
+def test_cloud_backend_and_legacy_model_override_cannot_make_requests(monkeypatch):
+    def forbidden(*args):raise AssertionError('Must not call any model')
+    monkeypatch.setattr(llm,'complete',forbidden)
+    monkeypatch.setattr(llm,'settings',lambda:{'MODEL_BACKEND':'cloud'})
+    with pytest.raises(llm.ModelError):asyncio.run(llm.structured('test',{},Review,'test'))
+    monkeypatch.setattr(llm,'settings',lambda:{'MODEL_BACKEND':'local'})
+    with pytest.raises(llm.ModelError):asyncio.run(llm.structured('test',{},Review,'test',model_override='qwen3.8-max'))
 
 
 def sample_result():
@@ -105,6 +111,26 @@ def test_independent_review_downgrades_conclusion(monkeypatch):
     assert c['analysis']['status']=='证据不足'
     assert c['analysis']['perpetrators']==[] and c['analysis']['charges']==[]
     assert c['analysis']['confidence']<=.49
+
+
+def test_source_bound_tool_context_preserves_quotes_without_copying_them(monkeypatch):
+    evidence=[{'id':'E1','kind':'证言','quote':'唯一原文：证人称没有看清面部。',
+               'summary':'展示摘要不作为第二来源','entities':[]}]
+    seen=[]
+    async def fake(system,payload,schema,*args):
+        if schema is Decision:return Decision(action='inspect_evidence',evidence_ids=['E1'],purpose='核对否定陈述')
+        if schema is Conclusion:
+            seen.append(json.loads(json.dumps(payload)))
+            return sample_result()
+        if schema is Review:return Review(supported=False,unsupported_claims=[],unresolved_issues=[])
+        raise AssertionError(schema)
+    monkeypatch.setattr(agent,'structured',fake)
+    asyncio.run(agent.analyze({'sources':[],'evidence':evidence,
+        'research':{'source_only':True},'messages':[{'role':'user','text':evidence[0]['quote']}]}))
+    payload=seen[0]
+    assert json.dumps(payload,ensure_ascii=False).count(evidence[0]['quote'])==1
+    assert payload['evidence'][0]['text']==evidence[0]['quote']
+    assert all(o['evidence_ids']==['E1'] for o in payload['observations'])
 
 
 def test_no_secret_in_status(client):

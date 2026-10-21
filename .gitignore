@@ -12,3 +12,6 @@ data/review/
 .DS_Store
 *.zip
 *.tar.gz
+models/
+artifacts/
+.training-venv/
