@@ -10,6 +10,8 @@ from app.store import initialize, reserve, settle, budget_status
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
+    # Separate test applications must not inherit another fixture's rate window.
+    monkeypatch.setattr('app.main.login_attempts', {})
     monkeypatch.setenv('RUNTIME_DIR', str(tmp_path))
     monkeypatch.setenv('DASHSCOPE_API_KEY', '')
     monkeypatch.setenv('LOCAL_MODEL_PATH',str(tmp_path/'missing-local-model'))
@@ -98,6 +100,18 @@ def test_exact_quotes_reject_hallucinations(monkeypatch):
 def test_unknown_citations_and_unsupported_findings_rejected():
     r=sample_result()
     assert agent.citations_valid(r,[])
+
+
+def test_roles_require_source_identity_and_consistent_perpetrator_set():
+    from app.models import ParticipantFinding,Finding
+    r=sample_result();r.findings=[Finding(claim='合成机制测试',evidence_ids=['E1'])]
+    r.participants=[ParticipantFinding(name='甲',participation='直接实施',role='仅为合成测试',evidence_ids=['E1'])]
+    ev=[{'id':'E1','quote':'甲与乙出现在合成测试材料中。'}]
+    assert not agent.citations_valid(r,ev)
+    r.participants[0].name='丙'
+    assert agent.citations_valid(r,ev)
+    r.participants[0].name='甲';r.participants[0].participation='无法确认'
+    assert agent.citations_valid(r,ev)
 
 
 def test_independent_review_downgrades_conclusion(monkeypatch):

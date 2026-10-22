@@ -26,7 +26,7 @@ chmod 600 .env
 sh run_offline.sh
 ```
 
-打开 http://127.0.0.1:8765 ，首次注册本机账户。无需任何模型API Key。准备阶段只下载公开文件；标注、训练、推理均使用本地权重，禁止云端回退。断网检查见[data/offline_smoke_report.json](data/offline_smoke_report.json)，它是软件机制测试，不计入真实案件数量或准确率。
+打开 http://127.0.0.1:8765 ，首次注册本机账户。无需任何模型API Key。准备阶段只下载公开文件；标注、训练、推理均使用本地权重，禁止云端回退。断网检查见[data/five_dimensions_v2_offline_smoke.json](data/five_dimensions_v2_offline_smoke.json)，它是软件机制测试，不计入真实案件数量或准确率。
 
 基座采用Apache-2.0许可的[Qwen3 4B Instruct 2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507)及固定修订的[MLX四位转换](https://huggingface.co/mlx-community/Qwen3-4B-Instruct-2507-4bit)。模型文件逐一校验Git blob或LFS SHA-256，见[本地模型清单](data/local_model_manifest.json)。网页明确显示基座或已配置适配器，不能把基座推理冒充微调成果。
 
@@ -34,14 +34,20 @@ sh run_offline.sh
 
 完整要求、字段含义和复现顺序见[离线训练及验收规程](docs/local_training_protocol.md)，字段结构见[五维Schema](data/five_dimensions_schema.json)，实时阶段统计见[data/five_dimensions_report.json](data/five_dimensions_report.json)。
 
-计划冻结600个不同案件组，训练420、验证90、测试90，严格70/15/15。每案至少6条有效线索、3类证据，具有真实矛盾或多个待排查对象，且至少需要3层证据关联。标注证据层级、逻辑链、矛盾点、推理深度和对话轮次。来源、语义充分性与人工验收状态分别记录。
+计划冻结600个不同案件组，训练420、验证90、测试90，严格70/15/15。当前新版结构候选池为1,999组；候选不等于合格案例。每案至少6条有效线索、3类证据，具有真实矛盾或多个待排查对象，且至少需要3层证据关联。标注证据层级、逻辑链、矛盾点、推理深度和对话轮次。来源、语义充分性与人工验收状态分别记录。新版五维v2覆盖全案有行为证据支持的参与人（含另案处理者）及其角色；当前判决定罪名单单独保留，不能作为全案人物全集。关键经过采用摘要与逐句原文支持映射。
+
+4B初标抽查发现人物、角色和伪矛盾错误，四案均隔离。正在准备固定修订的官方[Qwen3 14B四位本地标注模型](https://huggingface.co/Qwen/Qwen3-14B-MLX-4bit)，约7.86GB；尚需本机内存及标注质量实测，不能提前声称它解决了问题。Agent训练基座仍为4B。
+
+标注先做原文边界、偏移及结构校验，再由另一轮本地生成核对人物角色、事件覆盖、真实矛盾和依赖关系。不通过或质检未完成均隔离。该机器质检与初标使用相同基座，可能共享错误，不能替代人工复核。
 
 训练集的多轮对话只能从原始材料释放证据，轮次标记为模拟；验证、测试和新案记录真实研究人员的交互，未发生时为null。训练变体包含证据顺序扰动、缺失证据时拒绝定论、合成提示注入及模拟证据追问；变体不增加真实案件数量，验证和测试案件禁止生成训练变体。
 
 ```bash
 # 须先有来源材料和跨来源关联审计，案源获取见docs/data_sources.md
 .venv/bin/python scripts/prepare_five_dimensions.py
-.venv/bin/python scripts/annotate_five_dimensions_batch.py --limit 1980 --batch-size 4
+# 数据构建使用单独的本地14B模型，不更改4B Agent训练基座
+.venv/bin/python scripts/download_local_model.py --profile curator
+.venv/bin/python scripts/annotate_five_dimensions_batch.py --limit 2000 --batch-size 1 --model-profile curator
 .venv/bin/python scripts/assemble_five_dimensions.py
 # 完整数据未准备好时，正式训练会被阻止
 .venv/bin/python scripts/train_local.py
@@ -49,9 +55,9 @@ sh run_offline.sh
 
 QLoRA会实际更新适配器权重，记录参数、数据及权重哈希，检查学习后的LoRA B矩阵。超长训练样例不会静默截断；所有训练组必须有可用样例。小样本pilot只验证训练工程，不能进入正式验收。token级验证损失不等于整案准确率。
 
-2026-10-21已完成一次8个微批次、2次优化器更新的工程试训：56个LoRA B张量发生非零更新，记录峰值内存7.093GB。见[真实训练记录](data/latest_training_report.json)及[训练后断网检查](data/pilot_offline_smoke_report.json)。这是小样本pilot，尚无500+合格数据集、正式训练完成或70%整案准确率的证据。
+2026-10-21已完成一次8个微批次、2次优化器更新的工程试训：56个LoRA B张量发生非零更新，记录峰值内存7.093GB。见[真实训练记录](data/latest_training_report.json)及[训练后断网检查](data/pilot_offline_smoke_report.json)。这是旧版口径的小样本pilot，不能用于新版全案角色验收；尚无500+合格数据集、正式训练完成或70%整案准确率的证据。旧版55案机器初标已[归档](data/five_dimensions_v1_legacy_report.json)，不计入本轮数量。
 
-长任务可脱离当前终端续跑；Mac运行期间暂时阻止自动休眠，任务退出后解除。默认4案批次，实测8案批次发生Metal内存不足，见[资源边界记录](data/local_resource_probe.json)。
+长任务可脱离当前终端续跑；14B标注默认每批1案，每2案退出并重启工作进程，释放GPU与约束编译资源。8案批次曾发生Metal内存不足，见[资源边界记录](data/local_resource_probe.json)。任务暂时阻止空闲休眠，但合盖仍会暂停计算；持续运行请保持开盖并接通电源。进度文件记录约束编译、预填充、生成与保存阶段。
 
 ```bash
 .venv/bin/python scripts/run_local_pipeline.py --launch
@@ -72,7 +78,7 @@ QLoRA会实际更新适配器权重，记录参数、数据及权重哈希，检
 .venv/bin/python scripts/summarize_acceptance.py
 ```
 
-完整验证集达到70%后才开启测试集。首次测试冻结模型和数据版本；同一测试案不选择多次运行中的最好结果。测试集打开后禁止继续同周期训练调参。拒答、失败、超时及未完成案件保留在分母，报告Wilson 95%区间。只有数据人工核验、实际权重训练、完整验证与独立测试均通过，才能标记训练完成。
+整案正确要求罪名、全案行为参与人、角色和关键经过同时正确；仅在场或仅被提及者不算作案者。完整验证集达到70%后才开启测试集。首次测试冻结模型和数据版本；同一测试案不选择多次运行中的最好结果。测试集打开后禁止继续同周期训练调参。拒答、失败、超时及未完成案件保留在分母，报告Wilson 95%区间。只有数据人工核验、实际权重训练、完整验证与独立测试均通过，才能标记训练完成。
 
 ## 功能与使用边界
 

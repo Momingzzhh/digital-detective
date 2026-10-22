@@ -120,8 +120,38 @@ def test_missing_scores_remain_in_denominator_and_do_not_pass(monkeypatch):
     for row in rows[420:490]:
         scores[('dev',row['case_id'])]={'record_binding':row['record_binding'],'model_binding':'m',
             'mode':'human_source_bound','reviewer_id':'synthetic-test','human_scored_at':'fixture',
-            'session_sha256':'fixture','all_correct':True,'human_analysis_rounds':2}
+            'session_sha256':'fixture','all_correct':True,'human_analysis_rounds':2,
+            'charge_correct':True,'perpetrator_correct':True,'participant_roles_correct':True,'chronology_correct':True}
     out=summary.summarize(rows,scores,'m',True)
     assert out['dev']['cases']==90 and out['dev']['missing_or_failed']==20
     assert out['dev']['whole_case_accuracy']==70/90
     assert not out['dev']['passed'] and not out['training_complete']
+
+
+@pytest.mark.parametrize('defect',['none','omit_separate_actor','wrong_role','missing_human_role_check'])
+def test_whole_case_score_requires_all_supported_actors_and_roles(setup_research,defect):
+    from app.store import load_case,save_case
+    client,h,row,_=setup_research
+    row['hidden_gold']['adjudicated_perpetrators']=['甲']
+    row['hidden_gold']['perpetrators']=['甲','乙']
+    e=row['evidence'][0]
+    row['hidden_gold']['actor_roles']=[{'name':name,'aliases':[],'participation':role,'role':'仅为合成机制测试描述',
+        'evidence_ids':['E1'],'supporting_sentences':[{'sentence_id':'E1:S1','evidence_id':'E1',
+        'sentence_start':0,'sentence_end':len(e['text']),'text':e['text']}]} for name,role in [('甲','直接实施'),('乙','帮助配合')]]
+    row['record_binding']=record_binding(row)
+    assert approve(client,h,row).status_code==200
+    sid=client.post('/api/research/items/fixture/session',headers=h,json={}).json()['session_case_id']
+    me=client.get('/api/me').json()
+    with research.db() as con:user=con.execute('SELECT id FROM users WHERE name=?',(me['name'],)).fetchone()[0]
+    case=load_case(user,sid);case['research']['analysis_attempts']=1
+    case['analysis']={'status':'暂定结论','charges':['合成测试罪名'],'perpetrators':['甲','乙'],
+        'participants':[{'name':p['name'],'participation':p['participation'],'role':p['role'],
+                         'evidence_ids':['E1']} for p in row['hidden_gold']['actor_roles']]}
+    if defect=='omit_separate_actor':case['analysis']['perpetrators']=['甲'];case['analysis']['participants'].pop()
+    elif defect=='wrong_role':case['analysis']['participants'][1]['participation']='组织指使'
+    save_case(user,case)
+    body={'chronology_all_correct':True,'no_unsupported_events':True,'notes':'仅为自动化机制测试，不代表真人验收结论。'}
+    if defect!='missing_human_role_check':body['participant_roles_correct']=True
+    response=client.post('/api/research/sessions/'+sid+'/score',headers=h,json=body)
+    assert response.status_code==200
+    assert response.json()['all_correct'] is (defect=='none')

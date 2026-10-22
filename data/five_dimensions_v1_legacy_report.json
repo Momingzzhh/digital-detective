@@ -1,0 +1,53 @@
+{
+  "generated_at": "2026-10-22T08:28:36.269468+00:00",
+  "version": "five-dimensions-v1",
+  "target": 600,
+  "minimum_cases": 501,
+  "split_target": {
+    "train": 420,
+    "dev": 90,
+    "test": 90
+  },
+  "pool_cases": 1980,
+  "pool_split_counts": {
+    "train": 1388,
+    "test": 287,
+    "dev": 305
+  },
+  "pool_binding": "3b56a8960d4c2e9ca641ddf44421c8cc29ebfe0d24facb341f409f22457367e2",
+  "group_audit_sha256": "acf48c208baea4951fc87da969ceadc90e3c4c94649c07965ce0aaaa25389295",
+  "screening_counts": {
+    "source_section_candidates": 4933,
+    "six_items_three_types": 2174,
+    "long_source_reserved_for_later": 180
+  },
+  "machine_annotated": 55,
+  "human_reviewed": 0,
+  "qualified_complex_cases": 0,
+  "weights_trained": false,
+  "validation_passed": false,
+  "test_passed": false,
+  "first_round_threshold": 0.7,
+  "note": "Structural pool only. Real conflict/multiple investigated persons, necessary logic depth and sufficient clues still require annotation and review.",
+  "annotation_status_counts": {
+    "complexity_or_reference_rejected": 16,
+    "machine_annotated_unverified": 55
+  },
+  "current_split_counts": {
+    "train": 41,
+    "test": 7,
+    "dev": 7
+  },
+  "dataset_target_assembled": false,
+  "data_sha256": "6629e17618d5233ca8a2cddaaaae33caebc7b85586b56bdce5a87118bddddd92",
+  "dataset_binding": "6629e17618d5233ca8a2cddaaaae33caebc7b85586b56bdce5a87118bddddd92",
+  "pilot_weight_update_verified": true,
+  "superseded_at": "2026-10-22T08:45:16.597689+00:00",
+  "superseded_by": "five-dimensions-v2",
+  "superseded_reasons": [
+    "Full-case participants and roles replace adjudicated-defendant-only answer keys.",
+    "Stricter extraction excludes judicial reasoning at end of evidence items.",
+    "Event summaries require complete source-bound coverage; machine annotations are unverified."
+  ],
+  "eligible_for_current_acceptance": false
+}

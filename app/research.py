@@ -15,8 +15,9 @@ from .store import db, save_case, load_case
 router = APIRouter(prefix='/api/research')
 CHECKS = ('source_authentic', 'source_offsets_correct', 'sufficient_clues', 'no_outcome_leakage',
           'all_actors_covered', 'gold_correct', 'five_dimensions_correct', 'logic_depth_necessary',
-          'conflicts_or_multiple_suspects_real', 'grouping_correct')
-BASE = ROOT / 'data/processed/five_dimensions_v1'
+          'conflicts_or_multiple_suspects_real', 'grouping_correct',
+          'participant_roles_supported', 'alias_mapping_supported')
+BASE = ROOT / 'data/processed/five_dimensions_v2'
 
 
 def enabled(user=Depends(session)):
@@ -84,12 +85,12 @@ def review(cid: str, value: HumanReview, user=Depends(enabled)):
         raise HTTPException(422, '存在未核实项目，不可标记通过。')
     record = value.model_dump() | {'case_id': cid, 'reviewer_id': identity(user),
               'reviewed_at': datetime.now(timezone.utc).isoformat(), 'human_attestation': True}
-    save(ROOT / 'data/review/five_dimensions_human' / (cid + '.json'), record)
+    save(ROOT / 'data/review/five_dimensions_v2_human' / (cid + '.json'), record)
     return {'saved': True, 'decision': value.decision}
 
 
 def approved(row):
-    path = ROOT / 'data/review/five_dimensions_human' / (row['case_id'] + '.json')
+    path = ROOT / 'data/review/five_dimensions_v2_human' / (row['case_id'] + '.json')
     if not path.exists(): return False
     r = json.loads(path.read_text())
     return (r.get('human_attestation') is True and r.get('reviewer_id') and r.get('reviewed_at') and
@@ -141,7 +142,7 @@ def start(cid: str, user=Depends(enabled)):
             validation.get('dataset_binding') != current_data):
             raise HTTPException(409, '完整验证集尚未通过，测试集保持关闭。')
         # Opening tests freezes the whole cycle; training cannot silently resume.
-        freeze = ROOT / 'runtime/five_dimensions_test_freeze.json'
+        freeze = ROOT / 'runtime/five_dimensions_v2_test_freeze.json'
         if not freeze.exists():
             save(freeze, {'opened_at': datetime.now(timezone.utc).isoformat(),
                           'model_binding': model,
@@ -149,7 +150,7 @@ def start(cid: str, user=Depends(enabled)):
         elif (json.loads(freeze.read_text())['model_binding'] != model or
               json.loads(freeze.read_text())['data_binding'] != current_data):
             raise HTTPException(409, '测试集已绑定另一模型，不可重复调参后再测同一集合。')
-        session_file = ROOT / 'runtime/five_dimensions_test_sessions' / (cid + '.json')
+        session_file = ROOT / 'runtime/five_dimensions_v2_test_sessions' / (cid + '.json')
         if session_file.exists():
             existing = json.loads(session_file.read_text())
             case = load_case(user['user_id'], existing['session_id'])
@@ -197,6 +198,7 @@ def release(sid: str, value: Release, user=Depends(enabled)):
 class HumanScore(BaseModel):
     chronology_all_correct: bool
     no_unsupported_events: bool
+    participant_roles_correct: bool = False
     notes: str = Field(min_length=10, max_length=5000)
 
 
@@ -212,19 +214,33 @@ def score(sid: str, value: HumanScore, user=Depends(enabled)):
     if binding.get('record_binding') != row['record_binding']: raise HTTPException(409, '数据版本已改变，请勿对旧会话评分。')
     if not binding.get('source_only') or not approved(row): raise HTTPException(409, '此会话不符合来源约束或人工复核条件。')
     if binding.get('model_binding') != model_binding(): raise HTTPException(409, '分析期间模型版本已改变。')
-    score_path = ROOT / 'data/review/five_dimensions_scores' / row['split'] / (row['case_id'] + '.json')
+    score_path = ROOT / 'data/review/five_dimensions_v2_scores' / row['split'] / (row['case_id'] + '.json')
     if row['split'] == 'test' and score_path.exists(): raise HTTPException(409, '最终测试评分已保存，不可重复改分。')
     prediction = case.get('analysis') or {'charges': [], 'perpetrators': [], 'status': '证据不足'}
     gold = row['hidden_gold']
     charge = normalized(prediction['charges'], True) == normalized(gold['charges'], True)
-    actor = normalized(prediction['perpetrators']) == normalized(gold['perpetrators'])
+    # Only source-reviewed aliases may normalize a name; never fuzzy-match people.
+    aliases = {}
+    for person in gold.get('actor_roles',[]):
+        for name in [person['name'],*person['aliases']]:
+            aliases[next(iter(normalized([name])))] = next(iter(normalized([person['name']])))
+    def names(values):
+        return {aliases.get(n,n) for n in normalized(values)}
+    actor = names(prediction['perpetrators']) == names(gold['perpetrators'])
+    expected_roles = {next(iter(names([p['name']]))):p['participation'] for p in gold.get('actor_roles',[])
+                      if p['participation'] != '无法确认'}
+    observed = [p for p in prediction.get('participants',[]) if p['participation'] != '无法确认']
+    observed_roles = {next(iter(names([p['name']]))):p['participation'] for p in observed}
+    roles = bool(expected_roles and observed_roles == expected_roles and len(observed_roles) == len(observed)
+                 and value.participant_roles_correct)
     correct = (prediction['status'] != '证据不足' and charge and actor and
-               value.chronology_all_correct and value.no_unsupported_events)
+               roles and value.chronology_all_correct and value.no_unsupported_events)
     result = {'case_id': row['case_id'], 'record_binding': row['record_binding'], 'split': row['split'],
         'session_id': sid, 'reviewer_id': identity(user), 'human_scored_at': datetime.now(timezone.utc).isoformat(),
         'model_binding': binding['model_binding'], 'analysis_attempts': binding['analysis_attempts'],
         'mode': 'human_source_bound', 'human_analysis_rounds': len(case.get('confidence_history', [])),
         'charge_correct': charge, 'perpetrator_correct': actor, 'all_correct': bool(correct),
+        'participant_roles_correct': roles,
         'chronology_correct': bool(value.chronology_all_correct and value.no_unsupported_events),
         'refused_or_failed': prediction['status'] == '证据不足',
         'scoring': value.model_dump(), 'session_sha256': fingerprint(case)}

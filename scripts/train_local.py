@@ -11,7 +11,7 @@ import subprocess
 import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from app.five_dimensions import training_examples, conclusion, TRAIN_SYSTEM, view, validate_splits, fingerprint, record_binding
+from app.five_dimensions import training_examples, conclusion, TRAIN_SYSTEM, view, validate_splits, fingerprint, record_binding, FiveDimensions, validate_annotation, ground_truth, VERSION
 from app.local_model import model_path, verify_model_files
 from app.local_resource import model_resource
 
@@ -31,7 +31,7 @@ def main(args):
     dataset = args.dataset
     if not dataset:
         state = json.loads((ROOT/'data/five_dimensions_report.json').read_text())
-        dataset = state.get('frozen_dataset') if not args.pilot else 'data/processed/five_dimensions_v1/current.private.jsonl'
+        dataset = state.get('frozen_dataset') if not args.pilot else 'data/processed/five_dimensions_v2/current.private.jsonl'
         if not dataset: raise ValueError('Full dataset is not frozen; formal training cannot start')
     source = (ROOT / dataset).resolve()
     data_bytes = source.read_bytes()
@@ -40,8 +40,17 @@ def main(args):
     if not rows or not any(r['split'] == 'train' for r in rows): raise ValueError('No training cases')
     if any(r.get('record_binding') != record_binding(r) for r in rows): raise ValueError('Dataset binding changed')
     from scripts.export_review_bundle import verify
-    for row in rows: verify(row, {'raw_record': row['raw_record']})
-    if (ROOT / 'runtime/five_dimensions_test_freeze.json').exists():
+    for row in rows:
+        if row.get('annotation_version') != VERSION: raise ValueError('Training data uses a superseded annotation version')
+        verify(row, {'raw_record': row['raw_record']})
+        validate_annotation(row,{k:row['five_dimensions'][k] for k in FiveDimensions.model_fields},row['sentence_spans'])
+        if fingerprint(row['hidden_gold']) != fingerprint(ground_truth(row)):
+            raise ValueError('Answer key differs from source-bound participant and event annotation')
+    if not args.pilot:
+        from app.research import approved
+        if not all(approved(r) for r in rows if r['split'] in ('dev','test')):
+            raise ValueError('Formal training requires source-reviewed heldout data; human approvals cannot be synthesized')
+    if (ROOT / 'runtime/five_dimensions_v2_test_freeze.json').exists():
         raise ValueError('Test set already opened. Freeze new independent test data before another training cycle.')
     os.environ.update(HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', HF_HUB_DISABLE_TELEMETRY='1')
     base_manifest = verify_model_files()
@@ -121,7 +130,7 @@ def main(args):
         'report_to': None, 'test': False}
     import yaml
     (out / 'config.yaml').write_text(yaml.safe_dump(config))
-    report = {'run_id': run_id, 'dataset_sha256': data_hash,
+    report = {'run_id': run_id, 'dataset_sha256': data_hash, 'dataset_version':VERSION,
         'dataset_binding': fingerprint([r['record_binding'] for r in rows]),
         'base_manifest_binding': fingerprint(base_manifest),
         'code_file_sha256': code_hashes,

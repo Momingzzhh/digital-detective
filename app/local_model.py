@@ -91,7 +91,7 @@ def complete(messages, max_tokens=4096, schema=None):
         return text
 
 
-def complete_batch(requests, max_tokens=3000):
+def complete_batch(requests, max_tokens=3000, progress=None):
     """Independent constrained processors per prompt, using MLX BatchGenerator."""
     with _lock, model_resource('annotation_batch'):
         model, tokenizer, _, make_sampler, mx = _load()
@@ -100,21 +100,25 @@ def complete_batch(requests, max_tokens=3000):
         wrapped = outlines.from_mlxlm(model, tokenizer)
         prompts = []; processors = []
         limit = int(settings().get('LOCAL_CONTEXT_TOKENS', '16384'))
-        for messages, schema in requests:
-            prompt = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True)
+        for index,(messages, schema) in enumerate(requests):
+            if progress: progress({'stage':'compiling_constraints','item':index+1,'items':len(requests)})
+            prompt = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, enable_thinking=False)
             if len(prompt) + max_tokens > limit: raise ValueError('Batch context limit exceeded; nothing truncated')
             prompts.append(prompt)
             generator = outlines.Generator(wrapped, schema)
             generator.logits_processor.reset()
             processors.append([generator.logits_processor])
         generator = BatchGenerator(model, sampler=make_sampler(temp=0.0), stop_tokens=tokenizer.eos_token_ids,
-            prefill_batch_size=1, completion_batch_size=len(prompts), prefill_step_size=1024)
+            prefill_batch_size=1, completion_batch_size=len(prompts), prefill_step_size=512,
+            prompt_progress_callback=(lambda values: progress({'stage':'prefill','progress':values})) if progress else None)
         ids = generator.insert(prompts, max_tokens=max_tokens, logits_processors=processors)
         tokens = {uid: [] for uid in ids}
         try:
             while responses := generator.next():
                 for result in responses:
                     if result.finish_reason != 'stop': tokens[result.uid].append(result.token)
+                if progress: progress({'stage':'generating','generated_tokens':sum(map(len,tokens.values())),
+                    'active_memory_gb':round(mx.get_active_memory()/1e9,3)})
             stats = vars(generator.stats())
         finally:
             generator.close()

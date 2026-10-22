@@ -8,7 +8,8 @@ from pathlib import Path
 import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from app.five_dimensions import VERSION, TARGET, fingerprint
+from app.five_dimensions import VERSION, TARGET, fingerprint, DATASET_SLUG
+from app.source_policy import require_clean_evidence
 from build_v3 import preflight, sentences
 from export_review_bundle import write_rows, verify
 
@@ -35,6 +36,7 @@ def main():
             if sum(len(e['text']) for e in row['evidence']) > 7000:
                 counts['long_source_reserved_for_later'] += 1; continue
             verify(row, source)
+            require_clean_evidence(row['evidence'])
             row['source_group_id'] = row['group_id']; row['group_id'] = linked['linked_group_id']
             row['sentence_spans'] = sentences(row['evidence'])
             if len(row['sentence_spans']) < 3: continue
@@ -43,12 +45,13 @@ def main():
             row['source_fact_excerpt'] = source['raw_record']['ajjbqk']
             row['source_judgment_excerpt'] = source['raw_record']['pjjg']
             row['raw_record'] = source['raw_record']
+            row['hidden_gold']['adjudicated_perpetrators'] = row['hidden_gold'].pop('perpetrators')
             row['source_binding'] = fingerprint({k: row[k] for k in
                 ('case_id', 'group_id', 'split', 'source', 'evidence', 'sentence_spans', 'source_fact_sha256')})
             groups.add(row['group_id']); pool.append(row)
     # This order is frozen independently of any agent predictions or test score.
     pool.sort(key=lambda r: fingerprint(VERSION + ':' + r['group_id']))
-    out = ROOT / 'data/processed/five_dimensions_v1'
+    out = ROOT / 'data/processed' / DATASET_SLUG
     existing = out / 'pool_manifest.json'
     binding = fingerprint([r['source_binding'] for r in pool])
     if existing.exists() and json.loads(existing.read_text())['pool_binding'] != binding:
@@ -61,6 +64,8 @@ def main():
         'screening_counts': dict(counts), 'machine_annotated': 0, 'human_reviewed': 0,
         'qualified_complex_cases': 0, 'weights_trained': False, 'validation_passed': False,
         'test_passed': False, 'first_round_threshold': 0.7,
+        'participant_scope': 'All source-supported behavior participants, including separately prosecuted persons; roles required. Adjudicated names retained separately.',
+        'source_extraction_version':'source-sections-v3.9',
         'note': 'Structural pool only. Real conflict/multiple investigated persons, necessary logic depth and sufficient clues still require annotation and review.'}
     existing.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     (ROOT / 'data/five_dimensions_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')

@@ -50,6 +50,7 @@ function renderConclusion(c) {
   if(!a) {empty(node,'完成分析后，将展示结论、证据依据、竞争假设和未解问题。');return;}
   node.append(el('div',a.status,'result-status'),el('p',a.summary,'summary'));
   const principal=section(node,'当前判断');principal.append(el('p','罪名：'+(a.charges.join('、')||'暂不确定')),el('p','作案者：'+(a.perpetrators.join('、')||'暂不确定')));
+  const people=section(node,'全案参与人及角色');for(const p of a.participants||[]) {const line=el('p',`${p.name} · ${p.participation} · ${p.role}`);refs(line,p.evidence_ids);people.append(line);}
   for(const [title,key] of [['证据依据','findings'],['关键经过','reconstruction']]) {const s=section(node,title);if(!a[key].length)s.append(el('p','尚无足够依据。'));for(const f of a[key]) {const p=el('p',f.claim);refs(p,f.evidence_ids);s.append(p);}}
   const conflicts=section(node,'矛盾与冲突');if(!a.conflicts.length)conflicts.append(el('p','当前未识别出明确矛盾；不代表材料已被证实。'));for(const f of a.conflicts) {const p=el('p',`${f.severity} · ${f.description}`);refs(p,f.evidence_ids);conflicts.append(p);}
   const hypotheses=section(node,'竞争假设');for(const h of a.hypotheses) {hypotheses.append(el('p',h.description));const p=el('p','支持：');refs(p,h.supporting);p.append(el('span',' 反证：'));refs(p,h.opposing);hypotheses.append(p);}

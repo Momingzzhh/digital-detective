@@ -1,5 +1,58 @@
 {
   "$defs": {
+    "ActorAssessment": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5,
+          "title": "Aliases",
+          "type": "array"
+        },
+        "participation": {
+          "enum": [
+            "直接实施",
+            "组织指使",
+            "帮助配合",
+            "无法确认"
+          ],
+          "title": "Participation",
+          "type": "string"
+        },
+        "role": {
+          "maxLength": 160,
+          "minLength": 4,
+          "title": "Role",
+          "type": "string"
+        },
+        "sentence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5,
+          "minItems": 1,
+          "title": "Sentence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "aliases",
+        "participation",
+        "role",
+        "sentence_ids"
+      ],
+      "title": "ActorAssessment",
+      "type": "object"
+    },
     "Contradiction": {
       "additionalProperties": false,
       "properties": {
@@ -45,6 +98,32 @@
         "resolution_evidence_ids"
       ],
       "title": "Contradiction",
+      "type": "object"
+    },
+    "EventAnnotation": {
+      "additionalProperties": false,
+      "properties": {
+        "claim": {
+          "maxLength": 180,
+          "minLength": 4,
+          "title": "Claim",
+          "type": "string"
+        },
+        "sentence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5,
+          "minItems": 1,
+          "title": "Sentence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "claim",
+        "sentence_ids"
+      ],
+      "title": "EventAnnotation",
       "type": "object"
     },
     "Step": {
@@ -163,10 +242,36 @@
       "items": {
         "type": "string"
       },
-      "maxItems": 10,
+      "maxItems": 50,
       "minItems": 3,
       "title": "Event Sentence Ids",
       "type": "array"
+    },
+    "actor_assessments": {
+      "items": {
+        "$ref": "#/$defs/ActorAssessment"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Actor Assessments",
+      "type": "array"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/EventAnnotation"
+      },
+      "maxItems": 10,
+      "minItems": 3,
+      "title": "Events",
+      "type": "array"
+    },
+    "complete_actor_coverage": {
+      "title": "Complete Actor Coverage",
+      "type": "boolean"
+    },
+    "complete_event_coverage": {
+      "title": "Complete Event Coverage",
+      "type": "boolean"
     }
   },
   "required": [
@@ -174,7 +279,11 @@
     "logic_chain",
     "contradictions",
     "candidate_names",
-    "event_sentence_ids"
+    "event_sentence_ids",
+    "actor_assessments",
+    "events",
+    "complete_actor_coverage",
+    "complete_event_coverage"
   ],
   "title": "FiveDimensions",
   "type": "object"

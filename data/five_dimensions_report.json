@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-10-21T16:00:36.525016+00:00",
-  "version": "five-dimensions-v1",
+  "generated_at": "2026-10-22T09:12:37.148776+00:00",
+  "version": "five-dimensions-v2",
   "target": 600,
   "minimum_cases": 501,
   "split_target": {
@@ -8,38 +8,38 @@
     "dev": 90,
     "test": 90
   },
-  "pool_cases": 1980,
+  "pool_cases": 1999,
   "pool_split_counts": {
-    "train": 1388,
-    "test": 287,
-    "dev": 305
+    "train": 1400,
+    "dev": 310,
+    "test": 289
   },
-  "pool_binding": "3b56a8960d4c2e9ca641ddf44421c8cc29ebfe0d24facb341f409f22457367e2",
+  "pool_binding": "3605bdb5d2fe1e4254a4f341ad7afa8b5a4597f4398fc2cdfd1da5094eba8717",
   "group_audit_sha256": "acf48c208baea4951fc87da969ceadc90e3c4c94649c07965ce0aaaa25389295",
   "screening_counts": {
-    "source_section_candidates": 4933,
-    "six_items_three_types": 2174,
-    "long_source_reserved_for_later": 180
+    "source_section_candidates": 4961,
+    "six_items_three_types": 2196,
+    "long_source_reserved_for_later": 183
   },
-  "machine_annotated": 29,
+  "machine_annotated": 0,
   "human_reviewed": 0,
   "qualified_complex_cases": 0,
   "weights_trained": false,
   "validation_passed": false,
   "test_passed": false,
   "first_round_threshold": 0.7,
+  "participant_scope": "All source-supported behavior participants, including separately prosecuted persons; roles required. Adjudicated names retained separately.",
+  "source_extraction_version": "source-sections-v3.9",
   "note": "Structural pool only. Real conflict/multiple investigated persons, necessary logic depth and sufficient clues still require annotation and review.",
   "annotation_status_counts": {
-    "complexity_or_reference_rejected": 12,
-    "machine_annotated_unverified": 29
+    "semantic_quality_rejected": 4
   },
-  "current_split_counts": {
-    "train": 21,
-    "test": 4,
-    "dev": 4
-  },
+  "current_split_counts": {},
   "dataset_target_assembled": false,
-  "data_sha256": "f3f7011f40f5dba70696925be846bab3baf9197dc7790cedddc9e3c61a40c605",
-  "dataset_binding": "f3f7011f40f5dba70696925be846bab3baf9197dc7790cedddc9e3c61a40c605",
-  "pilot_weight_update_verified": true
+  "data_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "dataset_binding": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "annotation_backend": "local",
+  "planned_annotator": "Qwen/Qwen3-14B-MLX-4bit",
+  "annotator_preparation": "public_weights_downloading",
+  "training_complete": false
 }

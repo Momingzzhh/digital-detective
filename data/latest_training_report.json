@@ -34,5 +34,8 @@
     }
   ],
   "completed_micro_iterations": 8,
-  "optimizer_updates": 2
+  "optimizer_updates": 2,
+  "dataset_version": "five-dimensions-v1",
+  "eligible_for_current_acceptance": false,
+  "scope_note": "Legacy engineering pilot; full-case roles v2 must be trained and independently validated separately."
 }

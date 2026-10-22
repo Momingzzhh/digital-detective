@@ -39,10 +39,24 @@ def verify(row, source):
         if 'fulltext_start' in e and full[e['fulltext_start']:e['fulltext_end']]!=e['quote']:
             raise ValueError('Fulltext source offset mismatch')
     for event in row['hidden_gold'].get('chronology',[]):
+        if 'supporting_sentences' in event:
+            verify_support(event,index)
+            continue
         if len(event['evidence_ids'])!=1:raise ValueError('Expected one exact supporting sentence')
         e=index[event['evidence_ids'][0]]
         if e['text'][event['sentence_start']:event['sentence_end']]!=event['summary']:
             raise ValueError('Gold sentence not exact')
+    for actor in row['hidden_gold'].get('actor_roles',[]): verify_support(actor,index)
+
+
+def verify_support(item,index):
+    refs=item['supporting_sentences']
+    if not refs or set(item['evidence_ids'])!={r['evidence_id'] for r in refs}:
+        raise ValueError('Ground-truth support IDs differ from referenced sentences')
+    for ref in refs:
+        text=index[ref['evidence_id']]['text']
+        if text[ref['sentence_start']:ref['sentence_end']]!=ref['text']:
+            raise ValueError('Ground-truth support sentence differs from source')
 
 
 def write_rows(path, rows):

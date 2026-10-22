@@ -83,3 +83,21 @@ def test_reference_repair_resolves_only_exact_known_sentence_ids():
     assert len(repairs)==2 and ann.culprit_evidence_ids==['E1:S1','E1']
     ann.culprit_evidence_ids=['E9:S1']
     with pytest.raises(ValueError):b.normalize_annotation_references(ann,spans,{'E1','E2'})
+
+
+def test_judicial_assessments_cannot_hide_in_last_confession():
+    from app.source_policy import require_clean_evidence
+    import pytest
+    b=module('build_v3')
+    quote='被告人乙供述：我与丙商量好后，将电脑从仓库搬到车上，后来交给了丙，丙支付了事先商定的价款。'
+    for tail in ('此外，在案还有刑事判决书证明。关于被告人乙的辩解，经查本院不予采纳。',
+                 '关于被告人乙提出的辩解，经查不能成立。',
+                 '本院对相关辩护意见不予采纳。',
+                 '上述证据经过庭审举证、质证。'):
+        fact='上述事实有下列证据证实：1、'+quote+tail
+        items=b.extract_items(fact,'盗窃罪')
+        assert len(items)==1 and quote.replace('被告人','当事人') in items[0]['text']
+        assert tail not in items[0]['quote']
+        require_clean_evidence(items)
+        assert fact[items[0]['start']:items[0]['end']]==items[0]['quote']
+        with pytest.raises(ValueError):require_clean_evidence([{'text':tail}])

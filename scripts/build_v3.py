@@ -20,8 +20,9 @@ sys.path.insert(0, str(ROOT))
 from pydantic import BaseModel, ConfigDict, Field
 from app.llm import structured
 from app.store import initialize, budget_status
+from app.source_policy import court_boundary
 
-VERSION = 'source-sections-v3.8'
+VERSION = 'source-sections-v3.9'
 CODE_SHA256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 START = re.compile(r'下列证据(?:予以|加以|能够|足以)?(?:证实|证明|佐证)?\s*[：:]|证据如下\s*[：:]')
 ITEM = re.compile(r'(?<!\d)(?:^|[。；\s])(?:[（(]?\d{1,2}[）)]?[、.．]|[（(][一二三四五六七八九十]{1,3}[）)])\s*', re.M)
@@ -100,11 +101,13 @@ def extract_items(fact, charge):
         start = match.start()
         raw = tail[start:end]
         court = COURT_TAIL.search(raw)
+        strict = court_boundary(raw)
         heading = FACT_HEADING.search(raw)
         if heading and (not court or heading.start()<court.start()):
             court = heading
-        if court:
-            end = start+court.start()
+        cutoff = min([len(raw)] + ([court.start()] if court else []) + ([strict['offset']] if strict else []))
+        if cutoff < len(raw):
+            end = start+cutoff
             raw = tail[start:end]
         if not marker and '证据' not in tail[max(0, start-200):start]:
             continue

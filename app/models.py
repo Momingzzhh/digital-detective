@@ -35,11 +35,19 @@ class Hypothesis(StrictModel):
     opposing: list[str]
 
 
+class ParticipantFinding(StrictModel):
+    name: str
+    participation: Literal['直接实施','组织指使','帮助配合','无法确认']
+    role: str
+    evidence_ids: list[str]
+
+
 class Conclusion(StrictModel):
     status: Literal['暂定结论', '证据不足']
     summary: str
     charges: list[str]
     perpetrators: list[str]
+    participants: list[ParticipantFinding] = Field(default_factory=list)
     reconstruction: list[Finding]
     findings: list[Finding]
     conflicts: list[Conflict]

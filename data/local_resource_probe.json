@@ -12,7 +12,23 @@
     "failure": "Metal command buffer Insufficient Memory (00000008:kIOGPUCommandBufferCallbackErrorOutOfMemory)",
     "failed_outputs_counted_as_qualified": 0
   },
-  "default_annotation_batch_size": 4,
+  "default_annotation_batch_size": 1,
   "fallback": "On a recorded Metal insufficient-memory failure, retry at half batch size; never relax source or complexity validation.",
-  "accuracy_claim": false
+  "accuracy_claim": false,
+  "worker_chunk_cases": 2,
+  "updated_at": "2026-10-22T09:08:52.980326+00:00",
+  "annotation_v2_batch_2": {
+    "generation_protocol": "compact-json-v4-full-case-roles",
+    "completed": true,
+    "observed_peak_mlx_memory_gb": 5.492510308,
+    "prompt_tokens": 11234,
+    "generation_tokens": 2528,
+    "generation_tps": 36.774597133200956,
+    "semantically_qualified_cases": 0,
+    "note": "Two training cases rejected on semantic inspection; throughput does not establish annotation quality.",
+    "batch_seconds": 199.67
+  },
+  "default_annotation_model_profile": "curator",
+  "curator_14b_resource_probe_completed": false,
+  "curator_note": "Official 7.86GB local weights downloading; memory and quality results not yet measured. The recorded batch-2 metrics use the earlier 4B annotator."
 }

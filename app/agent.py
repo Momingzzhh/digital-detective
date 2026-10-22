@@ -19,6 +19,9 @@ SYSTEM += '''\n证据缺失不是反证：监控损坏、尚无指纹不能列�
 没有直接物证不必然无法推断，可靠且相互印证的间接证据也可以支持暂定判断。
 区分“有人报告丢失”和“已经证实被盗”。hypotheses只能列有实际线索基础的竞争解释，不能因纯粹可能性暗示他人犯罪。
 已确认不存在的资料应列为不可获取的局限，不应再次要求用户提供同一资料。'''
+SYSTEM += '''\n分析全案有证据支持的行为参与人，包括另案处理者，区分直接实施、组织指使、帮助配合、无法确认。
+participants逐人记录name、participation、role、evidence_ids；角色描述须有引用依据。perpetrators仅列已得到行为证据支持者，与participants中非“无法确认”的人物一致。不将当前判决定罪名单当作全案参与人全集；不推断未知另案裁判结果。纯证人、被害人和仅被提及者不能作为作案者。
+分工互补、不知情、未直接实施与间接协助不必然矛盾，不得据此编造冲突。'''
 
 
 async def extract(source, existing=()):
@@ -47,7 +50,7 @@ def search_evidence(evidence, query, limit=8):
 def citations_valid(result, evidence):
     ids = {e['id'] for e in evidence}
     problems = []
-    for item in result.findings + result.reconstruction + result.conflicts:
+    for item in result.findings + result.reconstruction + result.conflicts + result.participants:
         if not item.evidence_ids or not set(item.evidence_ids) <= ids:
             problems.append('论据引用为空或包含不存在的证据编号。')
     for h in result.hypotheses:
@@ -55,6 +58,16 @@ def citations_valid(result, evidence):
             problems.append('假设引用了不存在的证据。')
     if (result.charges or result.perpetrators) and not result.findings:
         problems.append('罪名或作案者判断缺少证据依据。')
+    actors = [p.name for p in result.participants]
+    if len(actors) != len(set(actors)):
+        problems.append('同一参与人被重复列出。')
+    if result.status != '证据不足' and set(result.perpetrators) != {
+            p.name for p in result.participants if p.participation != '无法确认'}:
+        problems.append('作案者集合与有证据支持的角色分析不一致。')
+    quotes = {e['id']: e['quote'] for e in evidence}
+    for p in result.participants:
+        if not p.name.strip() or not any(p.name in quotes.get(e,'') for e in p.evidence_ids):
+            problems.append('参与人身份未出现在其引用材料中。')
     return list(dict.fromkeys(problems))
 
 
@@ -137,6 +150,7 @@ async def analyze(case, stage=None):
         result.status = '证据不足'
         result.charges = []
         result.perpetrators = []
+        result.participants = []
         result.confidence = min(result.confidence, 0.49)
         result.summary = '当前材料不足以形成可靠的最终判断；下列内容仅为待核验分析。'
         result.missing_information = list(dict.fromkeys(result.missing_information + problems + review.unresolved_issues))

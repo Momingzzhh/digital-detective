@@ -27,8 +27,10 @@ def summarize(rows, scores, model, ready):
             if (score.get('record_binding') != row['record_binding'] or score.get('model_binding') != model or
                 score.get('mode') != 'human_source_bound' or not score.get('reviewer_id') or
                 not score.get('human_scored_at') or not score.get('session_sha256')): continue
-            completed += 1; correct += score['all_correct'] is True
-            for key in ('charge_correct', 'perpetrator_correct', 'chronology_correct', 'refused_or_failed'):
+            completed += 1
+            correct += (score['all_correct'] is True and all(score.get(k) is True for k in (
+                'charge_correct','perpetrator_correct','participant_roles_correct','chronology_correct')))
+            for key in ('charge_correct', 'perpetrator_correct', 'participant_roles_correct', 'chronology_correct', 'refused_or_failed'):
                 components[key] += score.get(key) is True
             rounds.append(score['human_analysis_rounds'])
         n = len(subset); value = correct / n if n else 0
@@ -37,6 +39,7 @@ def summarize(rows, scores, model, ready):
             'whole_case_accuracy': value, 'wilson_95_interval': wilson(correct, n),
             'charge_accuracy': components['charge_correct'] / n,
             'perpetrator_accuracy': components['perpetrator_correct'] / n,
+            'participant_roles_accuracy': components['participant_roles_correct'] / n,
             'chronology_accuracy': components['chronology_correct'] / n,
             'refused_or_failed_scored': components['refused_or_failed'],
             'human_rounds': rounds, 'threshold': THRESHOLD,
@@ -51,7 +54,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__); parser.parse_args()
     scores = {}
     for split in ('dev', 'test'):
-        for path in (ROOT / 'data/review/five_dimensions_scores' / split).glob('*.json'):
+        for path in (ROOT / 'data/review/five_dimensions_v2_scores' / split).glob('*.json'):
             r = json.loads(path.read_text()); scores[(split, r['case_id'])] = r
     report = summarize(records(), scores, model_binding(), acceptance_model_ready())
     for split, name in (('dev', 'validation'), ('test', 'test')):

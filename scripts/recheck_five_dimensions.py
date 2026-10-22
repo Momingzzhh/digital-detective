@@ -9,23 +9,27 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from app.five_dimensions import validate_annotation
+from app.annotation_quality import quality_passed
 from scripts.annotate_five_dimensions import normalize_references
 from scripts.annotation_lock import acquire_annotation_lock
 
 
 def main():
     acquire_annotation_lock()
-    pool = ROOT / 'data/processed/five_dimensions_v1/candidates.private.jsonl'
+    pool = ROOT / 'data/processed/five_dimensions_v2/candidates.private.jsonl'
     rows = {r['case_id']: r for r in map(json.loads, pool.open())}
     counts = Counter()
-    for path in sorted((ROOT / 'data/review/five_dimensions_v1').glob('*.json')):
+    for path in sorted((ROOT / 'data/review/five_dimensions_v2').glob('*.json')):
         saved = json.loads(path.read_text()); row = rows.get(saved['case_id'])
         if not row or not saved.get('raw_annotation'): continue
         if saved.get('source_binding') != row['source_binding']: raise ValueError('Source binding changed')
         try:
             normalized, repairs = normalize_references(saved['raw_annotation'], row['sentence_spans'])
             annotation = validate_annotation(row, normalized, row['sentence_spans'])
-            update = {'status': 'machine_annotated_unverified', 'five_dimensions': annotation}
+            eligible=quality_passed(saved|{'five_dimensions':annotation},row)
+            update = {'status':'machine_annotated_unverified' if eligible else 'semantic_quality_rejected',
+                      'five_dimensions': annotation}
+            if not eligible:update['error']='Semantic audit missing or failed; source format alone is insufficient'
         except ValueError as exc:
             update = {'status': 'complexity_or_reference_rejected', 'error': str(exc)[:300]}
         except (KeyError, TypeError):
