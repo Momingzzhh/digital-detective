@@ -32,7 +32,7 @@
 
 联网准备仅用于安装依赖和下载文件。标注、训练及推理采用本地文件，开启HF_HUB_OFFLINE与TRANSFORMERS_OFFLINE；没有云端模型回退，不读取阿里云密钥，不新增云端费用预占。旧账本仍保留待对账。
 
-本地[Outlines约束生成](https://github.com/dottxt-ai/outlines/blob/main/docs/features/models/mlxlm.md)限制JSON格式及允许的编号；它不能保证事实正确。紧凑标注通过已知句子ID还原原始引句，不使用模型改写的句子冒充原文。未知引用、虚构引句、缺失层级、循环或不足三层的推理链仍被拒绝。只允许已知句子ID还原到所属证据ID、完全相同姓名去重，记录修复前后值；不合并别名、不补造人物或语义。修订标注协议后可重试旧协议失败记录，原始输出保留归档，不修改分组和复杂度门槛。格式错误每协议最多两次尝试，语义失败不无限重试。14B默认每批1案、每2案重启工作进程；内存不足减小批次，计算阶段超过30分钟则停止或缩小批次。休眠期间本地GPU会暂停，保持开盖和电源连接。
+本地[Outlines约束生成](https://github.com/dottxt-ai/outlines/blob/main/docs/features/models/mlxlm.md)限制JSON格式及允许的编号；它不能保证事实正确。紧凑标注通过已知句子ID还原原始引句，不使用模型改写的句子冒充原文。未知引用、虚构引句、缺失层级、循环或不足三层的推理链仍被拒绝。只允许已知句子ID还原到所属证据ID、完全相同姓名去重，记录修复前后值；不合并别名、不补造人物或语义。修订标注协议后可重试旧协议失败记录，原始输出保留归档，不修改分组和复杂度门槛。格式错误每协议最多两次尝试；另允许一次来源约束的语义修订，原始输出、反馈、修订提示和前次结果哈希保留。修订只能改正有来源支持的标签，不能强制翻转完整性或补造三层依赖。仍未通过则隔离，不无限重试。14B默认每批1案、每2案重启工作进程；内存不足减小批次，计算阶段超过30分钟则停止或缩小批次。休眠期间本地GPU会暂停，保持开盖和电源连接。
 
 结构通过后，另一次本地生成执行语义质检：全案参与人支持与覆盖、证人/被害人误分类、角色与动作一致、别名明示对应、事件支持和覆盖、真实矛盾、必要依赖、与来源参考的一致性。任何否定项、错误码或未完成质检都隔离；输出及质检绑定原文和标注哈希。标注与语义质检均使用同一固定的本地标注基座；与待测4B属于相同模型系列，相关错误仍可能存在，不能冒充人工独立审定。
 
@@ -66,7 +66,7 @@ python3 -m venv .venv
 # 确认已有data_sources.md所述原始来源和去重审计，再离线处理
 .venv/bin/python scripts/prepare_five_dimensions.py
 .venv/bin/python scripts/download_local_model.py --profile curator
-.venv/bin/python scripts/annotate_five_dimensions_batch.py --limit 2000 --batch-size 1 --model-profile curator --retry-rejected
+.venv/bin/python scripts/annotate_five_dimensions_batch.py --limit 2000 --batch-size 1 --model-profile curator --retry-rejected --repair-rejected
 .venv/bin/python scripts/assemble_five_dimensions.py
 # 必须已导出完整600案；不足会被阻止
 .venv/bin/python scripts/train_local.py

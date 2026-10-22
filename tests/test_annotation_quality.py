@@ -43,3 +43,12 @@ def test_retry_budget_cannot_loop_forever_or_retry_semantic_failures():
     assert not retry_checkpoint(old|{'protocol_attempts':2},args)
     assert not retry_checkpoint(old|{'status':'semantic_quality_rejected'},args)
     assert retry_checkpoint(old|{'generation_protocol':'older'},args)
+
+
+def test_semantic_revision_is_explicit_and_hard_bounded():
+    args=Namespace(retry_errors=True,retry_rejected=True,max_case_attempts=2,repair_rejected=True)
+    old={'status':'semantic_quality_rejected','generation_protocol':PROTOCOL,'semantic_repair_attempts':0,
+         'raw_annotation':{'synthetic_mechanism_only':True}}
+    assert retry_checkpoint(old,args)
+    assert not retry_checkpoint(old|{'semantic_repair_attempts':1},args)
+    assert not retry_checkpoint(old|{'status':'complexity_or_reference_rejected'},args)

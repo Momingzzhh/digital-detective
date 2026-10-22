@@ -44,13 +44,13 @@ def annotate_until_ready(batch_size, chunk_cases, annotation_model='curator'):
         if (ROOT/'runtime/stop_five_dimensions_annotation').exists(): return
         chunks += 1
         state('annotating_local_cases',batch_size=batch_size,annotation_chunk=chunks,
-              machine_annotated=report.get('machine_annotated',0))
+              machine_annotated=report.get('machine_annotated',0),reason='Local annotation, source checks and semantic screening; no external model API')
         result_path = ROOT/'runtime/five_dimensions_annotation_result.json'
         result_path.unlink(missing_ok=True)
         attempt_start = datetime.now(timezone.utc).isoformat()
         try:
             step('annotate_five_dimensions_batch.py', '--limit', chunk_cases, '--batch-size', batch_size,
-                 '--max-tokens', 4000, '--retry-rejected', '--retry-errors','--model-profile',annotation_model)
+                 '--max-tokens', 4000, '--retry-rejected', '--retry-errors','--repair-rejected','--model-profile',annotation_model)
         except subprocess.TimeoutExpired:
             if batch_size == 1: raise
             batch_size //= 2

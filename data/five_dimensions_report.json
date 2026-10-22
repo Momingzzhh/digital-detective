@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-22T09:12:37.148776+00:00",
+  "generated_at": "2026-10-22T11:34:18.109812+00:00",
   "version": "five-dimensions-v2",
   "target": 600,
   "minimum_cases": 501,
@@ -32,7 +32,8 @@
   "source_extraction_version": "source-sections-v3.9",
   "note": "Structural pool only. Real conflict/multiple investigated persons, necessary logic depth and sufficient clues still require annotation and review.",
   "annotation_status_counts": {
-    "semantic_quality_rejected": 4
+    "complexity_or_reference_rejected": 12,
+    "semantic_quality_rejected": 8
   },
   "current_split_counts": {},
   "dataset_target_assembled": false,
@@ -40,6 +41,7 @@
   "dataset_binding": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
   "annotation_backend": "local",
   "planned_annotator": "Qwen/Qwen3-14B-MLX-4bit",
-  "annotator_preparation": "public_weights_downloading",
-  "training_complete": false
+  "annotator_preparation": "local_weights_ready",
+  "training_complete": false,
+  "annotator_manifest_binding": "fa06b8ec7641c8fb2fc2e97f43a242c57058107365481bd0fe9c6966458cee5d"
 }

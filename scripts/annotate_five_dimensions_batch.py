@@ -27,6 +27,10 @@ PROTOCOL = 'compact-json-v6-local-curator'
 RESULT = ROOT/'runtime/five_dimensions_annotation_result.json'
 PROGRESS = ROOT/'runtime/five_dimensions_annotation_progress.json'
 FAILURE = ROOT/'runtime/five_dimensions_annotation_failure.json'
+REPAIR_POLICY = 'one-source-bound-semantic-repair-v1'
+REPAIR_PROMPT = '''上次候选未通过核验。请对照本案原文审查反馈并修正标注；反馈也可能误读原文，不能为通过检查而盲从。
+纯证人、纯被害人、正常购货者、仅在场者不自动成为犯罪协助者，不能用“无法确认”收纳所有无关人物。删除原本不存在的矛盾；不知情和互补分工不是矛盾。没有别名可留空，真实但未解决的矛盾应如实保留。
+每个角色和事件须由引用句子支持。依赖链须从较小的原始观察出发，经其他来源关联再核查行为；不能先给全案结论后用时间顺序罗列细节。无法形成必要的三层关联或覆盖不足时如实保留不足，不得捏造依赖或强行将完整性改为true。只允许这一次来源约束的修订，仍须重新经过全部校验。'''
 
 
 def binding(row):
@@ -54,6 +58,9 @@ def retry_checkpoint(old, args):
     older = old.get('generation_protocol') != PROTOCOL
     if older and (args.retry_rejected or old.get('generation_protocol') == 'compact-json-v1-eos-stop'):
         return True
+    if (old['status']=='semantic_quality_rejected' and getattr(args,'repair_rejected',False)
+        and old.get('semantic_repair_attempts',0)<1
+        and (old.get('raw_compact_annotation') or old.get('raw_annotation'))):return True
     errors = old['status'] == 'local_annotation_error' or (
         not old.get('raw_annotation') and 'validation error' in old.get('error',''))
     attempts = old.get('protocol_attempts', 1) if not older else 0
@@ -73,7 +80,7 @@ def main(args):
     rows = [json.loads(l) for l in (ROOT / 'data/processed/five_dimensions_v2/candidates.private.jsonl').open()]
     if args.split != 'all': rows = [r for r in rows if r['split'] == args.split]
     counts = Counter(); pending = []; existing = Counter()
-    attempts = {}
+    attempts = {}; repair_context = {}
     # Source metadata priority is independent of agent predictions and scores.
     rows.sort(key=lambda r: len(r['hidden_gold'].get('adjudicated_perpetrators',[])) < 2)
     for row in rows:
@@ -84,6 +91,10 @@ def main(args):
             if old.get('annotation_binding') == expected:
                 existing[old['status']] += 1
                 if not retry_checkpoint(old,args): continue
+                if old['status']=='semantic_quality_rejected' and (old.get('raw_compact_annotation') or old.get('raw_annotation')):
+                    repair_context[row['case_id']]={'previous_annotation':old.get('raw_compact_annotation') or old['raw_annotation'],
+                        'feedback':old.get('semantic_audit',{'error':old.get('error','')}),
+                        'previous_result_binding':fingerprint(old)}
                 history = output / 'history'; history.mkdir(exist_ok=True)
                 archived = history / (row['case_id'] + '.' + fingerprint(old)[:16] + '.json')
                 if not archived.exists(): archived.write_bytes(path.read_bytes())
@@ -124,7 +135,11 @@ def main(args):
         reserved = 0
         for row, schema in zip(batch, schemas):
             system = INSTRUCTIONS + '\n只输出JSON数据实例。Schema：' + json.dumps(schema.model_json_schema(), ensure_ascii=False)
-            messages = [{'role':'system','content':system}, {'role':'user','content':json.dumps(payload(row),ensure_ascii=False)}]
+            content=payload(row)
+            if row['case_id'] in repair_context:
+                system+='\n'+REPAIR_PROMPT
+                content['source_bound_revision']=repair_context[row['case_id']]
+            messages = [{'role':'system','content':system}, {'role':'user','content':json.dumps(content,ensure_ascii=False)}]
             prompt_tokens = len(tokenizer.apply_chat_template(messages,tokenize=True,add_generation_prompt=True,enable_thinking=False))
             if prompt_tokens + args.max_tokens > context_limit:
                 save(output/(row['case_id']+'.json'), {'case_id':row['case_id'],'group_id':row['group_id'],
@@ -151,8 +166,12 @@ def main(args):
                 'annotator_manifest_binding':fingerprint(json.loads((model_path()/'local_manifest.json').read_text())),
                 'generation_protocol':PROTOCOL,
                 'protocol_attempts':attempts.get(row['case_id'],0)+1,
+                'semantic_repair_attempts':int(row['case_id'] in repair_context),
                 'actual_prompt_sha256':fingerprint(requests[index][0]),
                 'generated_at':datetime.now(timezone.utc).isoformat()}
+            if row['case_id'] in repair_context:
+                result.update(repair_policy=REPAIR_POLICY,repair_prompt_sha256=fingerprint(REPAIR_PROMPT),
+                    previous_result_binding=repair_context[row['case_id']]['previous_result_binding'])
             try:
                 raw = schema.model_validate_json(text).model_dump(); result['raw_compact_annotation'] = raw
                 data = canonical(raw, row); result['raw_annotation'] = data
@@ -232,5 +251,6 @@ if __name__ == '__main__':
     parser.add_argument('--retry-errors',action='store_true')
     parser.add_argument('--max-case-attempts',type=int,default=2)
     parser.add_argument('--split',choices=['all','train','dev','test'],default='all')
+    parser.add_argument('--repair-rejected',action='store_true',help='One source-bound revision of a semantic failure; original output is archived, all gates rerun')
     parser.add_argument('--retry-rejected',action='store_true',help='Retry failures from an older protocol once; never changes splits or validity checks')
     main(parser.parse_args())

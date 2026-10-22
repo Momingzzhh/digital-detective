@@ -29,6 +29,31 @@
     "batch_seconds": 199.67
   },
   "default_annotation_model_profile": "curator",
-  "curator_14b_resource_probe_completed": false,
-  "curator_note": "Official 7.86GB local weights downloading; memory and quality results not yet measured. The recorded batch-2 metrics use the earlier 4B annotator."
+  "curator_14b_resource_probe_completed": true,
+  "curator_note": "At least one actual generation batch completed; memory evidence does not establish semantic quality or accuracy.",
+  "curator_14b_last_batch": {
+    "recorded_at": "2026-10-22T11:27:37.990231+00:00",
+    "batch_size": 1,
+    "protocol": "compact-json-v6-local-curator",
+    "generation_stats": {
+      "prompt_tokens": 6569,
+      "prompt_tps": 73.22218561973261,
+      "prompt_time": 89.71324666700093,
+      "generation_tokens": 1026,
+      "generation_tps": 7.677099271682355,
+      "generation_time": 133.6442272909626,
+      "peak_memory": 9.925583929
+    },
+    "status_counts": {
+      "complexity_or_reference_rejected": 1
+    }
+  },
+  "curator_14b_probe_summary": {
+    "recorded_at": "2026-10-22T11:35:24.607124+00:00",
+    "completed_generation_batches": 20,
+    "maximum_observed_peak_memory_gb": 10.070288185,
+    "accepted_annotations_at_summary": 0,
+    "human_qualified_cases": 0,
+    "accuracy_claim": false
+  }
 }
