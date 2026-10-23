@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 from app.five_dimensions import training_examples, conclusion, TRAIN_SYSTEM, view, validate_splits, fingerprint, record_binding, FiveDimensions, validate_annotation, ground_truth, VERSION
 from app.local_model import model_path, verify_model_files
 from app.local_resource import model_resource
+from app.local_context import chat_token_ids, TOKEN_POLICY
 
 
 def observed_metrics(log_path):
@@ -61,7 +62,7 @@ def main(args):
     out = ROOT / 'artifacts/training' / run_id
     (out / 'data').mkdir(parents=True)
     code_hashes = {}
-    for relative in ('scripts/train_local.py','app/five_dimensions.py','requirements-mac.lock'):
+    for relative in ('scripts/train_local.py','app/five_dimensions.py','app/local_context.py','requirements-mac.lock'):
         content = (ROOT/relative).read_bytes()
         code_hashes[relative] = hashlib.sha256(content).hexdigest()
         destination = out/'code'/relative
@@ -69,7 +70,7 @@ def main(args):
     def write(name, examples):
         accepted = []; rejected = []
         for example in examples:
-            token_count = len(tokenizer.apply_chat_template(example['messages'], tokenize=True, add_generation_prompt=False))
+            token_count = len(chat_token_ids(tokenizer, example['messages'], generation=False))
             if token_count > args.max_seq_length:
                 rejected.append({'case_id': example['case_id'], 'variant': example.get('variant'), 'tokens': token_count})
             else: accepted.append(example)
@@ -134,6 +135,7 @@ def main(args):
         'dataset_binding': fingerprint([r['record_binding'] for r in rows]),
         'base_manifest_binding': fingerprint(base_manifest),
         'code_file_sha256': code_hashes,
+        'token_length_policy': TOKEN_POLICY,
         'model_path': str(model_path().relative_to(ROOT)),
         'pilot': args.pilot, 'train_groups': len(trained_groups), 'train_examples': len(accepted),
         'validation_kind': validation_kind, 'iters': iters, 'minimum_iters_for_full_example_coverage': minimum_iters,

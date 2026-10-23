@@ -1,0 +1,36 @@
+{
+  "generated_at": "2026-10-23T17:43:14.232286+00:00",
+  "token_length_policy": "explicit-flat-chat-token-ids-v1",
+  "transformers_version": "5.0.0rc1",
+  "pool_binding": "3605bdb5d2fe1e4254a4f341ad7afa8b5a4597f4398fc2cdfd1da5094eba8717",
+  "curator_manifest_binding": "fa06b8ec7641c8fb2fc2e97f43a242c57058107365481bd0fe9c6966458cee5d",
+  "annotation_context_limit": 16384,
+  "annotation_generation_budget": 4000,
+  "fresh_annotation_only": true,
+  "repairs_and_semantic_audits_checked_separately_at_runtime": true,
+  "pool_cases": 1999,
+  "by_split": {
+    "train": {
+      "fits": 1343,
+      "reserved": 57
+    },
+    "dev": {
+      "fits": 299,
+      "reserved": 11
+    },
+    "test": {
+      "fits": 276,
+      "reserved": 13
+    }
+  },
+  "source_truncation": false,
+  "qualified_cases_from_this_check": 0,
+  "min_prompt_tokens": 2850,
+  "max_prompt_tokens": 17804,
+  "superseded_v1_pilot_length_reaudit": {
+    "examples": 20,
+    "max_tokens": 5005,
+    "over_6144": 0,
+    "acceptance_result": false
+  }
+}

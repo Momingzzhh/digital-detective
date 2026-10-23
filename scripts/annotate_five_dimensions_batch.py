@@ -15,6 +15,7 @@ from app.five_dimensions import FiveDimensions, VERSION, fingerprint, validate_a
 from app.local_model import complete_batch
 from app.local_model import model_path
 from app.config import settings
+from app.local_context import partition_requests, ContextLimitError, TOKEN_POLICY
 from scripts.annotate_five_dimensions import PROMPT, normalize_references
 from scripts.compact_annotation import INSTRUCTIONS, schema_for, payload, canonical
 from pydantic import ValidationError
@@ -65,6 +66,31 @@ def retry_checkpoint(old, args):
         not old.get('raw_annotation') and 'validation error' in old.get('error',''))
     attempts = old.get('protocol_attempts', 1) if not older else 0
     return bool(args.retry_errors and errors and attempts < args.max_case_attempts)
+
+
+def bounded_generation(tokenizer, requests, max_tokens, context_limit, progress=None):
+    """Reserve each oversized request without truncating or losing its peers."""
+    fitting, reserved = partition_requests(tokenizer, requests, max_tokens, context_limit)
+    indices = [index for index, _ in fitting]
+    prompt_counts = dict(fitting)
+    while indices:
+        try:
+            texts, stats = complete_batch([requests[i] for i in indices], max_tokens, progress=progress)
+        except ContextLimitError as exc:
+            # The loaded MLX tokenizer is authoritative if its template differs
+            # from the CPU preflight. No generation has begun at this point.
+            original_index = indices.pop(exc.index)
+            reserved.append(ContextLimitError(exc.prompt_tokens, max_tokens, context_limit, original_index))
+            continue
+        if len(texts) != len(indices):
+            raise ValueError('Batch output count differs from request count; no case pairing was guessed')
+        return [(i, text, prompt_counts[i]) for i, text in zip(indices, texts)], stats, reserved
+    return [], {}, reserved
+
+
+def context_metadata(exc):
+    return {'prompt_tokens':exc.prompt_tokens,'generation_budget':exc.max_tokens,
+            'context_limit':exc.limit,'token_length_policy':TOKEN_POLICY}
 
 
 def main(args):
@@ -131,8 +157,7 @@ def main(args):
                 save(PROGRESS,progress_base | event | {'updated_at':datetime.now(timezone.utc).isoformat()})
                 last_progress = now
         progress({'stage':'preparing'},True)
-        schemas = [schema_for(row) for row in batch]; requests = []; valid_rows = []; valid_schemas = []
-        reserved = 0
+        schemas = [schema_for(row) for row in batch]; requests = []
         for row, schema in zip(batch, schemas):
             system = INSTRUCTIONS + '\n只输出JSON数据实例。Schema：' + json.dumps(schema.model_json_schema(), ensure_ascii=False)
             content=payload(row)
@@ -140,26 +165,24 @@ def main(args):
                 system+='\n'+REPAIR_PROMPT
                 content['source_bound_revision']=repair_context[row['case_id']]
             messages = [{'role':'system','content':system}, {'role':'user','content':json.dumps(content,ensure_ascii=False)}]
-            prompt_tokens = len(tokenizer.apply_chat_template(messages,tokenize=True,add_generation_prompt=True,enable_thinking=False))
-            if prompt_tokens + args.max_tokens > context_limit:
-                save(output/(row['case_id']+'.json'), {'case_id':row['case_id'],'group_id':row['group_id'],
-                    'split':row['split'],'annotation_binding':binding(row),'source_binding':row['source_binding'],
-                    'generation_protocol':PROTOCOL,'actual_prompt_sha256':fingerprint(messages),
-                    'human_reviewed':False,'status':'local_context_reserved_for_later',
-                    'prompt_tokens':prompt_tokens,'generation_budget':args.max_tokens,'context_limit':context_limit})
-                reserved += 1
-                continue
-            valid_rows.append(row); valid_schemas.append(schema); requests.append((messages,schema))
+            requests.append((messages,schema))
         begin = time.monotonic()
         try:
-            texts, stats = complete_batch(requests, args.max_tokens, progress=progress) if requests else ([],{})
+            generated, stats, reserved = bounded_generation(tokenizer,requests,args.max_tokens,context_limit,progress)
         except Exception as exc:
             # A driver failure is not a case annotation. Preserve all prior
             # checkpoints and let the supervisor restart at a smaller batch.
             save(FAILURE,progress_base | {'failed_at':datetime.now(timezone.utc).isoformat(),'error':str(exc)[:500]})
             raise
+        for exc in reserved:
+            row = batch[exc.index]
+            save(output/(row['case_id']+'.json'), {'case_id':row['case_id'],'group_id':row['group_id'],
+                'split':row['split'],'annotation_binding':binding(row),'source_binding':row['source_binding'],
+                'generation_protocol':PROTOCOL,'actual_prompt_sha256':fingerprint(requests[exc.index][0]),
+                'human_reviewed':False,'status':'local_context_reserved_for_later',**context_metadata(exc)})
         results = []
-        for index,(row, schema, text) in enumerate(zip(valid_rows, valid_schemas, texts)):
+        for index, text, prompt_tokens in generated:
+            row, schema = batch[index], schemas[index]
             result = {'case_id':row['case_id'],'group_id':row['group_id'],'split':row['split'],
                 'annotation_binding':binding(row),'source_binding':row['source_binding'],
                 'annotator':'local-'+args.model_profile+'-constrained-minibatch','human_reviewed':False,
@@ -168,6 +191,7 @@ def main(args):
                 'protocol_attempts':attempts.get(row['case_id'],0)+1,
                 'semantic_repair_attempts':int(row['case_id'] in repair_context),
                 'actual_prompt_sha256':fingerprint(requests[index][0]),
+                'prompt_tokens':prompt_tokens,'token_length_policy':TOKEN_POLICY,
                 'generated_at':datetime.now(timezone.utc).isoformat()}
             if row['case_id'] in repair_context:
                 result.update(repair_policy=REPAIR_POLICY,repair_prompt_sha256=fingerprint(REPAIR_PROMPT),
@@ -194,8 +218,14 @@ def main(args):
                 for row,r in audit_pairs]
             def audit_progress(event):progress(event | {'phase':'semantic_audit'})
             try:
-                audit_texts,audit_stats=complete_batch(audit_requests,1400,progress=audit_progress)
-                for (row,r),raw_audit in zip(audit_pairs,audit_texts):
+                audited,audit_stats,audit_reserved=bounded_generation(tokenizer,audit_requests,1400,context_limit,audit_progress)
+                for exc in audit_reserved:
+                    row,r=audit_pairs[exc.index]
+                    r.update(status='local_context_reserved_for_later',error='Semantic screen exceeds context; annotation remains unverified',
+                             semantic_audit_context=context_metadata(exc))
+                for index,raw_audit,prompt_tokens in audited:
+                    row,r=audit_pairs[index]
+                    r['semantic_audit_prompt_tokens']=prompt_tokens
                     r['semantic_audit_raw']=raw_audit
                     try:
                         r['semantic_audit']=SemanticAudit.model_validate_json(raw_audit).model_dump()
@@ -229,7 +259,7 @@ def main(args):
             save(ROOT/'data/five_dimensions_report.json',current)
         print(json.dumps({'processed':processed,'seconds':round(time.monotonic()-begin,2),
             'accepted_by_split':dict(counts),'attempt_status_counts':dict(existing),
-            'reserved_over_context_this_batch':reserved,'generation_stats':stats}), flush=True)
+            'reserved_over_context_this_batch':len(reserved),'generation_stats':stats}), flush=True)
         with (ROOT/'runtime/five_dimensions_annotation_batches.jsonl').open('a') as stream:
             stream.write(json.dumps({'generated_at':datetime.now(timezone.utc).isoformat(),
                 'protocol':PROTOCOL,'batch_size':len(batch),'seconds':round(time.monotonic()-begin,2),

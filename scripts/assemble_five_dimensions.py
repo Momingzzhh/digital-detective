@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT))
 from app.five_dimensions import fingerprint, record_binding, validate_splits, training_examples, view, validate_annotation, FiveDimensions, conclusion, TRAIN_SYSTEM
 from app.five_dimensions import ground_truth
 from app.annotation_quality import quality_passed
+from app.local_context import chat_token_ids
 from app.research import CHECKS as HUMAN_CHECKS
 from export_review_bundle import write_rows
 
@@ -43,7 +44,7 @@ def main():
             messages = [{'role':'system','content':TRAIN_SYSTEM},
                 {'role':'user','content':json.dumps({'evidence':view(row)},ensure_ascii=False)},
                 {'role':'assistant','content':json.dumps(conclusion(row),ensure_ascii=False)}]
-            tokens = len(tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=False))
+            tokens = len(chat_token_ids(tokenizer, messages, generation=False))
             if tokens > 6144:
                 states['train_context_reserved_for_later'] += 1
                 continue

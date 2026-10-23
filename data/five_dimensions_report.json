@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-22T11:34:18.109812+00:00",
+  "generated_at": "2026-10-23T17:43:08.183070+00:00",
   "version": "five-dimensions-v2",
   "target": 600,
   "minimum_cases": 501,
@@ -32,8 +32,8 @@
   "source_extraction_version": "source-sections-v3.9",
   "note": "Structural pool only. Real conflict/multiple investigated persons, necessary logic depth and sufficient clues still require annotation and review.",
   "annotation_status_counts": {
-    "complexity_or_reference_rejected": 12,
-    "semantic_quality_rejected": 8
+    "complexity_or_reference_rejected": 23,
+    "semantic_quality_rejected": 3
   },
   "current_split_counts": {},
   "dataset_target_assembled": false,

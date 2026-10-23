@@ -6,6 +6,7 @@ from pathlib import Path
 import threading
 from .config import ROOT, settings
 from .local_resource import model_resource
+from .local_context import chat_token_ids, check_context
 
 _lock = threading.RLock()
 _loaded = None
@@ -72,27 +73,29 @@ def complete(messages, max_tokens=4096, schema=None):
     global _outlines_model
     with _lock, model_resource('inference'):
         model, tokenizer, generate, make_sampler, mx = _load()
-        prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        count = len(tokenizer.encode(prompt))
+        prompt = chat_token_ids(tokenizer, messages)
         limit = int(settings().get('LOCAL_CONTEXT_TOKENS', '16384'))
-        if count + max_tokens > limit:
-            raise ValueError(f'材料超出本地上下文上限（{limit} tokens），请拆分材料；未截断证据。')
+        check_context(prompt, max_tokens, limit)
+        processors = None
         if schema is not None:
             import outlines
-            from outlines.inputs import Chat
             if _outlines_model is None or _outlines_model[0] is not model:
                 _outlines_model = (model, outlines.from_mlxlm(model, tokenizer))
-            text = _outlines_model[1](Chat(messages), output_type=schema,
-                max_tokens=max_tokens, sampler=make_sampler(temp=0.0), verbose=False)
-        else:
-            text = generate(model, tokenizer, prompt=prompt, max_tokens=max_tokens,
-                            sampler=make_sampler(temp=0.0), verbose=False)
+            constraint = outlines.Generator(_outlines_model[1], schema).logits_processor
+            constraint.reset()
+            processors = [constraint]
+        # Pass the exact checked IDs, rather than re-rendering through a second
+        # chat wrapper with potentially different defaults.
+        text = generate(model, tokenizer, prompt=prompt, max_tokens=max_tokens,
+                        sampler=make_sampler(temp=0.0), logits_processors=processors, verbose=False)
         mx.clear_cache()
         return text
 
 
 def complete_batch(requests, max_tokens=3000, progress=None):
     """Independent constrained processors per prompt, using MLX BatchGenerator."""
+    if not requests:
+        return [], {}
     with _lock, model_resource('annotation_batch'):
         model, tokenizer, _, make_sampler, mx = _load()
         import outlines
@@ -102,8 +105,8 @@ def complete_batch(requests, max_tokens=3000, progress=None):
         limit = int(settings().get('LOCAL_CONTEXT_TOKENS', '16384'))
         for index,(messages, schema) in enumerate(requests):
             if progress: progress({'stage':'compiling_constraints','item':index+1,'items':len(requests)})
-            prompt = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, enable_thinking=False)
-            if len(prompt) + max_tokens > limit: raise ValueError('Batch context limit exceeded; nothing truncated')
+            prompt = chat_token_ids(tokenizer, messages, thinking=False)
+            check_context(prompt, max_tokens, limit, index)
             prompts.append(prompt)
             generator = outlines.Generator(wrapped, schema)
             generator.logits_processor.reset()

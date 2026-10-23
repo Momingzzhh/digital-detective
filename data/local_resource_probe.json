@@ -32,17 +32,17 @@
   "curator_14b_resource_probe_completed": true,
   "curator_note": "At least one actual generation batch completed; memory evidence does not establish semantic quality or accuracy.",
   "curator_14b_last_batch": {
-    "recorded_at": "2026-10-22T11:27:37.990231+00:00",
+    "recorded_at": "2026-10-23T17:43:08.289840+00:00",
     "batch_size": 1,
     "protocol": "compact-json-v6-local-curator",
     "generation_stats": {
-      "prompt_tokens": 6569,
-      "prompt_tps": 73.22218561973261,
-      "prompt_time": 89.71324666700093,
-      "generation_tokens": 1026,
-      "generation_tps": 7.677099271682355,
-      "generation_time": 133.6442272909626,
-      "peak_memory": 9.925583929
+      "prompt_tokens": 10431,
+      "prompt_tps": 58.494309289769085,
+      "prompt_time": 178.32503925000492,
+      "generation_tokens": 2182,
+      "generation_tps": 6.8071173094403745,
+      "generation_time": 320.54684836618253,
+      "peak_memory": 10.189955629
     },
     "status_counts": {
       "complexity_or_reference_rejected": 1
