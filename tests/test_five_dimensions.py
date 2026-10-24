@@ -106,6 +106,19 @@ def test_full_case_roles_are_separate_from_current_judgment_names():
     assert gold['chronology'][0]['supporting_sentences'][0]['text']==spans[0]['text']
 
 
+def test_role_identity_requires_cited_sentence_or_explicit_statement_speaker():
+    row,ann,spans=fixture()
+    row['evidence'][0]['text']='甲描述独立事项。稍后在另一件事中提到乙。'
+    spans[0].update(text='甲描述独立事项。',start=0,end=len('甲描述独立事项。'))
+    with pytest.raises(ValueError,match='Role support'):
+        validate_annotation(row,ann,spans)
+    row['evidence'][0]['text']='1.当事人甲供述：我搬走了物品。'
+    start=row['evidence'][0]['text'].index('我')
+    spans[0].update(text='我搬走了物品。',start=start,end=len(row['evidence'][0]['text']))
+    ann['actor_assessments'][1]['sentence_ids']=['S2']
+    assert validate_annotation(row,ann,spans)['reasoning_depth']==3
+
+
 def test_compact_wire_derives_indexes_without_inventing_names_or_quotes():
     from scripts.compact_annotation import canonical,schema_for
     row,ann,spans=fixture()

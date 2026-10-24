@@ -72,6 +72,8 @@ QLoRA会实际更新适配器权重，记录参数、数据及权重哈希，检
 
 当前先进行训练集标注校准：`scripts/prepare_calibration_review.py --limit 10`生成原文与候选标注对照页。研究人员可先核对3案并导出反馈，操作见[校准与复核规程](docs/local_training_protocol.md#人工复核与真人验收)。校准反馈不自动批准正式案例，包内原文、身份与意见均不提交GitHub。长度检查已修复为显式统计token ID，[候选池长度审计](data/local_context_audit.json)仅判断可容纳性，不代表数据已合格。
 
+已收到并确认3份训练集人工校准反馈，均要求修订，见[回收统计](data/calibration_feedback_report.json)。程序据此加强引用与来源类型检查，并另建3案的来源修订，原冻结池不覆盖。人工意见、Word和具体修订引文均保留本机，汇总与[结构规则审计](data/calibration_source_policy_audit.json)不计作合格数据或准确率证据。
+
 在.env设置RESEARCH_REVIEW_ENABLED=true，登录后打开 http://127.0.0.1:8765/research 。该页面向复核人员显示原文、隐藏答案及五维标注，至少验证与测试集合必须逐案人工核验；acting Agent只收到研究人员选择释放的原始证据。
 
 正式训练后将.env中的LOCAL_ADAPTER_PATH设置为run.json记录的适配器目录。完成真人验证集交互、评分后运行：

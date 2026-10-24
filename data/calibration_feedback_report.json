@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-10-24T15:04:13.281592+00:00",
+  "protocol": "word-calibration-feedback-v1",
+  "scope": "Training-only feedback, not formal heldout source approvals",
+  "written": true,
+  "returned_documents": 3,
+  "training_cases": 3,
+  "attested_feedback_cases": 3,
+  "decision_counts": {
+    "needs_revision": 3
+  },
+  "formal_approvals_created": 0,
+  "qualified_cases_added": 0
+}

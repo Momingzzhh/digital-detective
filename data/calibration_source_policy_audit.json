@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-10-24T16:12:07.438799+00:00",
+  "rule_version": "source-sections-v4.0",
+  "audit_kind": "Automatic structural checks derived from training calibration; no agent predictions",
+  "frozen_candidate_pool_cases": 1999,
+  "cases_without_new_boundary_or_filename_flags": 1998,
+  "cases_with_new_flags": 1,
+  "case_flag_counts_nonexclusive": {
+    "current_offence_file_label": 1,
+    "generic_conclusive_confession": 1
+  },
+  "evidence_kind_changes_nonexclusive": {
+    "鉴定意见 -> 检验报告": 72,
+    "检查笔录 -> 勘验笔录": 193,
+    "物证 -> 检验报告": 33,
+    "被害人陈述 -> 当事人供述": 15,
+    "辨认笔录 -> 检验报告": 1,
+    "书证 -> 检验报告": 18,
+    "提取笔录 -> 检验报告": 4,
+    "书证 -> 当事人供述": 1,
+    "电子数据 -> 检验报告": 1,
+    "视听资料 -> 检验报告": 2
+  },
+  "cases_meeting_count_type_and_new_text_checks": 1995,
+  "frozen_pool_modified": false,
+  "heldout_case_semantics_manually_read": false,
+  "qualified_cases_added": 0,
+  "note": "No source sufficiency, necessary depth, human approval, or task accuracy is established by these counts."
+}

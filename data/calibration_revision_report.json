@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-10-24T16:11:17.970729+00:00",
+  "protocol": "calibrated-feedback-bound-annotation-v2",
+  "attempted_training_revisions": 1,
+  "status_counts": {
+    "semantic_quality_rejected": 1
+  },
+  "formal_dataset_changed": false,
+  "heldout_materials_used": false,
+  "external_inference_api_calls": 0,
+  "qualified_cases_added": 0,
+  "formal_training_complete": false,
+  "local_annotation_attempts_by_version": [
+    {
+      "source_revision": "51ad996ee5b6f8d2",
+      "protocol": "calibrated-source-only-annotation-v1",
+      "status": "complexity_or_reference_rejected",
+      "seconds": 344.3
+    },
+    {
+      "source_revision": "182c8cb9577d0ce5",
+      "protocol": "calibrated-feedback-bound-annotation-v2",
+      "status": "semantic_quality_rejected",
+      "seconds": 309.59
+    }
+  ],
+  "assistant_aided_drafts": 1,
+  "assistant_draft_local_screen_status": "rejected_internal_inconsistency",
+  "human_requalified_revision_cases": 0,
+  "original_confirmed_training_feedback_cases": 3,
+  "formal_heldout_approvals_created": 0
+}

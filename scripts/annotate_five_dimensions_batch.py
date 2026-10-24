@@ -94,6 +94,9 @@ def context_metadata(exc):
 
 
 def main(args):
+    if getattr(args,'calibration_revision',None):
+        from scripts.annotate_calibration_revision import main as revise_calibration
+        return revise_calibration(args)
     acquire_annotation_lock()
     agent_path=str(model_path())
     if args.model_profile=='curator':
@@ -275,6 +278,9 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--limit',type=int,default=2000)
+    parser.add_argument('--calibration-revision',help='Private, isolated training source revision; never exported into the formal dataset')
+    parser.add_argument('--case-id',help='One training revision to diagnose; only used with --calibration-revision')
+    parser.add_argument('--audit-draft',help='Screen a private assistant-authored draft without claiming local-model authorship')
     parser.add_argument('--batch-size',type=int,choices=[1,2,4,8],default=1)
     parser.add_argument('--model-profile',choices=['agent','curator'],default='curator')
     parser.add_argument('--max-tokens',type=int,default=4000)

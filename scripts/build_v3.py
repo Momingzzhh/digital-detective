@@ -20,14 +20,14 @@ sys.path.insert(0, str(ROOT))
 from pydantic import BaseModel, ConfigDict, Field
 from app.llm import structured
 from app.store import initialize, budget_status
-from app.source_policy import court_boundary
+from app.source_policy import court_boundary,require_clean_evidence
 
-VERSION = 'source-sections-v3.9'
+VERSION = 'source-sections-v4.0'
 CODE_SHA256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 START = re.compile(r'下列证据(?:予以|加以|能够|足以)?(?:证实|证明|佐证)?\s*[：:]|证据如下\s*[：:]')
 ITEM = re.compile(r'(?<!\d)(?:^|[。；\s])(?:[（(]?\d{1,2}[）)]?[、.．]|[（(][一二三四五六七八九十]{1,3}[）)])\s*', re.M)
 FACT_HEADING = re.compile(r'(?:^|[。；\s])[一二三四五六七八九十]{1,3}[、.．]\s*(?:被告|\d{4}年|[（(]\d{4})')
-TYPE = re.compile(r'证人.{0,35}?(?:证言|证实|陈述|证明)|被害人.{0,35}?陈述|被告人.{0,35}?供述|(?:鉴定|勘验|辨认|检查)笔录|鉴定意见|物证|书证|现场照片|电子数据|视听资料')
+TYPE = re.compile(r'证人.{0,35}?(?:证言|证实|陈述|证明)|被害人.{0,35}?陈述|被告人.{0,35}?(?:供述|陈述)|(?:现场)?勘验(?:检查)?笔录|(?:鉴定|辨认|检查)笔录|鉴定意见|(?:物证)?检验报告(?:书)?|物证|书证|现场照片|电子数据|视听资料')
 CONTINUED_TYPE = re.compile(r'^[。；\s（）()一二三四五六七八九十\d、.．]*[^：:，,。；\s]{1,35}?(?:证言(?:证明|证实|称)?|供述(?:和辩解|称)?|陈述(?:称)?|鉴定书|检验报告|勘验检查记录|提取笔录)')
 COURT_TAIL = re.compile(r'对于控辩双方|根据上述事实和证据|本院(?:评判|审查|认为|确认)|上述证据(?:经|均|相互)|以上证据(?:经|均|相互)|上述事实并有|被告人.{2,20}供述的事实与起诉指控的事实一致|另(?:经审理)?查明|另经审理查明|证据确实[、，\s]*充分|证实案件相关事实|足以认定')
 LEAK = re.compile(r'本院认为|经审理查明|公诉机关指控|判决如下|判处|构成.{1,15}罪|犯[\u4e00-\u9fff]{1,15}罪|原审法院认定|原判认定|上述证据内容|上述证据|[一二三四五六七八九十]、被告人.{0,35}犯罪事实')
@@ -82,6 +82,7 @@ def evidence_kind(raw):
     match=match or CONTINUED_TYPE.search(prefix)
     if not match:return None
     label=match.group()
+    if '被告人' in label and '陈述' in label:return '当事人供述'
     for token,kind in (('证言','证人证言'),('证人','证人证言'),('供述','当事人供述'),
                        ('陈述','被害人陈述'),('鉴定','鉴定意见'),('检验','检验报告'),
                        ('勘验','勘验笔录'),('提取','提取笔录')):
@@ -123,11 +124,14 @@ def extract_items(fact, charge):
         if fact[full_start:full_end] != raw:
             raise ValueError('source offset mismatch')
         neutral = raw.replace('被告人', '当事人').replace('犯罪嫌疑人', '当事人')
-        results.append({'id':f'E{len(results)+1}', 'text':neutral, 'quote':raw,
+        item={'id':f'E{len(results)+1}', 'text':neutral, 'quote':raw,
                         'kind':kind, 'start':full_start,
                         'end':full_end, 'source_field':'ajjbqk',
                         'source_context_before':before,
-                        'transforms':[] if neutral == raw else [{'type':'neutral_role_label','from':['被告人','犯罪嫌疑人'],'to':'当事人'}]})
+                        'transforms':[] if neutral == raw else [{'type':'neutral_role_label','from':['被告人','犯罪嫌疑人'],'to':'当事人'}]}
+        try:require_clean_evidence([item])
+        except ValueError:continue
+        results.append(item)
     return results
 
 

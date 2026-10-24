@@ -26,6 +26,23 @@ def test_v3_preserves_source_offsets_and_rejects_court_section():
     assert all('法院确认' not in e['text'] for e in items)
 
 
+def test_source_kind_distinguishes_accused_statement_victim_and_lab_report():
+    b=module('build_v3')
+    assert b.evidence_kind('2.被告人甲陈述，我申请后收到款项，用于归还借款。')=='当事人供述'
+    assert b.evidence_kind('3.被害人乙的陈述，自己的物品被拿走，之后向警方反映。')=='被害人陈述'
+    assert b.evidence_kind('10、物证检验报告书证实，两份样本的化验结果为阴性。')=='检验报告'
+    assert b.evidence_kind('5、现场勘验检查笔录，记录了现场实际观察及提取物。')=='勘验笔录'
+
+
+def test_file_label_item_is_excluded_without_stopping_other_evidence():
+    b=module('build_v3')
+    fact=('下列证据证实：1、电子数据，提取结果存放在甲涉嫌测试案.rar文件中，文件标题载明了目前的案件分类与人员信息。 '
+          '2、证人乙的证言：我看到有人将登记在册的物品搬进车里，随后驾车离开，天黑后还曾返回现场。 '
+          '3、鉴定意见：从现场提取的痕迹与车内物品上的痕迹相符，检验过程保留照片及相关编号记录。')
+    items=b.extract_items(fact,'测试罪')
+    assert len(items)==2 and all('涉嫌测试案.rar' not in e['text'] for e in items)
+
+
 def test_same_primary_case_number_groups_across_title_formats():
     p=module('prepare_lecardv2')
     a='某某一审判决书甲省乙市人民法院（2020）甲0101刑初42号：案情'

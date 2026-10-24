@@ -137,12 +137,19 @@ def validate_annotation(record, annotation, sentences):
     identities = set(names)
     for actor in ann.actor_assessments:
         if not set(actor.sentence_ids) <= spans.keys(): raise ValueError('Unknown actor support sentence')
-        sources = [ev[spans[s]['evidence_id']] for s in actor.sentence_ids]
+        sources = [spans[s]['text'] for s in actor.sentence_ids]
         for alias in actor.aliases:
             if alias in identities or not alias or not any(explicit_alias(text,actor.name,alias) for text in ev.values()):
                 raise ValueError('Alias mapping needs explicit unique source identity binding')
             identities.add(alias)
-        if not any(any(n in text for n in [actor.name,*actor.aliases]) for text in sources):
+        identities_for_actor=[actor.name,*actor.aliases]
+        # A statement's explicitly named speaker supplies the context for
+        # first-person references in its later sentences. An incidental mention
+        # elsewhere in a long evidence block does not support an unrelated quote.
+        speaker_bound=any(re.search(r'^\s*(?:\d{1,2}[.．、]\s*)?(?:当事人|被告人|证人|被害人)?\s*'+re.escape(name)+
+            r'(?:的)?(?:供述|陈述|证言)',ev[spans[s]['evidence_id']][:80])
+            for s in actor.sentence_ids for name in identities_for_actor)
+        if not speaker_bound and not any(any(n in text for n in identities_for_actor) for text in sources):
             raise ValueError('Role support does not identify the investigated person')
     for event in ann.events:
         if not set(event.sentence_ids) <= spans.keys(): raise ValueError('Unknown event support sentence')
