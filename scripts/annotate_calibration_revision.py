@@ -16,8 +16,10 @@ from scripts.annotation_lock import acquire_annotation_lock
 from scripts.compact_annotation import INSTRUCTIONS,schema_for,payload,canonical,Strict
 from scripts.annotate_five_dimensions import normalize_references
 from scripts.export_review_bundle import verify
+from app.complexity_review import complexity_exclusion, source_review_hold
+from app.source_policy import require_clean_evidence
 
-PROTOCOL='calibrated-feedback-bound-annotation-v2'
+PROTOCOL='calibrated-feedback-bound-annotation-v5-calibrated-identities'
 RULES='''本轮按已收到的训练组人工校准改进标注，仍只能引用本轮source_evidence。
 裁判认定、公诉指控、文书身份部分以及人工意见都不替代可见证据。别名只收可见原文明示的对应，未显示就留空。
 不能因某人出现在整段另一句就认定当前引用句支持其动作；先核对谁做什么及付款、物品的流转方向，不能把收付款写成同一人自我转交。
@@ -77,6 +79,16 @@ def main(args):
     output=ROOT/'data/review/five_dimensions_v2_calibration_revision'/dataset.parent.name;output.mkdir(parents=True,exist_ok=True)
     progress_path=ROOT/'runtime/calibration_revision_progress.json';counts=Counter();processed=0
     for row in rows[:args.limit]:
+        if complexity_exclusion(row):
+            counts['human_complexity_excluded']+=1
+            continue
+        if source_review_hold(row):
+            counts['human_source_revision_pending']+=1
+            continue
+        try:require_clean_evidence(row['evidence'])
+        except ValueError:
+            counts['source_policy_rejected']+=1
+            continue
         feedback=confirmed_feedback(row)
         notes=create_model('TierNotes',__base__=Strict,**{e['id']:(str,Field(min_length=4,max_length=160)) for e in row['evidence']})
         schema=create_model('CalibratedAnnotation',__base__=schema_for(row),t_notes=(notes,...))
@@ -154,6 +166,8 @@ def audit_draft(args,rows):
     if not draft_path.is_relative_to(private):raise ValueError('Draft must remain in the private revision directory')
     draft=json.loads(draft_path.read_text());row=next((r for r in rows if r['case_id']==draft['case_id']),None)
     if not row or row['source_binding']!=draft['source_binding']:raise ValueError('Draft source differs')
+    if complexity_exclusion(row):raise ValueError('Human-reviewed insufficient complexity; retain draft as a calibration counterexample')
+    if source_review_hold(row):raise ValueError('Confirmed feedback requires source revision before a new draft can be screened')
     if args.model_profile!='curator':raise ValueError('Use the fixed curator for semantic screening')
     ann=validate_annotation(row,draft['raw_annotation'],row['sentence_spans'])
     errors=obvious_quality_errors(ann)

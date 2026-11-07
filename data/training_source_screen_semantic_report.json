@@ -1,0 +1,10 @@
+{
+  "scope": "Assistant review of two exploratory training-source diagnostic outputs; not independent human approval or population quality estimate",
+  "outputs_source_reviewed": 2,
+  "outputs_with_support_or_dependency_errors": 2,
+  "full_case_annotations_approved": 0,
+  "human_approvals_created": 0,
+  "qualified_cases_added": 0,
+  "source_text_removed_to_create_depth": false,
+  "hidden_answers_or_acting_agent_predictions_used": false
+}

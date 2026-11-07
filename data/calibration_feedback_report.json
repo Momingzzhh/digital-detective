@@ -1,13 +1,14 @@
 {
-  "generated_at": "2026-10-24T15:04:13.281592+00:00",
-  "protocol": "word-calibration-feedback-v1",
+  "generated_at": "2026-11-02T06:01:41.833920+00:00",
+  "protocol": "training-calibration-feedback-summary-v2",
   "scope": "Training-only feedback, not formal heldout source approvals",
   "written": true,
-  "returned_documents": 3,
-  "training_cases": 3,
-  "attested_feedback_cases": 3,
+  "returned_documents": 5,
+  "training_cases": 4,
+  "attested_feedback_cases": 4,
   "decision_counts": {
-    "needs_revision": 3
+    "needs_revision": 3,
+    "exclude": 1
   },
   "formal_approvals_created": 0,
   "qualified_cases_added": 0

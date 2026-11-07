@@ -22,12 +22,12 @@ from app.llm import structured
 from app.store import initialize, budget_status
 from app.source_policy import court_boundary,require_clean_evidence
 
-VERSION = 'source-sections-v4.0'
+VERSION = 'source-sections-v4.4'
 CODE_SHA256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 START = re.compile(r'下列证据(?:予以|加以|能够|足以)?(?:证实|证明|佐证)?\s*[：:]|证据如下\s*[：:]')
 ITEM = re.compile(r'(?<!\d)(?:^|[。；\s])(?:[（(]?\d{1,2}[）)]?[、.．]|[（(][一二三四五六七八九十]{1,3}[）)])\s*', re.M)
 FACT_HEADING = re.compile(r'(?:^|[。；\s])[一二三四五六七八九十]{1,3}[、.．]\s*(?:被告|\d{4}年|[（(]\d{4})')
-TYPE = re.compile(r'证人.{0,35}?(?:证言|证实|陈述|证明)|被害人.{0,35}?陈述|被告人.{0,35}?(?:供述|陈述)|(?:现场)?勘验(?:检查)?笔录|(?:鉴定|辨认|检查)笔录|鉴定意见|(?:物证)?检验报告(?:书)?|物证|书证|现场照片|电子数据|视听资料')
+TYPE = re.compile(r'证人.{0,35}?(?:证言|证实|陈述|证明)|被害人.{0,35}?陈述|被告人.{0,35}?(?:供述|陈述)|(?:现场)?勘验(?:检查)?笔录|(?:鉴定|辨认|检查|提取)笔录|鉴定意见|鉴定书|检测报告(?:书)?|(?:物证)?检验报告(?:书)?|汇款记录|会议纪要|会议记录|物证|书证|现场照片|电子数据|视听资料')
 CONTINUED_TYPE = re.compile(r'^[。；\s（）()一二三四五六七八九十\d、.．]*[^：:，,。；\s]{1,35}?(?:证言(?:证明|证实|称)?|供述(?:和辩解|称)?|陈述(?:称)?|鉴定书|检验报告|勘验检查记录|提取笔录)')
 COURT_TAIL = re.compile(r'对于控辩双方|根据上述事实和证据|本院(?:评判|审查|认为|确认)|上述证据(?:经|均|相互)|以上证据(?:经|均|相互)|上述事实并有|被告人.{2,20}供述的事实与起诉指控的事实一致|另(?:经审理)?查明|另经审理查明|证据确实[、，\s]*充分|证实案件相关事实|足以认定')
 LEAK = re.compile(r'本院认为|经审理查明|公诉机关指控|判决如下|判处|构成.{1,15}罪|犯[\u4e00-\u9fff]{1,15}罪|原审法院认定|原判认定|上述证据内容|上述证据|[一二三四五六七八九十]、被告人.{0,35}犯罪事实')
@@ -76,6 +76,11 @@ def digest(value):
 def evidence_kind(raw):
     """Recognize repeated source labels, including a witness's name + 证言."""
     prefix=raw[:100]
+    personal=re.search(r'(?:被告人|当事人|同案犯)[^：:，,。；]{1,35}?(?:供述|陈述)',prefix)
+    if personal and personal.start()<=25 and '证言' not in personal.group():
+        return '当事人供述'
+    coactor_witness=re.search(r'同案犯[^：:，,。；]{1,35}?证言',prefix)
+    if coactor_witness and coactor_witness.start()<=25:return '证人证言'
     match=TYPE.search(prefix)
     if match and any(s in match.group() for s in ('证人','证言','陈述','供述')) and match.start()>25:
         match=None
@@ -83,8 +88,10 @@ def evidence_kind(raw):
     if not match:return None
     label=match.group()
     if '被告人' in label and '陈述' in label:return '当事人供述'
+    if label in ('汇款记录','会议纪要','会议记录'):return '书证'
     for token,kind in (('证言','证人证言'),('证人','证人证言'),('供述','当事人供述'),
                        ('陈述','被害人陈述'),('鉴定','鉴定意见'),('检验','检验报告'),
+                       ('检测','检测报告'),
                        ('勘验','勘验笔录'),('提取','提取笔录')):
         if token in label:return kind
     return label

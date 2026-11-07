@@ -1,0 +1,14 @@
+{
+  "protocol": "explicit-nested-source-extension-v1",
+  "training_sources_repaired": 1,
+  "original_frozen_source_modified": false,
+  "old_quote_prefix_preserved": true,
+  "old_end": 6600,
+  "new_end": 6887,
+  "restored_characters": 287,
+  "declared_nested_item_markers": 2,
+  "next_independent_source_included": false,
+  "source_offsets_verified": true,
+  "qualified_cases_added": 0,
+  "human_approvals_created": 0
+}

@@ -1,0 +1,30 @@
+{
+  "protocol": "returned-training-selection-progress-v1",
+  "as_of_client_date": "2026-11-07",
+  "scope": "Training-only candidate selection; separate from signed calibration and formal approval",
+  "returned_documents": 2,
+  "training_cases_with_selection_feedback": 3,
+  "selection_counts": {
+    "continue_source_and_dependency_review": 2,
+    "stop_current_formal_candidate_work": 1
+  },
+  "new_source_working_copies": 2,
+  "raw_download_fulltext_hashes_verified": 2,
+  "appended_substantive_source_items": 3,
+  "evidence_kind_corrections": 1,
+  "previously_unindexed_short_sentences_exposed": 2,
+  "source_offsets_verified": true,
+  "frozen_candidate_pool_unchanged": true,
+  "new_versions_training_ready": false,
+  "necessary_depth_confirmed_cases": 0,
+  "new_formal_human_approvals": 0,
+  "formal_cases_added": 0,
+  "new_weight_training_runs": 0,
+  "heldout_materials_used": false,
+  "remaining_checks": [
+    "Necessary dependency depth is not established by ordering directly stated source facts.",
+    "Different witness observation windows need alignment before contradictory statements are inferred.",
+    "Injury severity does not establish the causal act or actor."
+  ],
+  "privacy": "No case text, identities, answers, returned documents, or model weights included."
+}

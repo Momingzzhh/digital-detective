@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from app.five_dimensions import validate_annotation
 from app.annotation_quality import quality_passed
+from app.complexity_review import complexity_exclusion, source_review_hold
 from scripts.annotate_five_dimensions import normalize_references
 from scripts.annotation_lock import acquire_annotation_lock
 
@@ -23,6 +24,12 @@ def main():
         saved = json.loads(path.read_text()); row = rows.get(saved['case_id'])
         if not row or not saved.get('raw_annotation'): continue
         if saved.get('source_binding') != row['source_binding']: raise ValueError('Source binding changed')
+        if complexity_exclusion(row):
+            counts['human_complexity_excluded'] += 1
+            continue
+        if source_review_hold(row):
+            counts['human_source_revision_pending'] += 1
+            continue
         try:
             normalized, repairs = normalize_references(saved['raw_annotation'], row['sentence_spans'])
             annotation = validate_annotation(row, normalized, row['sentence_spans'])

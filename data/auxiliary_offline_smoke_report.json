@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-11-05T04:24:21.317822+00:00",
+  "synthetic_mechanism_test": true,
+  "included_in_dataset_count": false,
+  "network_connections_blocked": true,
+  "network_attempts": 0,
+  "cloud_ledger_unchanged": true,
+  "structured_output_valid": true,
+  "no_evidence_supported": false,
+  "empty_evidence_injection_boundary_passed": true,
+  "accuracy_claim": false,
+  "adapter_sha256": "05e1a73b5e41626760ddaff74ad352689cd42412783deb47e0df64b330c0d761",
+  "passed": true
+}

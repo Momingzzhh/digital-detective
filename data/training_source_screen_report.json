@@ -1,0 +1,16 @@
+{
+  "protocol": "train-source-necessary-depth-screen-v4-shared-sentence-schema",
+  "cohort_binding": "2d8260e7f52de6d3a9cd76ba1f976fdb67d28d89d69f78f92aa8e62bb01f94e0",
+  "reference_binding": "4c3f3525372e35af4f5ed97b914477906e31e8d9342b59e36c63188e734178e1",
+  "generated_at": "2026-11-05T03:41:57.858858+00:00",
+  "scope": "Training-only source diagnostics; no acting-agent answers or heldout semantics",
+  "cohort_cases": 2,
+  "completed": 2,
+  "status_counts": {
+    "screen_structure_rejected": 1,
+    "source_gap": 1
+  },
+  "human_reviewed": 0,
+  "qualified_cases_added": 0,
+  "formal_approvals_created": 0
+}

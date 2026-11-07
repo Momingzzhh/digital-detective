@@ -3,6 +3,7 @@
 import argparse
 from datetime import datetime, timezone
 import html
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -46,13 +47,14 @@ def annotation_html(annotation):
     def refs(values):return '、'.join(esc(v) for v in values) or '无'
     parts=['<h4>人物与主要动作</h4>']
     for actor in annotation.get('actor_assessments',[]):
-        parts.append(f'<p><b>{esc(actor["name"])} · {esc(actor["participation"])}</b><br>{esc(actor["role"])}<br>支持句子：{refs(actor["sentence_ids"])}；别名：{refs(actor.get("aliases",[]))}</p>')
+        aliases=refs(actor['aliases']) if actor.get('aliases') else '可见材料未标注'
+        parts.append(f'<p><b>{esc(actor["name"])} · {esc(actor["participation"])}</b><br>{esc(actor["role"])}<br>支持句子：{refs(actor["sentence_ids"])}；别名：{aliases}</p>')
     parts.append('<h4>关键经过</h4><ol>')
     for event in annotation.get('events',[]):
         parts.append(f'<li>{esc(event["claim"])}<br><small>支持句子：{refs(event["sentence_ids"])}</small></li>')
     parts.append('</ol><h4>证据关联与依赖</h4>')
     for step in annotation.get('logic_chain',[]):
-        parts.append(f'<p><b>{esc(step["id"])}</b> {esc(step["claim"])}<br><small>证据：{refs(step["evidence_ids"])}；依赖先前步骤：{refs(step["depends_on_steps"])}</small></p>')
+        parts.append(f'<p><b>{esc(step["id"])}</b> {esc(step["claim"])}<br><small>证据：{refs(step["evidence_ids"])}；支持句子：{refs(step.get("sentence_ids",[]))}；依赖先前步骤：{refs(step["depends_on_steps"])}；可独立支持：{esc(step.get("independently_supported","未标注"))}；依赖说明：{esc(step.get("dependency_reason",""))}</small></p>')
     parts.append('<h4>候选矛盾点</h4>')
     conflicts=annotation.get('contradictions',[])
     if not conflicts:parts.append('<p>未提出矛盾；仍需人工核对是否确实没有。</p>')
@@ -60,7 +62,7 @@ def annotation_html(annotation):
         parts.append(f'<p><b>{esc(conflict["issue"])}</b></p><blockquote>{esc(conflict["left_id"])}：{esc(conflict["left_quote"])}<br>{esc(conflict["right_id"])}：{esc(conflict["right_quote"])}</blockquote><p>处理状态：{esc(conflict["resolution"])}</p>')
     parts.append('<details><summary>逐条证据层级</summary>')
     for tier in annotation.get('evidence_hierarchy',[]):
-        parts.append(f'<p>{esc(tier["evidence_id"])}：{esc(tier["tier"])}</p>')
+        parts.append(f'<p>{esc(tier["evidence_id"])}：{esc(tier["tier"])}<br><small>{esc(tier.get("reason",""))}</small></p>')
     parts.append('</details>')
     coverage=lambda key:'自报完整（须核实）' if annotation.get(key) else '自报不完整'
     parts.append(f'<p>人物覆盖：{coverage("complete_actor_coverage")}；经过覆盖：{coverage("complete_event_coverage")}。</p>')
@@ -156,18 +158,30 @@ def validate_submission(value, manifest):
 def main(args):
     output=ROOT/'artifacts/calibration'/RUBRIC
     if args.import_review:
-        value=json.loads(Path(args.import_review).expanduser().read_text())
+        submission=Path(args.import_review).expanduser().read_bytes()
+        value=json.loads(submission)
         binding=value.get('bundle_binding','')
         if not re.fullmatch('[0-9a-f]{64}',binding):raise ValueError('Invalid bundle binding')
         # Locate the exact immutable snapshot, even after newer packages exist.
         manifest=json.loads((output/binding[:16]/'manifest.private.json').read_text())
         reviews=validate_submission(value,manifest)
+        digest=hashlib.sha256(submission).hexdigest()
+        archive=ROOT/'data/review/five_dimensions_v2_calibration/submissions'/(digest+'.json')
+        archive.parent.mkdir(parents=True,exist_ok=True)
+        if not archive.exists():archive.write_bytes(submission)
         for review in reviews:
             path=ROOT/'data/review/five_dimensions_v2_calibration'/review['case_id']
             path.mkdir(parents=True,exist_ok=True)
             # Append-only: calibration feedback never writes formal approval paths.
             destination=path/(fingerprint(review)+'.json')
-            if not destination.exists():destination.write_text(json.dumps(review,ensure_ascii=False,indent=2)+'\n')
+            imported=review|{'feedback_protocol':'html-calibration-feedback-v1',
+                'bundle_binding':binding,'rubric':RUBRIC,'input_file_sha256':digest,
+                'original_submission':str(archive.relative_to(ROOT)),
+                'reviewed_date':datetime.fromisoformat(review['reviewed_at'].replace('Z','+00:00')).date().isoformat(),
+                'received_at':datetime.now(timezone.utc).isoformat(),'formal_approval':False}
+            if not destination.exists():destination.write_text(json.dumps(imported,ensure_ascii=False,indent=2)+'\n')
+        from scripts.import_word_calibration import write_feedback_report
+        write_feedback_report(ROOT)
         print(json.dumps({'imported':len(reviews),'formal_approvals_created':0}));return
     rows={r['case_id']:r for r in map(json.loads,(ROOT/'data/processed/five_dimensions_v2/candidates.private.jsonl').open()) if r['split']=='train'}
     saved=[json.loads(p.read_text()) for p in (ROOT/'data/review/five_dimensions_v2').glob('*.json')]

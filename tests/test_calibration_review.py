@@ -40,6 +40,17 @@ def test_calibration_import_cannot_write_formal_approval_or_overwrite_feedback(t
     calibration.main(args);calibration.main(args)
     assert len(list((tmp_path/'data/review/five_dimensions_v2_calibration/synthetic').glob('*.json')))==1
     assert not (tmp_path/'data/review/five_dimensions_v2_human').exists()
+    report=json.loads((tmp_path/'data/calibration_feedback_report.json').read_text())
+    assert report['returned_documents']==1 and report['training_cases']==1
+    assert report['decision_counts']=={'needs_revision':1} and report['qualified_cases_added']==0
+    from app import complexity_review
+    monkeypatch.setattr(complexity_review,'ROOT',tmp_path)
+    row={'case_id':'synthetic','split':'train','source_binding':'source'}
+    assert complexity_review.source_review_hold(row)['decision']=='needs_revision'
+    archive=next((tmp_path/'data/review/five_dimensions_v2_calibration/submissions').glob('*.json'))
+    archive.write_text('{}')
+    with pytest.raises(ValueError,match='submission hash differs'):
+        complexity_review.source_review_hold(row)
 
 
 def test_source_text_is_escaped_before_inclusion_in_review_html():

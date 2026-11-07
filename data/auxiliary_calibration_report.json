@@ -1,0 +1,15 @@
+{
+  "protocol": "user-accepted-auxiliary-calibration-v1",
+  "auxiliary_cases": 2,
+  "split_counts": {
+    "train": 2
+  },
+  "actual_depth_counts": {
+    "2": 2
+  },
+  "eligible_for_formal_benchmark": false,
+  "formal_cases_added": 0,
+  "formal_approvals_created": 0,
+  "manifest": "data/processed/auxiliary_calibration/caccf7b3712b8d8b/manifest.private.json",
+  "dataset_binding": "79da84baf743cf89f253e21a5fdab6ef411d00965a3775fca720d9ff633ee64c"
+}

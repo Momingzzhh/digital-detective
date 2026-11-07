@@ -64,7 +64,7 @@ def parse_feedback(path, manifest, template_paragraphs, confirmation=None):
     case=next((c for c in manifest['cases'] if c['case_id']==cid),None)
     if not case or case['split']!='train':raise ValueError('Calibration only accepts known training cases')
     reviewer_match=re.search(r'核对人或研究编号\s+([^\n]+)',text)
-    reviewer=re.split(r'单位或研究组',reviewer_match.group(1))[0].strip() if reviewer_match else ''
+    reviewer=re.split(r'单位或研究组|核对日期|本次是否通读完整来源',reviewer_match.group(1))[0].strip() if reviewer_match else ''
     if not reviewer or any(s in reviewer for s in ('待填写','【','】')):raise ValueError('Missing actual reviewer identity')
     day_match=re.search(r'核对日期\s+(\d{4})[.\-/](\d{1,2})[.\-/](\d{1,2})',text)
     if not day_match:raise ValueError('Missing actual review date')
@@ -149,6 +149,33 @@ def import_files(files,manifest_path,template_paths,confirmation_path=None,write
         'formal_approvals_created':0,'qualified_cases_added':0}
 
 
+def feedback_summary(root=None):
+    """Count all archived feedback versions without counting a case twice."""
+    base=(ROOT if root is None else root)/'data/review/five_dimensions_v2_calibration'
+    reviews=[json.loads(p.read_text()) for p in sorted(base.glob('*/*.json'))
+             if p.parent.name not in ('confirmations','documents','submissions')]
+    reviews=[r for r in reviews if r.get('feedback_protocol') in (PROTOCOL,'html-calibration-feedback-v1')]
+    latest={}
+    for review in sorted(reviews,key=lambda r:(r['reviewed_date'],r.get('received_at',''),r['input_file_sha256'])):
+        latest[review['case_id']]=review
+    return {'returned_documents':len({r['input_file_sha256'] for r in reviews}),
+        'training_cases':len(latest),'attested_feedback_cases':sum(r['human_attestation'] is True for r in latest.values()),
+        'decision_counts':dict(Counter(r['decision'] for r in latest.values())),
+        'formal_approvals_created':0,'qualified_cases_added':0}
+
+
+def write_feedback_report(root=None):
+    root=ROOT if root is None else root
+    value={'generated_at':datetime.now(timezone.utc).isoformat(),
+        'protocol':'training-calibration-feedback-summary-v2',
+        'scope':'Training-only feedback, not formal heldout source approvals',
+        'written':True,**feedback_summary(root)}
+    target=root/'data/calibration_feedback_report.json'
+    target.parent.mkdir(parents=True,exist_ok=True)
+    target.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
+    return value
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('files',nargs='+',type=Path)
@@ -163,9 +190,7 @@ def main():
         if match:templates[match.group(1)]=path
     result=import_files(args.files,args.manifest,templates,args.confirmation_file,args.write)
     if args.write:
-        report=ROOT/'data/calibration_feedback_report.json'
-        report.write_text(json.dumps({'generated_at':datetime.now(timezone.utc).isoformat(),
-            'protocol':PROTOCOL,'scope':'Training-only feedback, not formal heldout source approvals',**result},ensure_ascii=False,indent=2)+'\n')
+        write_feedback_report()
     print(json.dumps(result,ensure_ascii=False,indent=2))
 
 

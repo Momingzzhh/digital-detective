@@ -32,6 +32,13 @@ def test_source_kind_distinguishes_accused_statement_victim_and_lab_report():
     assert b.evidence_kind('3.被害人乙的陈述，自己的物品被拿走，之后向警方反映。')=='被害人陈述'
     assert b.evidence_kind('10、物证检验报告书证实，两份样本的化验结果为阴性。')=='检验报告'
     assert b.evidence_kind('5、现场勘验检查笔录，记录了现场实际观察及提取物。')=='勘验笔录'
+    assert b.evidence_kind('3、同案犯乙（外号“小乙”）的供述及辨认笔录，证明其拿走物品。')=='当事人供述'
+    assert b.evidence_kind('2、同案犯乙的证言及辨认笔录，证明甲在现场。')=='证人证言'
+    assert b.evidence_kind('6．某市公安司法鉴定中心某公（司）鉴（DNA）字［2017］01895号鉴定书证实：样本分型相同。')=='鉴定意见'
+    assert b.evidence_kind('7．现场检测报告书证实：样本的两项检测结果呈阳性。')=='检测报告'
+    assert b.evidence_kind('17、甲有限公司、乙有限公司汇款记录证实，公司账户分次转账给相关人员。')=='书证'
+    assert b.evidence_kind('13、甲公司会议纪要、董事会会议记录证明，费用继续汇入指定账户。')=='书证'
+    assert b.evidence_kind('7．提取笔录及照片证明：提取指血及十指擦拭物送检。三、鉴定意见')=='提取笔录'
 
 
 def test_file_label_item_is_excluded_without_stopping_other_evidence():
@@ -110,7 +117,13 @@ def test_judicial_assessments_cannot_hide_in_last_confession():
     for tail in ('此外，在案还有刑事判决书证明。关于被告人乙的辩解，经查本院不予采纳。',
                  '关于被告人乙提出的辩解，经查不能成立。',
                  '本院对相关辩护意见不予采纳。',
-                 '上述证据经过庭审举证、质证。'):
+                 '上述证据经过庭审举证、质证。',
+                 '针对控辩双方意见，本院综合评判如下：',
+                 '本院综合评判如下：',
+                 '关于本案的事实、证据及法律适用，本院对双方的争议焦点综合评判如下：',
+                 '关于被害单位的意见和被告人的辩解，本院综合分析评判如下：',
+                 '审理认为，相关辩解与事实不符。',
+                 '上述 上述2-17项证据，证实甲伙同他人实施行为的事实。'):
         fact='上述事实有下列证据证实：1、'+quote+tail
         items=b.extract_items(fact,'盗窃罪')
         assert len(items)==1 and quote.replace('被告人','当事人') in items[0]['text']

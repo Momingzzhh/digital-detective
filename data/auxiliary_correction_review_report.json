@@ -1,0 +1,33 @@
+{
+  "protocol": "auxiliary-correction-targeted-review-v1",
+  "status": "user_confirmed_for_auxiliary_training",
+  "review_binding": "299aff8ee997305a5f67afd50a3bab15a9fd7d5b541217ebd593d35df040745e",
+  "draft_cases": 1,
+  "proposed_graph_depth_counts": {
+    "2": 1
+  },
+  "human_check_points": 3,
+  "mechanical_validation_passed": true,
+  "training_examples_if_accepted": 9,
+  "maximum_example_tokens": 4778,
+  "training_context_limit": 6144,
+  "human_reviewed": 0,
+  "auxiliary_training_cases_added": 1,
+  "formal_cases_added": 0,
+  "new_weights_trained": true,
+  "user_confirmation_recorded": true,
+  "confirmed_actual_depth": 2,
+  "training_status": "completed",
+  "training_run_id": "20261105T041726268572Z",
+  "combined_auxiliary_cases": 2,
+  "combined_training_examples": 18,
+  "specific_human_check_points_confirmed": 3,
+  "auxiliary_user_accepted": true,
+  "formal_human_approvals_created": 0,
+  "human_reviewed_field_scope": "formal_case_approval_only",
+  "accepted_training_examples": 9,
+  "offline_smoke_passed": true,
+  "adapter_sha256": "05e1a73b5e41626760ddaff74ad352689cd42412783deb47e0df64b330c0d761",
+  "adapter_activated": false,
+  "guarded_files_unchanged": true
+}

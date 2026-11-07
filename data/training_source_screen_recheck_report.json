@@ -1,0 +1,12 @@
+{
+  "protocol": "train-source-necessary-depth-screen-v5-verbatim-premise-gate",
+  "original_generation_protocol": "train-source-necessary-depth-screen-v4-shared-sentence-schema",
+  "cases_rechecked": 2,
+  "model_regenerations": 0,
+  "verbatim_dependent_claim_rejections": 1,
+  "repeated_claim_rejections": 1,
+  "original_outputs_modified": false,
+  "qualified_cases_added": 0,
+  "human_approvals_created": 0,
+  "note": "Exact whole-sentence equality, optionally ignoring a leading item number. Conditional substrings and paraphrases are not classified by this rule."
+}

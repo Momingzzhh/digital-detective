@@ -11,6 +11,8 @@ sys.path.insert(0, str(ROOT))
 from app.five_dimensions import fingerprint, record_binding, validate_splits, training_examples, view, validate_annotation, FiveDimensions, conclusion, TRAIN_SYSTEM
 from app.five_dimensions import ground_truth
 from app.annotation_quality import quality_passed
+from app.complexity_review import complexity_exclusion, source_review_hold
+from app.source_policy import require_clean_evidence
 from app.local_context import chat_token_ids
 from app.research import CHECKS as HUMAN_CHECKS
 from export_review_bundle import write_rows
@@ -26,6 +28,16 @@ def main():
     from app.local_model import model_path
     tokenizer = AutoTokenizer.from_pretrained(str(model_path()), local_files_only=True, trust_remote_code=False)
     for row in pool:
+        if complexity_exclusion(row):
+            states['human_complexity_excluded'] += 1
+            continue
+        if source_review_hold(row):
+            states['human_source_revision_pending'] += 1
+            continue
+        try:require_clean_evidence(row['evidence'])
+        except ValueError:
+            states['source_policy_rejected'] += 1
+            continue
         path = ROOT / 'data/review/five_dimensions_v2' / (row['case_id'] + '.json')
         if not path.exists(): continue
         saved = json.loads(path.read_text()); states[saved['status']] += 1

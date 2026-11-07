@@ -15,6 +15,7 @@ from app.five_dimensions import training_examples, conclusion, TRAIN_SYSTEM, vie
 from app.local_model import model_path, verify_model_files
 from app.local_resource import model_resource
 from app.local_context import chat_token_ids, TOKEN_POLICY
+from app.complexity_review import complexity_exclusion, source_review_hold
 
 
 def observed_metrics(log_path):
@@ -37,11 +38,15 @@ def main(args):
     source = (ROOT / dataset).resolve()
     data_bytes = source.read_bytes()
     rows = [json.loads(l) for l in data_bytes.decode().splitlines() if l.strip()]
+    if any(r.get('dataset_role') == 'auxiliary_calibration' for r in rows):
+        raise ValueError('Auxiliary calibration must use its separate training entry point')
     if not args.pilot: validate_splits(rows, require_target=True)
     if not rows or not any(r['split'] == 'train' for r in rows): raise ValueError('No training cases')
     if any(r.get('record_binding') != record_binding(r) for r in rows): raise ValueError('Dataset binding changed')
     from scripts.export_review_bundle import verify
     for row in rows:
+        if complexity_exclusion(row):raise ValueError('Human-reviewed insufficient complexity; this source cannot enter training')
+        if source_review_hold(row):raise ValueError('Confirmed human feedback requires source revision before training')
         if row.get('annotation_version') != VERSION: raise ValueError('Training data uses a superseded annotation version')
         verify(row, {'raw_record': row['raw_record']})
         validate_annotation(row,{k:row['five_dimensions'][k] for k in FiveDimensions.model_fields},row['sentence_spans'])
@@ -62,7 +67,8 @@ def main(args):
     out = ROOT / 'artifacts/training' / run_id
     (out / 'data').mkdir(parents=True)
     code_hashes = {}
-    for relative in ('scripts/train_local.py','app/five_dimensions.py','app/local_context.py','requirements-mac.lock'):
+    for relative in ('scripts/train_local.py','app/five_dimensions.py','app/local_context.py',
+                     'app/complexity_review.py','requirements-mac.lock'):
         content = (ROOT/relative).read_bytes()
         code_hashes[relative] = hashlib.sha256(content).hexdigest()
         destination = out/'code'/relative

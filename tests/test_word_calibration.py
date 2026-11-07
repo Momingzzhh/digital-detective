@@ -83,3 +83,32 @@ def test_actual_word_confirmation_needs_matching_identity_and_date(tmp_path):
     paragraphs[-1]='亲自核对确认 确认 确认人及日期 合成机制核对人 2026.10.23'
     write_docx(source,paragraphs,description)
     assert word.parse_feedback(source,manifest,template)['human_attestation'] is False
+
+
+def test_inline_identity_date_and_scope_do_not_corrupt_reviewer(tmp_path):
+    source,_,manifest,template,_=fixture(tmp_path)
+    paragraphs,_,description,_=word.read_docx(source)
+    paragraphs[2:4]=['核对人或研究编号 合成机制核对人   核对日期 2026-10-26    本次是否通读完整来源 是']
+    paragraphs[-1]='亲自核对确认 确认   确认人及日期 合成机制核对人（复核日期：2026-10-26）'
+    write_docx(source,paragraphs,description)
+    result=word.parse_feedback(source,manifest,template)
+    assert result['reviewer_id']=='合成机制核对人'
+    assert result['reviewed_date']=='2026-10-26' and result['read_full_source'] is True
+    assert result['human_attestation'] is True and result['formal_approval'] is False
+
+
+def test_summary_counts_revised_feedback_once_per_case(tmp_path,monkeypatch):
+    source,base,manifest,_,confirmation=fixture(tmp_path)
+    m=tmp_path/'manifest.json';m.write_text(json.dumps(manifest))
+    c=tmp_path/'confirmation.json';c.write_text(json.dumps(confirmation))
+    monkeypatch.setattr(word,'ROOT',tmp_path)
+    word.import_files([source],m,{'synthetic':base},c,write=True)
+    paragraphs,_,description,_=word.read_docx(source)
+    paragraphs[3]='核对日期 2026-10-26 本次是否通读完整来源 是'
+    paragraphs[-1]='亲自核对确认 确认 确认人及日期 合成机制核对人 2026-10-26'
+    write_docx(source,paragraphs,description)
+    for _ in range(2):word.import_files([source],m,{'synthetic':base},write=True)
+    summary=word.feedback_summary()
+    assert summary['returned_documents']==2 and summary['training_cases']==1
+    assert summary['attested_feedback_cases']==1 and summary['decision_counts']=={'needs_revision':1}
+    assert summary['qualified_cases_added']==0

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-24T16:11:17.970729+00:00",
+  "generated_at": "2026-10-29T02:23:14.280056+00:00",
   "protocol": "calibrated-feedback-bound-annotation-v2",
   "attempted_training_revisions": 1,
   "status_counts": {
@@ -28,5 +28,8 @@
   "assistant_draft_local_screen_status": "rejected_internal_inconsistency",
   "human_requalified_revision_cases": 0,
   "original_confirmed_training_feedback_cases": 3,
-  "formal_heldout_approvals_created": 0
+  "formal_heldout_approvals_created": 0,
+  "human_rereview_feedback_documents": 1,
+  "human_reviewed_insufficient_depth_cases": 1,
+  "assistant_corrected_counterexamples": 1
 }

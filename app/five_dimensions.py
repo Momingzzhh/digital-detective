@@ -31,6 +31,9 @@ class Step(Strict):
     id: Literal['L1', 'L2', 'L3', 'L4', 'L5']
     claim: str
     evidence_ids: list[str] = Field(min_length=1)
+    sentence_ids: list[str] = Field(min_length=1, max_length=8)
+    independently_supported: bool
+    dependency_reason: str = Field(max_length=160)
     depends_on_steps: list[Literal['L1', 'L2', 'L3', 'L4', 'L5']]
 
 
@@ -62,7 +65,7 @@ class EventAnnotation(Strict):
 
 class FiveDimensions(Strict):
     evidence_hierarchy: list[Tier]
-    logic_chain: list[Step] = Field(min_length=3, max_length=5)
+    logic_chain: list[Step] = Field(min_length=1, max_length=5)
     contradictions: list[Contradiction]
     candidate_names: list[str]
     event_sentence_ids: list[str] = Field(min_length=3, max_length=50)
@@ -75,17 +78,62 @@ class FiveDimensions(Strict):
 def explicit_alias(text, name, alias):
     """Co-occurrence alone is never an identity mapping."""
     for primary, other in ((name,alias),(alias,name)):
-        if re.search(re.escape(primary) + r'[（(](?:(?:又名|别名|绰号|外号|化名|真名|真实姓名|曾用名)[为叫是：:]?)?[“\"‘]?'
+        if re.search(re.escape(primary) + r'[（(](?:(?:又名|别名|绰号|外号|化名|真名|真实姓名|曾用名|即)[为叫是：:]?)?[“\"‘]?'
                      + re.escape(other) + r'[”\"’]?[）)]',text):
             return True
+        # A source heading may explicitly list multiple labelled attributes,
+        # e.g. 甲（曾用名乙、绰号“丙”，手机号...）. Each alias needs its
+        # own label and exact field boundary; incidental names are not aliases.
+        for match in re.finditer(re.escape(primary)+r'[（(]([^（）()\n]{1,160})[）)]',text):
+            attributes=match.group(1)
+            if re.search(r'(?:^|[、，,；;])\s*(?:又名|别名|绰号|外号|化名|真名|真实姓名|曾用名|即)'
+                         r'[为叫是：:]?\s*[“\"‘]?'+re.escape(other)+r'[”\"’]?\s*(?=[、，,；;]|$)',attributes):
+                return True
         if re.search(re.escape(primary) + r'[，,]?(?:又名|别名|绰号|外号|化名|真名|真实姓名|曾用名)[为叫是：:]?[“\"‘]?'
                      + re.escape(other) + r'(?:[”\"’，,。；;）)\s]|$)',text):
+            return True
+        # Explicit identifications in a source statement can map a nickname or
+        # a descriptive title in either direction. Mere role co-occurrence,
+        # uncertain wording and a negated identification do not match.
+        identification=r'(?:^|[，,；。！？\n])\s*(?:其|并|其并)?(?:辨认|指认)(?:出)?[^。！？；\n]{0,60}?'
+        linking=r'[”\"’]?(?:就是|即是|是|即)(?:当事人|被告人|犯罪嫌疑人|证人|该名|那名|该)?(?:[^，,。！？；\n]{1,18}的)?[“\"‘]?'
+        if re.search(identification+r'[“\"‘]?'+re.escape(primary)+linking+re.escape(other)
+                     +r'(?:[”\"’，,。；;）)\s]|$)',text):
             return True
     return False
 
 
+def require_nonverbatim_inference(claim, independent, support_texts):
+    """An exact source sentence restatement cannot manufacture a depth level.
+
+    Only a leading item number may be ignored. Do not match substrings: a
+    consequence inside a conditional statement may need a genuine premise.
+    Paraphrases and the necessity of all other edges still need source review.
+    """
+    whole_sentences = {text.strip() for text in support_texts}
+    whole_sentences.update(re.sub(r'^[。；\s]*[（(]?\d{1,2}[）)]?[、.．]\s*', '', text.strip())
+                           for text in support_texts)
+    if not independent and claim.strip() and claim.strip() in whole_sentences:
+        raise ValueError('Dependent claim is already explicitly stated in a cited source sentence')
+
+
 def validate_annotation(record, annotation, sentences):
     """Mechanical validity is not a claim of semantic or human correctness."""
+    return _validate_annotation(record, annotation, sentences, minimum_depth=3)
+
+
+def validate_auxiliary_annotation(record, annotation, sentences):
+    """Keep actual depth for explicitly authorized training-only auxiliary cases.
+
+    This checks the same references and full-case coverage as the formal gate;
+    authorization and provenance are checked separately by auxiliary admission.
+    """
+    if record.get('split') != 'train':
+        raise ValueError('Auxiliary annotations must come from training groups')
+    return _validate_annotation(record, annotation, sentences, minimum_depth=1)
+
+
+def _validate_annotation(record, annotation, sentences, *, minimum_depth):
     ann = FiveDimensions.model_validate(annotation)
     if not ann.complete_actor_coverage or not ann.complete_event_coverage:
         raise ValueError('Full-case participant and event coverage are required')
@@ -97,13 +145,31 @@ def validate_annotation(record, annotation, sentences):
     if Counter(t.evidence_id for t in ann.evidence_hierarchy) != Counter(ev.keys()):
         raise ValueError('Every evidence item needs exactly one hierarchy label')
     depths = {}
+    seen_claims = set()
+    spans = {s['id']: s for s in sentences}
+    if len(spans) != len(sentences) or any(s['evidence_id'] not in ev or
+            ev[s['evidence_id']][s['start']:s['end']] != s['text'] for s in sentences):
+        raise ValueError('Sentence offsets differ from source evidence')
     for step in ann.logic_chain:
+        if step.claim.strip() in seen_claims:
+            raise ValueError('Repeated logic claim cannot count as another reasoning step')
+        seen_claims.add(step.claim.strip())
         if step.id in depths or not step.evidence_ids or not set(step.evidence_ids) <= ev.keys():
             raise ValueError('Duplicate step or unsupported evidence reference')
         if len(set(step.depends_on_steps)) != len(step.depends_on_steps) or not set(step.depends_on_steps) <= depths.keys():
             raise ValueError('Logic must be an ordered acyclic graph')
+        if len(set(step.sentence_ids)) != len(step.sentence_ids) or not set(step.sentence_ids) <= spans.keys():
+            raise ValueError('Logic needs distinct known support sentences')
+        if set(step.evidence_ids) != {spans[s]['evidence_id'] for s in step.sentence_ids}:
+            raise ValueError('Logic evidence IDs differ from its cited sentences')
+        if step.independently_supported and step.depends_on_steps:
+            raise ValueError('Independent source facts cannot depend on prior inference')
+        if not step.independently_supported and (not step.depends_on_steps or len(step.dependency_reason.strip()) < 4):
+            raise ValueError('Dependent inference needs a prior premise and a verifiable dependency reason')
+        require_nonverbatim_inference(step.claim, step.independently_supported,
+                                     [spans[s]['text'] for s in step.sentence_ids])
         depths[step.id] = 1 + max((depths[p] for p in step.depends_on_steps), default=0)
-    if max(depths.values()) < 3:
+    if max(depths.values()) < minimum_depth:
         raise ValueError('At least three linked reasoning levels required')
     for conflict in ann.contradictions:
         if not {conflict.left_id, conflict.right_id} <= ev.keys():
@@ -123,10 +189,6 @@ def validate_annotation(record, annotation, sentences):
         raise ValueError('Candidate identities must occur in visible source material')
     if len(names) < 2 and not ann.contradictions:
         raise ValueError('Complex case needs a real conflict or multiple investigated persons')
-    spans = {s['id']: s for s in sentences}
-    if len(spans) != len(sentences) or any(s['evidence_id'] not in ev or
-            ev[s['evidence_id']][s['start']:s['end']] != s['text'] for s in sentences):
-        raise ValueError('Sentence offsets differ from source evidence')
     if len(set(ann.event_sentence_ids)) != len(ann.event_sentence_ids) or not set(ann.event_sentence_ids) <= spans.keys():
         raise ValueError('Unknown or repeated event sentence')
     assessed = [a.name for a in ann.actor_assessments]

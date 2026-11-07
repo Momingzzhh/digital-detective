@@ -10,7 +10,7 @@ def fixture():
     row={'source_binding':'synthetic-source-only'}
     ann={'actor_assessments':[{'name':'甲','participation':'直接实施','role':'仅为机制测试'}],
          'contradictions':[]}
-    audit={k:True for k in AUDIT_CHECKS}|{'issue_codes':[],'reason':'仅为合成机制测试'}
+    audit={k:True for k in AUDIT_CHECKS}|{'issue_codes':[],'reason':'仅为合成机制测试','dependency_checks':[]}
     saved={'five_dimensions':ann,'semantic_audit':audit,'semantic_audit_binding':audit_binding(row,ann)}
     return row,saved
 
@@ -52,3 +52,19 @@ def test_semantic_revision_is_explicit_and_hard_bounded():
     assert retry_checkpoint(old,args)
     assert not retry_checkpoint(old|{'semantic_repair_attempts':1},args)
     assert not retry_checkpoint(old|{'status':'complexity_or_reference_rejected'},args)
+
+
+def test_every_dependency_edge_needs_a_unique_positive_semantic_check():
+    row,saved=fixture()
+    saved['five_dimensions']['logic_chain']=[{'id':'L1','depends_on_steps':[]},
+        {'id':'L2','depends_on_steps':['L1']},{'id':'L3','depends_on_steps':['L2']}]
+    saved['semantic_audit_binding']=audit_binding(row,saved['five_dimensions'])
+    checks=[{'step_id':'L2','parent_id':'L1','necessary':True,'reason':'仅为合成前提核验'},
+        {'step_id':'L3','parent_id':'L2','necessary':True,'reason':'仅为合成前提核验'}]
+    assert not quality_passed(saved,row)
+    saved['semantic_audit']['dependency_checks']=checks
+    assert quality_passed(saved,row)
+    for bad in (checks[:1],checks+[checks[0]],checks[:1]+[checks[1]|{'necessary':False}],
+                checks[:1]+[checks[1]|{'parent_id':'UNKNOWN'}]):
+        saved['semantic_audit']['dependency_checks']=bad
+        assert not quality_passed(saved,row)

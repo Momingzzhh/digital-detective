@@ -152,6 +152,24 @@
           "title": "Evidence Ids",
           "type": "array"
         },
+        "sentence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Sentence Ids",
+          "type": "array"
+        },
+        "independently_supported": {
+          "title": "Independently Supported",
+          "type": "boolean"
+        },
+        "dependency_reason": {
+          "maxLength": 160,
+          "title": "Dependency Reason",
+          "type": "string"
+        },
         "depends_on_steps": {
           "items": {
             "enum": [
@@ -171,6 +189,9 @@
         "id",
         "claim",
         "evidence_ids",
+        "sentence_ids",
+        "independently_supported",
+        "dependency_reason",
         "depends_on_steps"
       ],
       "title": "Step",
@@ -220,7 +241,7 @@
         "$ref": "#/$defs/Step"
       },
       "maxItems": 5,
-      "minItems": 3,
+      "minItems": 1,
       "title": "Logic Chain",
       "type": "array"
     },

@@ -20,11 +20,13 @@ from scripts.annotate_five_dimensions import PROMPT, normalize_references
 from scripts.compact_annotation import INSTRUCTIONS, schema_for, payload, canonical
 from pydantic import ValidationError
 from scripts.annotation_lock import acquire_annotation_lock
+from app.complexity_review import complexity_exclusion, source_review_hold
+from app.source_policy import require_clean_evidence
 from app.annotation_quality import (SemanticAudit, AUDIT_PROMPT, AUDIT_VERSION, audit_binding,
     quality_passed, obvious_quality_errors)
 
 QUOTAS = {'train': 420, 'dev': 90, 'test': 90}
-PROTOCOL = 'compact-json-v6-local-curator'
+PROTOCOL = 'compact-json-v10-calibrated-identities'
 RESULT = ROOT/'runtime/five_dimensions_annotation_result.json'
 PROGRESS = ROOT/'runtime/five_dimensions_annotation_progress.json'
 FAILURE = ROOT/'runtime/five_dimensions_annotation_failure.json'
@@ -113,6 +115,16 @@ def main(args):
     # Source metadata priority is independent of agent predictions and scores.
     rows.sort(key=lambda r: len(r['hidden_gold'].get('adjudicated_perpetrators',[])) < 2)
     for row in rows:
+        if complexity_exclusion(row):
+            existing['human_complexity_excluded'] += 1
+            continue
+        if source_review_hold(row):
+            existing['human_source_revision_pending'] += 1
+            continue
+        try:require_clean_evidence(row['evidence'])
+        except ValueError:
+            existing['source_policy_rejected'] += 1
+            continue
         path = output / (row['case_id'] + '.json'); expected = binding(row)
         if path.exists():
             old = json.loads(path.read_text())
@@ -128,6 +140,11 @@ def main(args):
                 archived = history / (row['case_id'] + '.' + fingerprint(old)[:16] + '.json')
                 if not archived.exists(): archived.write_bytes(path.read_bytes())
             else:
+                if (old.get('source_binding')==row['source_binding']
+                    and old.get('status')!='machine_annotated_unverified'
+                    and not args.retry_rejected):
+                    existing['older_protocol_deferred'] += 1
+                    continue
                 history = output / 'history'; history.mkdir(exist_ok=True)
                 archived = history / (row['case_id'] + '.' + old['annotation_binding'][:12] + '.json')
                 if not archived.exists(): archived.write_bytes(path.read_bytes())
