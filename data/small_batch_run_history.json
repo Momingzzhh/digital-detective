@@ -1,0 +1,202 @@
+{
+  "protocol": "small-batch-formal-training-v1",
+  "generated_at": "2026-11-07T18:01:48.860591+00:00",
+  "completed_runs": 5,
+  "distinct_training_groups_across_completed_runs": 5,
+  "run_count_is_not_case_count": true,
+  "human_approvals_created": 0,
+  "strict_three_level_benchmark_cases_added": 0,
+  "heldout_cases_used_for_training": 0,
+  "independent_accuracy_verified": false,
+  "runs": [
+    {
+      "run_id": "20261107T134324769759Z",
+      "training_cases": 2,
+      "actual_depth_counts": {
+        "2": 2
+      },
+      "review_status_counts": {
+        "user_accepted_corrected_version_pending_benchmark_review": 2
+      },
+      "train_examples": 18,
+      "iters": 36,
+      "optimizer_updates": 9,
+      "nonzero_lora_b_tensors": 56,
+      "adapter_sha256": "fe745010e1229025d71289254f836c5970e630f382a1b2c2146b2b7e92b0ae2f",
+      "observed_peak_memory_gb": 7.172,
+      "observed_validation_token_losses": [
+        {
+          "micro_iteration": 1,
+          "token_loss": 2.244
+        },
+        {
+          "micro_iteration": 36,
+          "token_loss": 1.753
+        }
+      ],
+      "dataset_binding": "e6f182b900f93ba86d40a24636a462e38714bb9a5511abd18d6c406be889ce2b",
+      "finished_at": "2026-11-07T13:54:39.199431+00:00",
+      "single_actor_without_conflict_cases": 0,
+      "frozen_input_and_adapter_hashes_verified": true,
+      "offline_smoke_passed": true,
+      "conflict_resolution_citations_superseded": true,
+      "training_file_sha256": "24a090c4997bd1800e414a267ae0fc0e388060e32b404049c9b17db127bfd0cf",
+      "current_derived_training_file_sha256": "ef7b82b8ce158b1b65d4f37fda1c4c2b26b178f92f1ebd36373daa86fb340a10",
+      "annotation_source_support_holds": 0,
+      "training_targets_superseded": true,
+      "independent_accuracy_verified": false
+    },
+    {
+      "run_id": "20261107T144905466324Z",
+      "training_cases": 2,
+      "actual_depth_counts": {
+        "2": 2
+      },
+      "review_status_counts": {
+        "user_accepted_corrected_version_pending_benchmark_review": 2
+      },
+      "train_examples": 18,
+      "iters": 36,
+      "optimizer_updates": 9,
+      "nonzero_lora_b_tensors": 56,
+      "adapter_sha256": "8d68137f999a3dd89164af54a28da50a27fbc782b25c7a2f30a9e251dea311fc",
+      "observed_peak_memory_gb": 7.172,
+      "observed_validation_token_losses": [
+        {
+          "micro_iteration": 1,
+          "token_loss": 2.236
+        },
+        {
+          "micro_iteration": 36,
+          "token_loss": 1.748
+        }
+      ],
+      "dataset_binding": "e6f182b900f93ba86d40a24636a462e38714bb9a5511abd18d6c406be889ce2b",
+      "finished_at": "2026-11-07T15:01:39.599780+00:00",
+      "single_actor_without_conflict_cases": 0,
+      "frozen_input_and_adapter_hashes_verified": true,
+      "offline_smoke_passed": true,
+      "conflict_resolution_citations_superseded": false,
+      "training_file_sha256": "b28e86a8ae3dea2675753ec21e8b5c174c5034606ca9832101f7145418ceb947",
+      "current_derived_training_file_sha256": "ef7b82b8ce158b1b65d4f37fda1c4c2b26b178f92f1ebd36373daa86fb340a10",
+      "annotation_source_support_holds": 0,
+      "training_targets_superseded": true,
+      "independent_accuracy_verified": false
+    },
+    {
+      "run_id": "20261107T151009813854Z",
+      "training_cases": 3,
+      "actual_depth_counts": {
+        "2": 3
+      },
+      "review_status_counts": {
+        "user_accepted_corrected_version_pending_benchmark_review": 2,
+        "automatically_audited_pending_human_review": 1
+      },
+      "train_examples": 26,
+      "iters": 52,
+      "optimizer_updates": 13,
+      "nonzero_lora_b_tensors": 56,
+      "adapter_sha256": "d2e2b7df2415291ccfce64dc275a4ce3aa056c8797bbbebf66332f785f301e34",
+      "observed_peak_memory_gb": 8.489,
+      "observed_validation_token_losses": [
+        {
+          "micro_iteration": 1,
+          "token_loss": 2.236
+        },
+        {
+          "micro_iteration": 52,
+          "token_loss": 1.612
+        }
+      ],
+      "dataset_binding": "0a445dbee413084158ce7afda0c678a52b19790514283f144f3da2ff3539bf85",
+      "finished_at": "2026-11-07T15:32:34.933174+00:00",
+      "single_actor_without_conflict_cases": 0,
+      "frozen_input_and_adapter_hashes_verified": true,
+      "offline_smoke_passed": true,
+      "conflict_resolution_citations_superseded": false,
+      "training_file_sha256": "12aa7d1ecf3fd89491f1101fba81165190e6bc301ec919c577125a28b1733190",
+      "current_derived_training_file_sha256": "4defc05338a5c384c94fa7a90e41032737d7933a4ca8fe7811dbb885f3fe98a5",
+      "annotation_source_support_holds": 0,
+      "training_targets_superseded": true,
+      "independent_accuracy_verified": false
+    },
+    {
+      "run_id": "20261107T154708857356Z",
+      "training_cases": 5,
+      "actual_depth_counts": {
+        "2": 5
+      },
+      "review_status_counts": {
+        "user_accepted_corrected_version_pending_benchmark_review": 2,
+        "automatically_audited_pending_human_review": 3
+      },
+      "train_examples": 41,
+      "iters": 84,
+      "optimizer_updates": 21,
+      "nonzero_lora_b_tensors": 56,
+      "adapter_sha256": "2da343da0891a1a20c58b2c359da7a67983dec649fa51f44faa858c0e52bdde5",
+      "observed_peak_memory_gb": 8.877,
+      "observed_validation_token_losses": [
+        {
+          "micro_iteration": 1,
+          "token_loss": 2.221
+        },
+        {
+          "micro_iteration": 84,
+          "token_loss": 1.5
+        }
+      ],
+      "dataset_binding": "718a2742c4f89be7b8026cc58e4e5c9612f1d05562768b0895013197c4435500",
+      "finished_at": "2026-11-07T16:25:39.782787+00:00",
+      "single_actor_without_conflict_cases": 1,
+      "frozen_input_and_adapter_hashes_verified": true,
+      "offline_smoke_passed": true,
+      "conflict_resolution_citations_superseded": false,
+      "training_file_sha256": "4f53229861f16167c22c0d8635a0ea0f8f6c67fde944d965f96595d2d4cbd5b4",
+      "current_derived_training_file_sha256": "4f53229861f16167c22c0d8635a0ea0f8f6c67fde944d965f96595d2d4cbd5b4",
+      "annotation_source_support_holds": 1,
+      "training_targets_superseded": true,
+      "independent_accuracy_verified": false
+    },
+    {
+      "run_id": "20261107T173318311149Z",
+      "training_cases": 5,
+      "actual_depth_counts": {
+        "2": 5
+      },
+      "review_status_counts": {
+        "user_accepted_corrected_version_pending_benchmark_review": 2,
+        "automatically_audited_pending_human_review": 3
+      },
+      "train_examples": 86,
+      "iters": 88,
+      "optimizer_updates": 22,
+      "nonzero_lora_b_tensors": 56,
+      "adapter_sha256": "ee4e9344b957114cedcbe57c22fb2e3acc6e9656f5a8b95b7e3078de5d1b1282",
+      "observed_peak_memory_gb": 8.863,
+      "observed_validation_token_losses": [
+        {
+          "micro_iteration": 1,
+          "token_loss": 2.221
+        },
+        {
+          "micro_iteration": 88,
+          "token_loss": 1.669
+        }
+      ],
+      "dataset_binding": "3dd4dd6a88af289fb63669aa174d4967b7f47d99309234fc772c8b0e944b5240",
+      "finished_at": "2026-11-07T17:55:02.447656+00:00",
+      "single_actor_without_conflict_cases": 1,
+      "frozen_input_and_adapter_hashes_verified": true,
+      "offline_smoke_passed": true,
+      "conflict_resolution_citations_superseded": false,
+      "training_file_sha256": "3b0a94169c5f345ba26fe1d128381f4798d792ea4e6338fe173945bc9da1df58",
+      "current_derived_training_file_sha256": "3b0a94169c5f345ba26fe1d128381f4798d792ea4e6338fe173945bc9da1df58",
+      "annotation_source_support_holds": 0,
+      "training_targets_superseded": false,
+      "independent_accuracy_verified": false
+    }
+  ],
+  "unfinished_runs": []
+}

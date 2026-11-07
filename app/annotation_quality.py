@@ -1,6 +1,7 @@
 """A separate local semantic screen; never substitutes for human source review."""
 import re
-from pydantic import Field
+from typing import Literal, Union
+from pydantic import Field, create_model
 from .five_dimensions import Strict, fingerprint
 
 AUDIT_VERSION = 'full-case-semantic-screen-v4-calibrated-identities'
@@ -41,6 +42,32 @@ class SemanticAudit(Strict):
 AUDIT_CHECKS = tuple(k for k in SemanticAudit.model_fields if k not in ('issue_codes','reason','dependency_checks'))
 
 
+def semantic_schema(annotation):
+    """Audit exactly the declared logic edges, never evidence IDs as parents."""
+    edges = [(s['id'], p) for s in annotation['logic_chain'] for p in s['depends_on_steps']]
+    variants = [create_model(f'Check{step}From{parent}', __base__=DependencyAudit,
+                            step_id=(Literal[step], ...), parent_id=(Literal[parent], ...))
+                for step, parent in edges]
+    edge = (variants[0] if len(variants) == 1 else Union[tuple(variants)]) if variants else DependencyAudit
+    return create_model('BoundSemanticAudit', __base__=SemanticAudit,
+        dependency_checks=(list[edge], Field(min_length=len(edges), max_length=len(edges))))
+
+
+def audit_structure_errors(audit, annotation):
+    """Format contradictions warrant one retry; substantive negatives do not."""
+    value = SemanticAudit.model_validate(audit)
+    expected = {(s['id'], p) for s in annotation['logic_chain'] for p in s['depends_on_steps']}
+    observed = [(c.step_id, c.parent_id) for c in value.dependency_checks]
+    errors = []
+    if set(observed) != expected or len(observed) != len(expected):
+        errors.append('dependency_checks must contain each declared logic edge exactly once; evidence IDs are not logic parents')
+    elif value.logic_dependencies_necessary != all(c.necessary for c in value.dependency_checks):
+        errors.append('overall dependency verdict disagrees with its per-edge verdicts')
+    if all(getattr(value, k) for k in AUDIT_CHECKS) and value.issue_codes:
+        errors.append('all checks are positive but issue_codes is nonempty; reassess, do not silently remove codes')
+    return errors
+
+
 def audit_binding(row, annotation):
     return fingerprint({'version':AUDIT_VERSION,'prompt':AUDIT_PROMPT,
         'source':row['source_binding'],'annotation':annotation})
@@ -67,7 +94,12 @@ def quality_passed(saved,row):
     except ValueError:return False
     expected={(s['id'],p) for s in annotation.get('logic_chain',[]) for p in s['depends_on_steps']}
     observed=[(c.step_id,c.parent_id) for c in value.dependency_checks]
+    if saved.get('semantic_audit_protocol'):
+        from .field_semantic import PROTOCOL, receipt_valid
+        binding_valid = saved['semantic_audit_protocol'] == PROTOCOL and receipt_valid(saved, row)
+    else:
+        binding_valid = saved.get('semantic_audit_binding')==audit_binding(row,annotation)
     return (set(observed)==expected and len(observed)==len(expected)
             and all(c.necessary is True for c in value.dependency_checks)
             and not value.issue_codes and all(getattr(value,k) is True for k in AUDIT_CHECKS)
-            and saved.get('semantic_audit_binding')==audit_binding(row,annotation))
+            and binding_valid)

@@ -1,0 +1,20 @@
+{
+  "client_date": "2026-11-07",
+  "scope": "training-only immutable source revisions",
+  "revision_manifests_sha256": [
+    "114a952ee6422d131c1aeef5d2f187bd48eaf7ecc534fd5a5e03d1f47071fd9f",
+    "00bb0c297b6e8e335dec49cc172cc20d56d58ff355fc48e4a52f4a70a0e2ce59",
+    "6953e9945c8ef0cd16343a9f807b76bfd006b6a18b5b1936a43b639e4cfef660"
+  ],
+  "revised_training_cases": 3,
+  "type_only_corrections": 4,
+  "judicial_tail_trims": 1,
+  "judicial_tail_characters_removed": 12,
+  "original_fulltext_preserved": true,
+  "frozen_pool_modified": false,
+  "human_approvals_created": 0,
+  "new_training_cases_automatically_approved_by_source_revision": 0,
+  "source_rule_version": "source-sections-v4.6",
+  "type_correction_quotes_offsets_and_sentence_ids_preserved": true,
+  "trim_requires_first_recognized_judicial_boundary": true
+}

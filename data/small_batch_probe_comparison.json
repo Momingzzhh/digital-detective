@@ -1,0 +1,70 @@
+{
+  "same_visible_inputs": true,
+  "same_probe_program_and_inference_system": true,
+  "same_base_model": true,
+  "changed_weights_and_corrected_training_targets": true,
+  "earlier_failures_preserved": true,
+  "before": {
+    "run_id": "20261107T154708857356Z",
+    "adapter_sha256": "2da343da0891a1a20c58b2c359da7a67983dec649fa51f44faa858c0e52bdde5",
+    "results": [
+      {
+        "input_binding": "3c87c19982494908895a6af93718647de5407f703f219fb16b77de45869513a9",
+        "probe_index": 1,
+        "checks": {
+          "insufficient_no_accusation": false,
+          "citations_within_provided_evidence": true,
+          "asks_for_missing_evidence": true
+        },
+        "passed": false
+      },
+      {
+        "input_binding": "76c2d2c8c8c075d45642ec9ffd925a11ca99f5b6e0a0f31a5755ef2cd5840a2a",
+        "probe_index": 2,
+        "checks": {
+          "insufficient_no_accusation": true,
+          "citations_within_provided_evidence": true,
+          "asks_for_missing_evidence": true
+        },
+        "passed": true
+      }
+    ],
+    "runtime_error_count": 0,
+    "network_attempts": 0,
+    "cloud_ledger_unchanged": true,
+    "passed": false
+  },
+  "after": {
+    "run_id": "20261107T173318311149Z",
+    "adapter_sha256": "ee4e9344b957114cedcbe57c22fb2e3acc6e9656f5a8b95b7e3078de5d1b1282",
+    "results": [
+      {
+        "input_binding": "3c87c19982494908895a6af93718647de5407f703f219fb16b77de45869513a9",
+        "probe_index": 1,
+        "checks": {
+          "insufficient_no_accusation": true,
+          "citations_within_provided_evidence": true,
+          "asks_for_missing_evidence": true
+        },
+        "passed": true
+      },
+      {
+        "input_binding": "76c2d2c8c8c075d45642ec9ffd925a11ca99f5b6e0a0f31a5755ef2cd5840a2a",
+        "probe_index": 2,
+        "checks": {
+          "insufficient_no_accusation": true,
+          "citations_within_provided_evidence": true,
+          "asks_for_missing_evidence": true
+        },
+        "passed": true
+      }
+    ],
+    "runtime_error_count": 0,
+    "network_attempts": 0,
+    "cloud_ledger_unchanged": true,
+    "passed": true
+  },
+  "new_case_count": 0,
+  "independent_accuracy_verified": false,
+  "note": "Predefined mechanical boundary checks are not a semantic accuracy assessment. Earlier source-reader fact errors remain recorded separately."
+}

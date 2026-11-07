@@ -4,7 +4,7 @@
 
 **采用本地离线方案** 本轮目标为500+复杂刑案、五维标注、实际权重微调，首轮完整验证与独立测试的整案准确率门槛为70%。尚未达到的指标不会因代码完成或训练损失下降而宣称通过。
 
-**最新进度（2026年11月7日）：** 2案辅助试训及对应离线检查已完成；新收回2份Word的3案选案意见，已另建2案来源修订副本，1案停止本轮正式候选工作。三层必要推理仍未核实，正式复杂案例保持0 / 600，正式训练及独立验收未完成。本次218项软件测试通过。完整状态、证据记录与下一步顺序见[当前进度](docs/progress.md)。案件原文、人工反馈和权重保留本机。
+**最新进度（2026年11月8日）：** 已完成5案正式小批量训练，86条完整示例、88个微迭代、22次优化器更新，56个LoRA B张量非零；新权重通过断网及空证据注入检查。5案实际深度均为2，其中3案自动审核后待人工复核，单行为人无矛盾1案单列。新诊断7个不同训练组中3案纳入、4案未通过。600案三层基准仍为0，完整真人验证和独立测试未完成。完整状态及下一步见[当前进度](docs/progress.md)。原文、反馈和权重保留本机。
 
 ## Mac离线运行
 
@@ -36,7 +36,28 @@ sh run_offline.sh
 
 完整要求、字段含义和复现顺序见[离线训练及验收规程](docs/local_training_protocol.md)，字段结构见[五维Schema](data/five_dimensions_schema.json)，实时阶段统计见[data/five_dimensions_report.json](data/five_dimensions_report.json)。
 
-计划冻结600个不同案件组，训练420、验证90、测试90，严格70/15/15。当前新版结构候选池为1,999组；候选不等于合格案例。每案至少6条有效线索、3类证据，具有真实矛盾或多个待排查对象，且至少需要3层证据关联。标注证据层级、逻辑链、矛盾点、推理深度和对话轮次。来源、语义充分性与人工验收状态分别记录。新版五维v2覆盖全案有行为证据支持的参与人（含另案处理者）及其角色；当前判决定罪名单单独保留，不能作为全案人物全集。关键经过采用摘要与逐句原文支持映射。
+长期计划冻结600个不同案件组，训练420、验证90、测试90，严格70/15/15。当前新版结构候选池为1,999组；候选不等于合格案例。每案至少6条有效线索、3类证据；完整三层基准还要求真实矛盾或多个待排查对象。正式小批量可用实际两层，用户另允许单行为人且无矛盾，单列统计。标注证据层级、逻辑链、矛盾点、推理深度和对话轮次。来源、语义充分性与人工验收状态分别记录。新版五维v2覆盖全案有行为证据支持的参与人（含另案处理者）及其角色；当前判决定罪名单单独保留，不能作为全案人物全集。关键经过采用摘要与逐句原文支持映射。
+
+### 正式小批量训练
+
+11月7日的新确认取消“必须凑齐600案才启动”的限制，优先三层、必要时实际两层。具体已被用户接受的修订稿重新核验后可按新政策派生；新标注须完成来源绑定的语义质检，可标为自动审核通过、待人工复核。原文、答案依据、集合隔离和完整长度检查仍为硬条件，没有放宽到一层或创建真人签署。
+
+```bash
+# 冻结新的来源绑定小批量政策；实际授权文件保留本机
+.venv/bin/python scripts/prepare_small_batch_training.py --policy /本机私有路径/authorization.private.json
+.venv/bin/python scripts/train_local.py --small-batch-manifest /本机私有路径/manifest.private.json --prepare-only --epochs 2 --max-seq-length 12288
+# 使用准备输出中的不可变目录执行真实权重训练
+.venv/bin/python scripts/train_local.py --small-batch-run artifacts/small_batch_formal/实际运行编号
+.venv/bin/python scripts/smoke_offline.py --adapter artifacts/small_batch_formal/实际运行编号/adapters --output data/small_batch_offline_smoke_report.json
+```
+
+当前五案均保持实际两层，包含45条单条证据训练变体，从固定4B基座新建适配器，峰值内存8.863GB；训练重放token损失2.221→1.669不代表独立准确率。见[小批量数据](data/small_batch_dataset_report.json)、[真实训练](data/latest_small_batch_training_report.json)和[同权重离线检查](data/small_batch_offline_smoke_report.json)。先前两案及三案的训练、引用修正和实际重训报告另存；5次运行只涉及5个不同训练组。旧辅助试训没有被改名，不同阶段复用的相同案件不重复累计。完整项目验收仍未完成，新适配器未自动激活。
+
+新增`scripts/annotate_small_batch.py --create-cohort 4`从未处理的训练来源按分组哈希冻结诊断组；随后用`--cohort`逐案生成标注和单独语义质检。材料、原始输出、失败和代码快照留本机，全部通过后才能加入新的训练政策版本。没有使用留出案语义或待测Agent成绩选案。完整规则见[训练规程](docs/local_training_protocol.md#2026年11月7日确认的正式小批量训练规则)。下列旧完整基准流程仍用于600案规模化准备。
+
+纠正后两项固定局部证据检查为2项通过、0项未通过；[原失败及相同输入比较](data/small_batch_probe_comparison.json)完整保留，不能作为独立准确率。
+
+新阶段另记录[历次运行及去重统计](data/small_batch_run_history.json)、[实际训练分词与库版本](data/small_batch_runtime_audit.json)及[待人工复核阅读包状态](data/small_batch_pending_review_report.json)。原始阅读包只留在本机，不产生签署。训练结论的引用包含所有必要前提，修改目标后须实际重训；旧运行保留并标明是否已被新目标替代。
 
 4B初标抽查发现人物、角色和伪矛盾错误，四案均隔离。已下载并逐文件校验固定修订的官方[Qwen3 14B四位本地标注模型](https://huggingface.co/Qwen/Qwen3-14B-MLX-4bit)，约7.86GB。单案批次已实际运行，资源记录见[本机内存实测](data/local_resource_probe.json)；首20案仍全部被复杂度或语义检查拦截，尚不能证明标注质量改善。Agent训练基座仍为4B。
 
@@ -51,7 +72,7 @@ sh run_offline.sh
 .venv/bin/python scripts/download_local_model.py --profile curator
 .venv/bin/python scripts/annotate_five_dimensions_batch.py --limit 2000 --batch-size 1 --model-profile curator
 .venv/bin/python scripts/assemble_five_dimensions.py
-# 完整数据未准备好时，正式训练会被阻止
+# 完整数据未准备好时，原600案基准训练会被阻止；小批量使用上面的显式入口
 .venv/bin/python scripts/train_local.py
 ```
 
@@ -68,7 +89,7 @@ QLoRA会实际更新适配器权重，记录参数、数据及权重哈希，检
 .venv/bin/python scripts/run_local_pipeline.py --stop
 ```
 
-流水线先续标、导出并检查600案配额；不足时保留失败原因，不降低门槛补数。完整材料导出后，须先由研究人员核验全部验证/测试来源，再次续跑才会进行正式训练及断网检查。最终真人验证和独立测试仍由网页完成。日志保存在本机runtime/local_pipeline.log。
+原完整基准流水线先续标、导出并检查600案配额；不足时保留失败原因，不降低门槛补数。它不替代新的显式小批量入口。完整材料导出后，须先由研究人员核验全部验证/测试来源，再次续跑才会进行完整基准训练及断网检查。最终真人验证和独立测试仍由网页完成。日志保存在本机runtime/local_pipeline.log。
 
 ## 人工复核与独立验收
 
@@ -78,7 +99,7 @@ QLoRA会实际更新适配器权重，记录参数、数据及权重哈希，检
 
 用户已同意将修订正例用于辅助训练、保留实际层数，并对第二份新稿的具体三个核对点作出确认。当前绑定到完整修订稿的2案均保持实际两层，生成18条监督示例，最长4778 tokens，见[辅助数据统计](data/auxiliary_calibration_report.json)。辅助数据和适配器使用独立目录、入口和报告；不能计入600案正式复杂基准，也不自动激活为网页当前模型。准备和试训方法见[辅助训练规程](docs/local_training_protocol.md#用户接受修订稿的辅助训练)。
 
-2026-11-05已完成两案联合辅助试训：20个微迭代、5次优化器更新，56个LoRA B张量非零，峰值内存7.158GB，见[独立辅助试训报告](data/latest_auxiliary_training_report.json)。同一权重哈希的新适配器通过[断网及空证据注入拒答检查](data/auxiliary_offline_smoke_report.json)，联网尝试0、云端账本未变。此前单案试训及其检查报告保留在原本机运行目录。训练重放损失和合成检查不能证明独立准确率提升；正式复杂数据可导出数仍为0，正式训练与验收未完成。
+2026-11-05已完成两案联合辅助试训：20个微迭代、5次优化器更新，56个LoRA B张量非零，峰值内存7.158GB，见[独立辅助试训报告](data/latest_auxiliary_training_report.json)。同一权重哈希的新适配器通过[断网及空证据注入拒答检查](data/auxiliary_offline_smoke_report.json)，联网尝试0、云端账本未变。此前单案试训及其检查报告保留在原本机运行目录。训练重放损失和合成检查不能证明独立准确率提升；三层基准可导出数仍为0，11月7日的新正式小批量结果单独见上文，完整验收未完成。
 
 后续来源规则v4.4补齐司法评判边界、鉴定与财务记录标题。新的2案来源诊断已完成，均因支持或依赖问题隔离；[确定性复查](data/training_source_screen_recheck_report.json)另拦截将原句直接转述算成依赖层级的情形，原模型输出保留。来源补全只追加连续原文、保留旧线索与集合，不绕过已确认的人工暂停或答案泄漏检查。正式复杂案例仍未增加。
 

@@ -109,6 +109,21 @@ def test_full_case_roles_are_separate_from_current_judgment_names():
     assert gold['chronology'][0]['supporting_sentences'][0]['text']==spans[0]['text']
 
 
+def test_conflict_resolution_cites_its_own_support_not_only_conflicting_sources():
+    from app.five_dimensions import conclusion
+    row, ann, spans = fixture()
+    # Synthetic unresolved difference plus an independent checking record.
+    ann['contradictions'] = [{'left_id': 'E1', 'right_id': 'E2',
+        'left_quote': row['evidence'][0]['text'], 'right_quote': row['evidence'][1]['text'],
+        'issue': '合成陈述差异', 'resolution': '依据第三份合成记录核对，仍保留未决状态',
+        'resolution_evidence_ids': ['E3', 'E1']}]
+    row['five_dimensions'] = validate_annotation(row, ann, spans)
+    row['hidden_gold'] = ground_truth(row)
+    target = conclusion(row)
+    assert set(target['conflicts'][0]['evidence_ids']) == {'E1', 'E2', 'E3'}
+    assert len(target['conflicts'][0]['evidence_ids']) == 3
+
+
 def test_role_identity_requires_cited_sentence_or_explicit_statement_speaker():
     row,ann,spans=fixture()
     row['evidence'][0]['text']='甲描述独立事项。稍后在另一件事中提到乙。'
@@ -255,3 +270,47 @@ def test_repeated_claim_cannot_inflate_graph_depth():
     ann['logic_chain'][2]['claim']=ann['logic_chain'][1]['claim']
     with pytest.raises(ValueError,match='Repeated logic claim'):
         validate_annotation(row,ann,spans)
+
+
+def test_dependent_findings_cite_transitive_premises_without_mutating_the_graph():
+    from app.five_dimensions import logic_support_ids, conclusion
+    row, ann, spans = fixture()
+    row['five_dimensions'] = validate_annotation(row, ann, spans)
+    row['hidden_gold'] = ground_truth(row)
+    original = copy.deepcopy(row['five_dimensions']['logic_chain'])
+    support = logic_support_ids(original)
+    assert support['L1'] == ['E1']
+    assert set(support['L2']) == {'E1', 'E2'}
+    assert set(support['L3']) == {'E1', 'E2', 'E3'}
+    assert conclusion(row)['findings'][2]['evidence_ids'] == support['L3']
+    assert row['five_dimensions']['logic_chain'] == original
+    import json
+    for example in training_examples(row):
+        visible = set()
+        for message in example['messages']:
+            if message['role'] == 'user':
+                payload = json.loads(message['content'])
+                visible.update(e['id'] for e in payload.get('evidence', payload.get('additional_evidence', [])))
+            elif message['role'] == 'assistant':
+                for finding in json.loads(message['content'])['findings']:
+                    step = next(s for s in original if s['claim'] == finding['claim'])
+                    assert finding['evidence_ids'] == support[step['id']]
+                    assert set(finding['evidence_ids']) <= visible
+
+
+def test_single_source_examples_are_opt_in_and_never_assert_whole_case_accusations():
+    import json
+    row, ann, spans = fixture()
+    row['five_dimensions'] = validate_annotation(row, ann, spans)
+    row['hidden_gold'] = ground_truth(row)
+    assert not any(e['variant'] == 'single_source_incomplete_case' for e in training_examples(row))
+    examples = [e for e in training_examples(row, include_singletons=True)
+                if e['variant'] == 'single_source_incomplete_case']
+    assert len(examples) == len(row['evidence'])
+    for e in examples:
+        material = json.loads(e['messages'][1]['content'])['evidence']
+        result = json.loads(e['messages'][-1]['content'])
+        assert result['status'] == '证据不足' and not result['charges'] and not result['perpetrators']
+        assert result['questions'] and len(material) == 1
+        assert all(set(x['evidence_ids']) <= {material[0]['id']}
+                   for key in ('findings', 'reconstruction', 'participants') for x in result[key])

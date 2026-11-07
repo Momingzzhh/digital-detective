@@ -133,7 +133,17 @@ def validate_auxiliary_annotation(record, annotation, sentences):
     return _validate_annotation(record, annotation, sentences, minimum_depth=1)
 
 
-def _validate_annotation(record, annotation, sentences, *, minimum_depth):
+def validate_small_batch_annotation(record, annotation, sentences, *, allow_single_actor_without_conflict=False):
+    """User-authorized training admission; never a heldout benchmark approval."""
+    if type(allow_single_actor_without_conflict) is not bool:
+        raise ValueError('Single-actor scope must be an explicit boolean')
+    if record.get('split') != 'train':
+        raise ValueError('Small-batch annotations must come from existing training groups')
+    return _validate_annotation(record, annotation, sentences, minimum_depth=2,
+                                require_conflict_or_multiple=not allow_single_actor_without_conflict)
+
+
+def _validate_annotation(record, annotation, sentences, *, minimum_depth, require_conflict_or_multiple=True):
     ann = FiveDimensions.model_validate(annotation)
     if not ann.complete_actor_coverage or not ann.complete_event_coverage:
         raise ValueError('Full-case participant and event coverage are required')
@@ -170,7 +180,8 @@ def _validate_annotation(record, annotation, sentences, *, minimum_depth):
                                      [spans[s]['text'] for s in step.sentence_ids])
         depths[step.id] = 1 + max((depths[p] for p in step.depends_on_steps), default=0)
     if max(depths.values()) < minimum_depth:
-        raise ValueError('At least three linked reasoning levels required')
+        label = {1: 'one', 2: 'two', 3: 'three'}[minimum_depth]
+        raise ValueError(f'At least {label} linked reasoning levels required')
     for conflict in ann.contradictions:
         if not {conflict.left_id, conflict.right_id} <= ev.keys():
             raise ValueError('A contradiction references unknown source items')
@@ -187,7 +198,7 @@ def _validate_annotation(record, annotation, sentences, *, minimum_depth):
     names = set(ann.candidate_names)
     if len(names) != len(ann.candidate_names) or any(not n or not any(n in text for text in ev.values()) for n in names):
         raise ValueError('Candidate identities must occur in visible source material')
-    if len(names) < 2 and not ann.contradictions:
+    if require_conflict_or_multiple and len(names) < 2 and not ann.contradictions:
         raise ValueError('Complex case needs a real conflict or multiple investigated persons')
     if len(set(ann.event_sentence_ids)) != len(ann.event_sentence_ids) or not set(ann.event_sentence_ids) <= spans.keys():
         raise ValueError('Unknown or repeated event sentence')
@@ -280,23 +291,37 @@ reconstruction和findings的每项为claim与evidence_ids。conflicts每项为de
 不足时清空罪名及作案者并询问关键缺口，不能把缺失当反证。给出可核验依据摘要，不输出私密思维链。'''
 
 
+def logic_support_ids(steps):
+    """Include every declared premise's source in a dependent finding's receipt."""
+    support = {}
+    for step in steps:
+        ids = list(step['evidence_ids'])
+        for parent in step['depends_on_steps']:
+            ids.extend(support[parent])
+        support[step['id']] = list(dict.fromkeys(ids))
+    return support
+
+
 def conclusion(row):
     ann = row['five_dimensions']; gold = row['hidden_gold']
+    support = logic_support_ids(ann['logic_chain'])
     return {'status': '暂定结论', 'summary': '依据现有材料形成暂定研究结论，须核查来源及反证。',
         'charges': gold['charges'], 'perpetrators': gold['perpetrators'],
         'participants': [{'name':a['name'],'participation':a['participation'],'role':a['role'],
             'evidence_ids':a['evidence_ids']} for a in gold.get('actor_roles',[])],
         'reconstruction': [{'claim': e['summary'], 'evidence_ids': e['evidence_ids']} for e in gold['chronology']],
-        'findings': [{'claim': e['claim'], 'evidence_ids': e['evidence_ids']} for e in ann['logic_chain']],
+        'findings': [{'claim': e['claim'], 'evidence_ids': support[e['id']]} for e in ann['logic_chain']],
         'conflicts': [{'description': c['issue'] + '；' + c['resolution'],
-            'evidence_ids': [c['left_id'], c['right_id']], 'severity': '中等'} for c in ann['contradictions']],
+            'evidence_ids': list(dict.fromkeys([c['left_id'], c['right_id'], *c['resolution_evidence_ids']])),
+            'severity': '中等'} for c in ann['contradictions']],
         'hypotheses': [], 'questions': [], 'missing_information': [], 'confidence': 0.7}
 
 
-def training_examples(row):
+def training_examples(row, *, include_singletons=False):
     if row['split'] != 'train':
         raise ValueError('Only training groups may produce training examples')
     evidence = view(row); target = conclusion(row)
+    support = logic_support_ids(row['five_dimensions']['logic_chain'])
     def sample(material, answer, variant):
         return {'messages': [{'role': 'system', 'content': TRAIN_SYSTEM},
             {'role': 'user', 'content': json.dumps({'evidence': material}, ensure_ascii=False)},
@@ -318,24 +343,30 @@ def training_examples(row):
                 {'role': 'user', 'content': json.dumps({'evidence': []}, ensure_ascii=False)},
                 {'role': 'assistant', 'content': json.dumps(insufficient, ensure_ascii=False)}]
     provided = set()
-    for start in range(0, len(evidence), 3):
-        subset = evidence[start:start + 3]
-        provided.update(e['id'] for e in subset)
-        messages.append({'role': 'user', 'content': json.dumps({'additional_evidence': subset}, ensure_ascii=False)})
-        final = start + 3 >= len(evidence)
+    def partial_for(provided):
         partial = json.loads(json.dumps(insufficient))
         known_steps = set()
         for step in row['five_dimensions']['logic_chain']:
             if set(step['evidence_ids']) <= provided and set(step['depends_on_steps']) <= known_steps:
                 known_steps.add(step['id'])
-                partial['findings'].append({'claim': step['claim'], 'evidence_ids': step['evidence_ids']})
+                partial['findings'].append({'claim': step['claim'], 'evidence_ids': support[step['id']]})
         partial['reconstruction'] = [f for f in target['reconstruction'] if set(f['evidence_ids']) <= provided]
         partial['participants'] = [p for p in target['participants'] if set(p['evidence_ids']) <= provided]
         missing_kinds = list(dict.fromkeys(e['kind'] for e in evidence if e['id'] not in provided))
         if missing_kinds:
             partial['questions'] = ['能否补充尚未提供的' + '、'.join(missing_kinds[:3]) +
                                     '原始材料，以核对事实经过及相关人员的具体行为？']
+        return partial
+    for start in range(0, len(evidence), 3):
+        subset = evidence[start:start + 3]
+        provided.update(e['id'] for e in subset)
+        messages.append({'role': 'user', 'content': json.dumps({'additional_evidence': subset}, ensure_ascii=False)})
+        final = start + 3 >= len(evidence)
+        partial = partial_for(provided)
         messages.append({'role': 'assistant', 'content': json.dumps(target if final else partial, ensure_ascii=False)})
     result.append({'messages': messages, 'case_id': row['case_id'], 'group_id': row['group_id'],
                    'variant': 'source_bound_simulated_dialogue', 'simulated_rounds': (len(evidence) + 2) // 3 + 1})
+    if include_singletons:
+        for item in evidence:
+            result.append(sample([item], partial_for({item['id']}), 'single_source_incomplete_case'))
     return result

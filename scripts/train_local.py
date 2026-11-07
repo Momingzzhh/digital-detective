@@ -40,6 +40,8 @@ def main(args):
     rows = [json.loads(l) for l in data_bytes.decode().splitlines() if l.strip()]
     if any(r.get('dataset_role') == 'auxiliary_calibration' for r in rows):
         raise ValueError('Auxiliary calibration must use its separate training entry point')
+    if any(r.get('dataset_role') == 'small_batch_formal_training' for r in rows):
+        raise ValueError('Small-batch data must use the explicit small-batch entry point')
     if not args.pilot: validate_splits(rows, require_target=True)
     if not rows or not any(r['split'] == 'train' for r in rows): raise ValueError('No training cases')
     if any(r.get('record_binding') != record_binding(r) for r in rows): raise ValueError('Dataset binding changed')
@@ -192,5 +194,16 @@ if __name__ == '__main__':
     parser.add_argument('--iters', type=int)
     parser.add_argument('--max-seq-length', type=int, default=6144)
     parser.add_argument('--pilot', action='store_true')
+    parser.add_argument('--small-batch-manifest')
+    parser.add_argument('--small-batch-run')
+    parser.add_argument('--prepare-only', action='store_true')
+    parser.add_argument('--epochs', type=int, default=2)
+    args = parser.parse_args()
     with model_resource('training'):
-        main(parser.parse_args())
+        if args.small_batch_manifest or args.small_batch_run:
+            from scripts.train_small_batch import main as small_batch_main
+            small_batch_main(args)
+        else:
+            if args.prepare_only:
+                parser.error('--prepare-only requires a small-batch manifest or run')
+            main(args)

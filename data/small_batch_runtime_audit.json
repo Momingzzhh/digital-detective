@@ -1,0 +1,29 @@
+{
+  "run_id": "20261107T173318311149Z",
+  "generated_at": "2026-11-07T17:55:21.054483+00:00",
+  "capture_stage": "completed",
+  "examples_checked": 86,
+  "actual_max_example_tokens": 6978,
+  "preflight_token_ids_match_installed_training_call": true,
+  "truncated_examples": 0,
+  "minimum_supervised_completion_tokens": 98,
+  "batch_size": 1,
+  "requested_micro_iterations": 88,
+  "complete_dataset_passes_covered_by_requested_iterations": 1,
+  "gradient_accumulation_steps": 4,
+  "planned_optimizer_updates": 22,
+  "runtime_versions": {
+    "mlx": "0.32.4",
+    "mlx-lm": "0.30.4",
+    "transformers": "5.0.0rc1",
+    "tokenizers": "0.22.2",
+    "safetensors": "0.8.0",
+    "numpy": "2.5.4"
+  },
+  "installed_training_code_sha256": {
+    "mlx_lm/tuner/trainer.py": "babf9ed2868a25d96f11bcef15b1c6146e45b1c856b3679d0c85008bbc75fd03",
+    "mlx_lm/tuner/datasets.py": "421db6c8db181fff9a34c70821f3de862b4305c4cb7a04513384982ea23f51bb",
+    "mlx_lm/lora.py": "6f546a387fd8b595384292bca8629676ab8333535e7e321d269e9be11b46779f"
+  },
+  "independent_accuracy_verified": false
+}

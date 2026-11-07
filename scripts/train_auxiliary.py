@@ -33,10 +33,10 @@ def save(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
 
 
-def expanded_examples(rows):
+def expanded_examples(rows, *, include_singletons=False):
     result = []
     for row in rows:
-        for example in training_examples(row):
+        for example in training_examples(row, include_singletons=include_singletons):
             if example['variant'] == 'source_bound_simulated_dialogue':
                 for index, message in enumerate(example['messages']):
                     if message['role'] == 'assistant':

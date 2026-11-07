@@ -96,6 +96,15 @@ def context_metadata(exc):
 
 
 def main(args):
+    if getattr(args, 'small_batch_cohort', None):
+        if args.split in ('dev', 'test') or args.batch_size > 2 or args.limit < 1:
+            raise ValueError('Small-batch annotation is training-only, at most two cases per process')
+        from argparse import Namespace
+        from scripts.annotate_small_batch import process
+        return process(Namespace(cohort=args.small_batch_cohort, case_id=args.case_id,
+            max_cases=min(args.batch_size, args.limit), max_tokens=args.max_tokens,
+            retry_runtime_errors=args.retry_runtime_errors, audit_draft=args.audit_draft,
+            repair_audit_format=args.repair_audit_format))
     if getattr(args,'calibration_revision',None):
         from scripts.annotate_calibration_revision import main as revise_calibration
         return revise_calibration(args)
@@ -295,6 +304,9 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--limit',type=int,default=2000)
+    parser.add_argument('--small-batch-cohort',help='Frozen training-only cohort under the revised small-batch policy')
+    parser.add_argument('--retry-runtime-errors',action='store_true',help='One archived retry if no small-batch model output was generated')
+    parser.add_argument('--repair-audit-format',action='store_true',help='One small-batch retry for internally malformed audit output, without changing the candidate')
     parser.add_argument('--calibration-revision',help='Private, isolated training source revision; never exported into the formal dataset')
     parser.add_argument('--case-id',help='One training revision to diagnose; only used with --calibration-revision')
     parser.add_argument('--audit-draft',help='Screen a private assistant-authored draft without claiming local-model authorship')

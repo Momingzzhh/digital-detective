@@ -22,7 +22,7 @@ from app.llm import structured
 from app.store import initialize, budget_status
 from app.source_policy import court_boundary,require_clean_evidence
 
-VERSION = 'source-sections-v4.4'
+VERSION = 'source-sections-v4.6'
 CODE_SHA256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 START = re.compile(r'下列证据(?:予以|加以|能够|足以)?(?:证实|证明|佐证)?\s*[：:]|证据如下\s*[：:]')
 ITEM = re.compile(r'(?<!\d)(?:^|[。；\s])(?:[（(]?\d{1,2}[）)]?[、.．]|[（(][一二三四五六七八九十]{1,3}[）)])\s*', re.M)
@@ -81,6 +81,12 @@ def evidence_kind(raw):
         return '当事人供述'
     coactor_witness=re.search(r'同案犯[^：:，,。；]{1,35}?证言',prefix)
     if coactor_witness and coactor_witness.start()<=25:return '证人证言'
+    # "物证" inside the issuing institution is not the document type.
+    # Only use an explicit report title within the first source heading;
+    # never search later testimony for a document mentioned in its body.
+    heading=re.split(r'[，,。；：:]',re.sub(r'^[。；\s（）()一二三四五六七八九十\d、.．]+','',prefix),maxsplit=1)[0]
+    if re.search(r'物证(?:鉴定室|鉴定所|鉴定中心|检验所|实验室)[^，,。；：:]{0,30}(?:鉴定书|鉴定意见书)',heading):
+        return '鉴定意见'
     match=TYPE.search(prefix)
     if match and any(s in match.group() for s in ('证人','证言','陈述','供述')) and match.start()>25:
         match=None

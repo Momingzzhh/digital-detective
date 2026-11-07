@@ -68,3 +68,31 @@ def test_every_dependency_edge_needs_a_unique_positive_semantic_check():
                 checks[:1]+[checks[1]|{'parent_id':'UNKNOWN'}]):
         saved['semantic_audit']['dependency_checks']=bad
         assert not quality_passed(saved,row)
+
+
+def test_bound_audit_schema_forbids_evidence_parents_and_extra_edges():
+    import pytest
+    from app.annotation_quality import semantic_schema, audit_structure_errors
+    ann = {'logic_chain': [{'id': 'L1', 'depends_on_steps': []},
+                           {'id': 'L2', 'depends_on_steps': ['L1']}]}
+    audit = {k: True for k in AUDIT_CHECKS} | {'issue_codes': [], 'reason': '合成格式核验',
+        'dependency_checks': [{'step_id': 'L2', 'parent_id': 'L1', 'necessary': True, 'reason': '仅为合成前提测试'}]}
+    schema = semantic_schema(ann)
+    assert schema.model_validate(audit)
+    assert not audit_structure_errors(audit, ann)
+    bad = copy.deepcopy(audit)
+    bad['dependency_checks'].append({'step_id': 'L2', 'parent_id': 'E7', 'necessary': False, 'reason': '错误地把证据当父节点'})
+    assert audit_structure_errors(bad, ann)
+    with pytest.raises(ValueError): schema.model_validate(bad)
+    bad = copy.deepcopy(audit); bad['dependency_checks'][0]['parent_id'] = 'E7'
+    with pytest.raises(ValueError): schema.model_validate(bad)
+
+
+def test_real_negative_dependency_verdict_is_not_a_format_retry_reason():
+    from app.annotation_quality import audit_structure_errors
+    ann = {'logic_chain': [{'id': 'L1', 'depends_on_steps': []},
+                           {'id': 'L2', 'depends_on_steps': ['L1']}]}
+    audit = {k: True for k in AUDIT_CHECKS} | {'logic_dependencies_necessary': False,
+        'issue_codes': ['ACTUAL_DEPENDENCY_FAILURE'], 'reason': '合成来源不足，不应因负面结论而重试',
+        'dependency_checks': [{'step_id': 'L2', 'parent_id': 'L1', 'necessary': False, 'reason': '合成主张无需先前前提'}]}
+    assert not audit_structure_errors(audit, ann)

@@ -1,0 +1,48 @@
+{
+  "protocol": "train-only-partial-source-probe-v1",
+  "generated_at": "2026-11-07T18:00:03.318595+00:00",
+  "run_id": "20261107T173318311149Z",
+  "adapter_sha256": "ee4e9344b957114cedcbe57c22fb2e3acc6e9656f5a8b95b7e3078de5d1b1282",
+  "dataset_binding": "3dd4dd6a88af289fb63669aa174d4967b7f47d99309234fc772c8b0e944b5240",
+  "probe_plan_binding": "499f0bad2280272b31ece96c8bb8d9086d28057cfec4f6aaf59eeeb86272eab2",
+  "probe_code_sha256": "5cbad2f6e21b8290056c229464506ce89af04d505689e3d3ce2d5cc0bf7cb76f",
+  "generation_code_sha256": {
+    "app/llm.py": "990ec9a1fd0e2f8a48cfc8d9cf4c455dda7673378886e0c2f0d5bd057060bdb8",
+    "app/local_model.py": "c2563034f8a323cd7f66754a247b2feb36d9f23fc993b2603483485f2a22758c",
+    "app/local_context.py": "cb9d7d706b8dc7c9b498cfb59fdaa3f4cecba283d5d077cc4298559d7533e3dc",
+    "app/models.py": "99e1ea1187f417f4aaa2ac4009a831043e471016219b8c2173d4e61c61c94b86",
+    "app/five_dimensions.py": "9265fd593a03a0284b1d432d0ca398a599da861453967d073441f3f80ee70844",
+    "app/local_resource.py": "c35567a9460c5e20d840187f8cfc44d49a905c44b37d374a037da984be4b3d2d"
+  },
+  "base_manifest_binding": "c8d59f8fef532011156c61f60f511ad185907a2547e3977ee43ee21db980d644",
+  "training_source_probes": 2,
+  "heldout_cases_used": 0,
+  "independent_accuracy_verified": false,
+  "included_in_dataset_count": false,
+  "network_attempts": 0,
+  "cloud_ledger_unchanged": true,
+  "results": [
+    {
+      "input_binding": "3c87c19982494908895a6af93718647de5407f703f219fb16b77de45869513a9",
+      "probe_index": 1,
+      "checks": {
+        "insufficient_no_accusation": true,
+        "citations_within_provided_evidence": true,
+        "asks_for_missing_evidence": true
+      },
+      "passed": true
+    },
+    {
+      "input_binding": "76c2d2c8c8c075d45642ec9ffd925a11ca99f5b6e0a0f31a5755ef2cd5840a2a",
+      "probe_index": 2,
+      "checks": {
+        "insufficient_no_accusation": true,
+        "citations_within_provided_evidence": true,
+        "asks_for_missing_evidence": true
+      },
+      "passed": true
+    }
+  ],
+  "runtime_error_count": 0,
+  "passed": true
+}

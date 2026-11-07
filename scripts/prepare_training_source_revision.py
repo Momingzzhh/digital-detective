@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Append or extend explicit training source ranges, preserving the frozen pool."""
+"""Revise explicit training source ranges or types, preserving the frozen pool."""
 import argparse
 import copy
 import hashlib
@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from app.complexity_review import complexity_exclusion, source_review_hold
 from app.five_dimensions import fingerprint, validate_splits
-from app.source_policy import require_clean_evidence
+from app.source_policy import require_clean_evidence, court_boundary
 from scripts.build_v3 import START, ITEM, LEAK, evidence_kind, sentences
 from scripts.export_review_bundle import verify
 
@@ -26,7 +26,6 @@ def revise(row, plan):
         raise ValueError('Original source binding differs')
     if complexity_exclusion(row) or source_review_hold(row):
         raise ValueError('Use the human-feedback revision workflow for a held source')
-    require_clean_evidence(row['evidence'])
     verify(row, {'raw_record': row['raw_record']})
     out = copy.deepcopy(row)
     fact = row['raw_record']['ajjbqk']
@@ -35,6 +34,53 @@ def revise(row, plan):
         raise ValueError('No explicit original evidence section')
     starts = [marker.end()+m.start() for m in ITEM.finditer(fact[marker.end():])]
     changes = []
+    trimmed = set()
+    for action in plan.get('trim_judicial_tails', []):
+        matches = [e for e in out['evidence'] if e['id'] == action['evidence_id']]
+        if len(matches) != 1 or action['evidence_id'] in trimmed:
+            raise ValueError('Judicial-tail trim must identify one distinct existing item')
+        e = matches[0]
+        boundary = court_boundary(e['quote'])
+        end = action['end']
+        if (not boundary or e['end'] != action['previous_end'] or
+            end != e['start'] + boundary['offset'] or not e['start'] < end < e['end'] or
+            fact[e['start']:e['end']] != e['quote'] or not action.get('reason', '').strip()):
+            raise ValueError('Only the exact first recognized judicial boundary may shorten a source item')
+        quote = fact[e['start']:end]
+        if len(quote) < 40:
+            raise ValueError('Judicial-tail trim must retain a substantive original source prefix')
+        before = fingerprint(e)
+        removed = fact[end:e['end']]
+        previous_end = e['end']
+        text = quote.replace('被告人','当事人').replace('犯罪嫌疑人','当事人')
+        e.update(end=end, quote=quote, text=text,
+                 transforms=[] if text == quote else [{'type':'neutral_role_label',
+                     'from':['被告人','犯罪嫌疑人'],'to':'当事人'}])
+        offset = row['source'].get('fact_offset_in_fulltext')
+        if offset is not None:
+            e.update(fulltext_start=offset + e['start'], fulltext_end=offset + end)
+        trimmed.add(e['id'])
+        changes.append({'operation':'trim_judicial_tail','evidence_id':e['id'],
+                        'previous_end':previous_end,'end':end,'boundary_rule':boundary['rule'],
+                        'removed_characters':len(removed), 'removed_tail_sha256':hashlib.sha256(removed.encode()).hexdigest(),
+                        'before_binding':before,'after_binding':fingerprint(e),'reason':action['reason']})
+    require_clean_evidence(out['evidence'])
+    changed_types = set()
+    for action in plan.get('reclassify_items', []):
+        matches = [e for e in out['evidence'] if e['id'] == action['evidence_id']]
+        if len(matches) != 1 or action['evidence_id'] in changed_types:
+            raise ValueError('Type correction must identify one distinct existing item')
+        e = matches[0]
+        if (e['kind'] != action['previous_kind'] or action['kind'] == e['kind'] or
+            evidence_kind(e['quote']) != action['kind'] or not action.get('reason', '').strip()):
+            raise ValueError('Type correction must match the original heading and previous type')
+        previous = e['kind']
+        e['kind'] = action['kind']
+        changed_types.add(e['id'])
+        changes.append({'operation':'reclassify_existing','evidence_id':e['id'],
+                        'previous_kind':previous,'kind':e['kind'],
+                        'source_quote_sha256':hashlib.sha256(e['quote'].encode()).hexdigest(),
+                        'reason':action['reason']})
     for action in plan['append_ranges']:
         start, end = action['start'], action['end']
         if start not in starts or not start < end <= len(fact):

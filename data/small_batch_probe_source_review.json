@@ -1,0 +1,25 @@
+{
+  "author": "assistant_source_reader",
+  "human_reviewed": false,
+  "formal_approval": false,
+  "original_probe_report_sha256": "3077b42c0bd7e220badf2d81cc2edd834b6afbbfeeadd1ddfa58e4f7fad7843c",
+  "run_id": "20261107T154708857356Z",
+  "adapter_sha256": "2da343da0891a1a20c58b2c359da7a67983dec649fa51f44faa858c0e52bdde5",
+  "original_predefined_boundary_passes": 1,
+  "original_predefined_boundary_failures": 1,
+  "source_reader_semantic_approval": false,
+  "issues": [
+    {
+      "probe_index": 1,
+      "issue": "Ordinary payment and sales contacts were turned into an unsupported offence and criminal actor."
+    },
+    {
+      "probe_index": 2,
+      "issue": "Despite abstaining from accusations, the hypothesis falsely says all seven samples exceed 999g; the source includes a 997.27g sample."
+    }
+  ],
+  "probe_plan_rationale_correction": "The second original rationale was too broad: the forensic item already names a driver and the vehicle seizure. Those facts do not alone establish knowing criminal participation. Original input, plan and automatic check results are preserved.",
+  "training_label_issue": "A separate freight-case event mentioned 34.8万元 without citing E4:S8. The original machine-passed label is now held; a corrected draft is separately audited.",
+  "no_accuracy_claim": true,
+  "old_adapter_activated": false
+}

@@ -125,3 +125,87 @@ def test_extension_cannot_absorb_an_independent_source_that_was_not_previously_s
                             if row['evidence'][0]['end']<=marker.end()+m.start()<len(fact)]
     with pytest.raises(ValueError,match='recognized source document'):
         revision.revise(row,plan)
+
+
+def type_correction_fixture():
+    texts = [f'{i}、证人甲的证言：仅为合成机制测试，甲看见乙搬走登记物品，现场记录了车辆、时间和后续经过。'
+             for i in range(1, 7)]
+    texts.append('7、某公安局物证鉴定室鉴定书，证实送检的合成检材编号和检测结果相互对应，本段仅为类型识别机制测试。')
+    fact = '下列证据证实：' + ' '.join(texts)
+    items = extract_items(fact, '合成测试罪')
+    assert len(items) == 7 and items[-1]['kind'] == '鉴定意见'
+    items[-1]['kind'] = '物证'  # Simulate the old issuing-institution error.
+    sha = hashlib.sha256(fact.encode()).hexdigest()
+    row = {'case_id': 'synthetic-type', 'group_id': 'synthetic-type-group', 'split': 'train',
+           'source': {'sha256_fulltext': sha}, 'source_fact_sha256': sha,
+           'raw_record': {'qw': fact, 'ajjbqk': fact}, 'hidden_gold': {'charges': ['合成测试罪']},
+           'evidence': items, 'sentence_spans': sentences(items)}
+    row['source_binding'] = fingerprint({k: row[k] for k in revision.SOURCE_KEYS})
+    plan = {'case_id': row['case_id'], 'parent_source_binding': row['source_binding'], 'append_ranges': [],
+            'reclassify_items': [{'evidence_id': 'E7', 'previous_kind': '物证',
+                                  'kind': '鉴定意见', 'reason': '机构名称中的物证不是文书类型'}]}
+    return row, plan
+
+
+def test_type_only_revision_preserves_quotes_offsets_sentences_and_original_pool():
+    row, plan = type_correction_fixture(); before = copy.deepcopy(row)
+    out = revision.revise(row, plan)
+    assert row == before and out['sentence_spans'] == row['sentence_spans']
+    assert out['evidence'][:-1] == row['evidence'][:-1]
+    assert out['evidence'][-1] == row['evidence'][-1] | {'kind': '鉴定意见'}
+    assert out['source_binding'] != row['source_binding']
+    assert not out['human_reviewed'] and not out['formal_approval']
+
+
+@pytest.mark.parametrize('defect', ['previous_type', 'new_type', 'reason', 'repeated_item', 'heldout'])
+def test_type_plan_cannot_relabel_without_a_matching_source_title(defect):
+    row, plan = type_correction_fixture(); action = plan['reclassify_items'][0]
+    if defect == 'previous_type': action['previous_kind'] = '书证'
+    elif defect == 'new_type': action['kind'] = '证人证言'
+    elif defect == 'reason': action['reason'] = ''
+    elif defect == 'repeated_item': plan['reclassify_items'] *= 2
+    else: row['split'] = 'test'
+    with pytest.raises(ValueError): revision.revise(row, plan)
+
+
+def judicial_tail_fixture(tail='上述事实清楚，证据充分，'):
+    fact = '下列证据证实：' + ' '.join(
+        f'{i}、证人甲的证言：仅为合成机制测试，甲看见乙搬走登记物品，现场记录了车辆、时间和后续经过。'
+        for i in range(1, 7)) + tail
+    items = extract_items(fact, '合成测试罪')
+    # Reproduce the old extractor's untrimmed last evidence item.
+    items[-1].update(end=len(fact), quote=fact[items[-1]['start']:], text=fact[items[-1]['start']:])
+    sha = hashlib.sha256(fact.encode()).hexdigest()
+    row = {'case_id': 'synthetic-tail', 'group_id': 'synthetic-tail-group', 'split': 'train',
+           'source': {'sha256_fulltext': sha}, 'source_fact_sha256': sha,
+           'raw_record': {'qw': fact, 'ajjbqk': fact}, 'hidden_gold': {'charges': ['合成测试罪']},
+           'evidence': items, 'sentence_spans': sentences(items)}
+    row['source_binding'] = fingerprint({k: row[k] for k in revision.SOURCE_KEYS})
+    plan = {'case_id': row['case_id'], 'parent_source_binding': row['source_binding'], 'append_ranges': [],
+            'trim_judicial_tails': [{'evidence_id': items[-1]['id'], 'previous_end': len(fact),
+                                    'end': len(fact) - len(tail), 'reason': '移除已识别的司法结语，保留原始来源'}]}
+    return row, plan
+
+
+def test_judicial_trim_only_removes_known_tail_and_preserves_all_evidence_ids_and_raw_record():
+    row, plan = judicial_tail_fixture(); before = copy.deepcopy(row)
+    out = revision.revise(row, plan)
+    assert row == before and out['raw_record'] == row['raw_record']
+    assert out['evidence'][:-1] == row['evidence'][:-1]
+    assert [e['id'] for e in out['evidence']] == [e['id'] for e in row['evidence']]
+    assert row['evidence'][-1]['quote'].startswith(out['evidence'][-1]['quote'])
+    assert out['training_source_revision']['changes'][0]['removed_characters'] == 12
+    assert out['human_reviewed'] is False
+
+
+@pytest.mark.parametrize('defect', ['before_boundary', 'after_boundary', 'previous_end', 'reason', 'duplicate', 'unrecognized'])
+def test_source_trim_cannot_delete_arbitrary_original_claims(defect):
+    row, plan = judicial_tail_fixture('证人又补充了一段具体观察。' if defect == 'unrecognized' else '上述事实清楚，证据充分，')
+    action = plan['trim_judicial_tails'][0]
+    if defect == 'before_boundary': action['end'] -= 3
+    elif defect == 'after_boundary': action['end'] += 3
+    elif defect == 'previous_end': action['previous_end'] -= 1
+    elif defect == 'reason': action['reason'] = ''
+    elif defect == 'duplicate': plan['trim_judicial_tails'] *= 2
+    with pytest.raises(ValueError, match='boundary|distinct existing'):
+        revision.revise(row, plan)
