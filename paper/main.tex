@@ -1,0 +1,177 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=25mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,booktabs,array,microtype}
+\usepackage{newtxtext,newtxmath}
+\usepackage[colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue]{hyperref}
+\usepackage{caption}
+\captionsetup{font=small,labelfont=bf}
+\setlength{\parindent}{1.5em}
+\setlength{\parskip}{0.15em}
+\title{\bfseries Digital Detective: An Evidence-Constrained Interactive Agent for Local Criminal Case Analysis}
+\author{Author information to be supplied for submission}
+\date{}
+\begin{document}
+\maketitle
+\begin{abstract}
+Large language models can organize criminal case materials, but a fluent account may confuse an allegation with a finding, cite an unrelated passage, or infer culpability from missing evidence. Digital Detective is a locally deployed, single-model interactive agent that treats source-bound evidence as the unit of analysis. It extracts verbatim spans with character offsets, performs bounded evidence inspection, produces structured findings and competing hypotheses, and applies citation checks and a second-pass review before exposing a provisional conclusion. A human analyst can add textual material and trigger another round; the interface retains quotations, evidence identifiers, an execution trace, and a navigable evidence graph. A five-dimensional annotation scheme supports training for evidence hierarchy, inferential dependencies, contradictions, reconstruction, and progressive disclosure. An initial five-case run yielded 86 supervised examples and 22 optimizer updates. A separate experiment used 150 training cases and 150 non-overlapping test cases; 112 test cases were scored correct, yielding 74.7\% case-level accuracy and exceeding the stated 70\% threshold. Two end-to-end synthetic rounds on the locally activated model completed in 64.97 and 65.67 seconds. These results support feasibility, while claim-level citation fidelity, calibration, and generalization remain open questions.
+\end{abstract}
+\noindent\textbf{Keywords:} legal AI; criminal case analysis; evidence-grounded agent; interactive investigation; local language model
+
+\section{Introduction}
+Criminal case analysis requires a distinction among what a source says, what an analyst infers, and what remains unknown. A witness statement can contain an allegation without establishing the event. Two accounts may refer to different times rather than contradict each other. Missing fingerprints may simply mean that no usable print was collected. These distinctions are important when language models generate coherent narratives from incomplete records.
+
+Tool-using language agents can interleave reasoning with actions \cite{react}, but their outputs still require domain-specific evidence control. Legal language models and benchmarks have improved access to legal knowledge and case-oriented reasoning \cite{disc,lawbench,lapis,legalagentbench}. Research on pre-arrest profiling exposes the difficulty and bias of inference from fragmentary evidence \cite{beforearrest}. Evidence-grounded digital forensic reporting further shows that restricting a model to evidence does not by itself guarantee that each generated claim is supported \cite{androidforensics}. A useful research prototype must therefore make the path from source text to provisional conclusion inspectable and allow a human analyst to add missing material without silently turning it into an established fact.
+
+Digital Detective addresses this workflow for Chinese-language textual criminal case materials. Its contribution is an application-specific integration, not a claim to have invented tool-using agents or evidence anchoring. First, extraction is accepted only when a quotation is a contiguous substring of a submitted source and is recorded with offsets. Second, a bounded evidence-tool loop and structured output distinguish findings, participants, hypotheses, conflicts, questions, and missing information. Third, a citation gate and same-model second pass can downgrade unsupported determinate conclusions to an insufficient-evidence status. Fourth, progressive disclosure allows analysts to add material and re-run a case while retaining a trace and model provenance. The system runs with a local four-bit model and adapter, without a cloud-model fallback.
+
+This paper reports the implemented architecture, training design, observed engineering tests, and a separate aggregate case-level result. An exact quotation proves textual provenance, not the truth of the statement or semantic sufficiency of a conclusion.
+
+\section{Related Work and Research Position}
+\subsection{Legal models and investigation support}
+DISC-LawLLM combines supervised fine-tuning, legal reasoning prompts, and retrieval for legal services \cite{disc}. LawBench evaluates Chinese legal knowledge across 20 tasks \cite{lawbench}. LAPIS combines a fine-tuned Korean model with a crime-investigation knowledge base to advise on legally appropriate police actions \cite{lapis}. LegalAgentBench evaluates agents' use of legal corpora and tools, emphasizing multi-step process evaluation \cite{legalagentbench}. These works establish that legal adaptation, retrieval, and tool use are active research areas. Digital Detective instead focuses on an investigator-facing case-evidence workflow: source quotation, participant and event reconstruction, explicit uncertainty, and analyst-controlled addition of evidence in a local environment.
+
+ReAct established the reasoning-and-action pattern used by many agents \cite{react}. Holmes uses evidence packs and quotation constraints for auditable cloud-network investigation \cite{holmes}. The Android forensic reporting study evaluates atomic claims and finds that source restriction and fact recall alone do not ensure valid attribution \cite{androidforensics}. Digital Detective applies this concern to evolving textual case files with participant roles and competing explanations. Its evidence graph is a display of quoted entities and claim links, not a graph-reasoning engine.
+
+\subsection{Incomplete evidence and evaluation}
+The PIJ benchmark shows that profiling from incomplete evidence is harder than extracting explicit facts, with biases in inferred attributes and motives \cite{beforearrest}. That result motivates conservative outputs and questions that discriminate between hypotheses. Abstention should be assessed together with false accusations, missed supported conclusions, and behavior after new evidence arrives. We distinguish engineering checks, aggregate case-level accuracy, and the finer-grained evaluation still required for this agent.
+
+\begin{center}
+\centering\small
+\captionof{table}{Position relative to representative prior work. Descriptions identify each study's principal task rather than all its features.}
+\label{tab:prior}
+\begin{tabular}{p{0.19\linewidth}p{0.32\linewidth}p{0.39\linewidth}}
+\toprule
+Study & Principal task & Relation to Digital Detective\\
+\midrule
+DISC-LawLLM \cite{disc}; LAPIS \cite{lapis} & Legal service or investigative legal guidance & Motivate domain adaptation; the present task follows evidence within one changing case.\\
+LawBench \cite{lawbench}; LegalAgentBench \cite{legalagentbench} & Legal knowledge and agent-process evaluation & Motivate process-aware case evaluation rather than using a legal score as a proxy.\\
+PIJ \cite{beforearrest} & Inference from incomplete homicide-case evidence & Motivates abstention and bias checks under partial observation.\\
+Holmes \cite{holmes}; Android forensic reporting \cite{androidforensics} & Auditable cyber investigation and forensic report grounding & Show that traceability is established; the present workflow targets interactive textual reconstruction.\\
+\bottomrule
+\end{tabular}
+\end{center}
+\section{Task Definition and Evidence Representation}
+Let a case contain textual sources $S=\{s_1,\ldots,s_m\}$. In analysis round $t$, only evidence available by that round, $E_t$, may support the output. Each accepted item is
+\begin{equation}
+e_i=(\mathrm{id}_i,\mathrm{source}_i,a_i,b_i,q_i,k_i),\qquad
+q_i=s_{\mathrm{source}_i}[a_i:b_i],
+\label{eq:span}
+\end{equation}
+where $q_i$ is an exact quotation, $[a_i,b_i)$ a character span, and $k_i$ an evidence-type label. The interface also stores a summary, mentioned entities, and a provisional reliability label; these are reading aids, not independent evidence. An identifier is deterministically derived from source ID, offset, and quote.
+
+The desired output is a structured provisional analysis, not an automated judicial determination. It contains a status (provisional conclusion or insufficient evidence), findings and event reconstruction with evidence IDs, named behavior participants and their roles, charges and perpetrators when warranted, conflicts, competing hypotheses with supporting and opposing citations, priority questions, and missing-information notes. A participant can be a direct actor, organizer, helper, or person whose participation cannot be confirmed. A witness, victim, or merely mentioned person is not automatically a perpetrator. The interface confidence field is a subjective model output rather than a calibrated probability.
+
+Equation~\eqref{eq:span} establishes that a quote occurred in submitted material. It does not establish source reliability, entity identity, or logical entailment of a proposed charge. This distinction shapes the verification gate and evaluation agenda.
+
+\section{Evidence-Constrained Agent Architecture}
+\begin{center}
+\centering
+\fbox{\begin{minipage}{0.92\linewidth}\centering\small
+Text source $\longrightarrow$ exact-span extraction $\longrightarrow$ evidence store\\[4pt]
+$\downarrow$\\[-1pt]
+bounded search / inspection / conflict check $\longrightarrow$ structured candidate\\[4pt]
+$\downarrow$\\[-1pt]
+citation gate + second-pass review $\longrightarrow$ provisional output / abstention\\[4pt]
+$\uparrow$\\[-1pt]
+analyst adds material $\longleftarrow$ questions, trace, quotation links, graph
+\end{minipage}}
+\captionof{figure}{Implemented single-model workflow. The second pass uses the same local model; the graph is a presentation layer.}
+\label{fig:architecture}
+\end{center}
+
+\subsection{Source-bound extraction}
+The extraction prompt treats submitted material and conversation text as untrusted data. The model proposes typed entries under a strict JSON schema. For each proposal, the application searches the source text for the exact quotation and rejects entries that cannot be located. Accepted entries receive source IDs, character offsets, and stable evidence IDs. This check reduces fabricated quotation text, although repeated identical passages may be aligned to the first occurrence and require human inspection. New source blocks are extracted once; previously accepted evidence survives an interrupted analysis.
+
+\subsection{Bounded evidence actions}
+After extraction, the agent receives quotations with IDs and may select up to three actions: lexical evidence search, inspection by evidence ID, or a conflict-check view. It can also finish. Duplicate actions are suppressed. Search is local lexical ranking over stored quotations and summaries, not web search or police-database access. Tool observations reference relevant evidence IDs while accepted quotations remain in context. The action space is small and produces an inspectable trace. The agent does not analyze raw fingerprint, DNA, video, or other non-text media.
+
+\subsection{Structured synthesis and conservative verification}
+The synthesis stage emits a schema-constrained analysis. The prompt distinguishes allegation from finding, absence from contrary evidence, and actual contradictions from differences in time or role. It asks for a discriminating follow-up question when the record is incomplete. A second generation pass, using the same local model, reviews candidate support and serious contrary evidence. The application checks citation IDs, required citations for findings and reconstruction, participant-name occurrence in cited quotations, duplicate participants, and consistency between supported participants and the perpetrator set.
+
+If review or deterministic checks flag a problem, the system sets the status to insufficient evidence, clears charge, perpetrator, and participant fields, and caps displayed confidence below 0.5. It preserves remaining analysis as material to verify, together with unresolved issues. This is an operational gate, not a proof of semantic correctness. The reviewer may repeat the first pass's error; a valid ID may still point to an irrelevant quote.
+
+\subsection{Human interaction and provenance}
+An analyst can append a text block as a new source and start another round. The agent carries forward previous status, questions, and missing-information notes while considering the expanded evidence set. The interface links citations to original text and displays an evidence graph whose edges denote mentions or citation by a finding. The graph does not estimate causality or drive planning. Case exports include evidence, analysis, review, trace, and model-version information. Local deployment validates adapter and configuration hashes before inference.
+
+\section{Training Data and Implementation}
+\subsection{Five-dimensional annotation}
+The schema records (1) the level of each evidence item, (2) a logic chain with inferential steps and prerequisites, (3) contradictions and resolving evidence, (4) the longest annotated dependency path as reasoning depth, and (5) simulated progressive-disclosure dialogue. Sentence IDs and offsets tie training answers to source text. Structural validation checks references and depth, but whether a dependency is necessary or a contradiction genuine still needs semantic and human review.
+
+The initial source-bound batch contains five distinct training cases, all at actual depth two. Two corrected versions had been accepted for small-batch use; three passed automated audit and awaited human review. This batch is not a completed 600-case three-level benchmark. It produced 86 supervised examples: five complete views, five reversed evidence orders, five all-evidence-withheld views, five synthetic instruction-injection views, 21 simulated dialogue views, and 45 single-evidence incomplete views. These variants are not 86 independent cases. Training and held-out data use separate case groups.
+
+\subsection{Local model and release controls}
+The local stack uses a four-bit Qwen3-4B-Instruct-2507 checkpoint with MLX and a low-rank adapter \cite{qwen3,lora,qlora}. The activated five-case run completed 88 micro-iterations and 22 optimizer updates, with measured peak memory of 8.863\,GB. A post-training check found 56 nonzero LoRA B tensors. All 86 training inputs were re-tokenized against the installed training code; none was truncated, and the longest had 6,978 tokens. Replay loss changed from 2.221 to 1.669, but this training-side value is not an independent accuracy estimate. The adapter was activated after weight, configuration, and offline checks.
+
+The web application runs locally on Apple Silicon and stores account-scoped cases in a local database. It accepts text-bearing uploads and exports JSON records. The public repository \cite{repository} contains code, methods, aggregate reports, and version bindings; raw documents, private annotations, and model weights are not redistributed.
+
+\section{Evaluation and Results}
+\subsection{Questions and measures}
+Three questions guide evaluation: Can the workflow execute and preserve source lineage? Does the adapted agent answer independent cases correctly? Does it avoid unsupported accusations and respond appropriately to new evidence? The first is assessed by software tests and a synthetic end-to-end scenario. The second is reported as a separate case-level result. The third requires larger claim-level and interactive human evaluation.
+
+Case-level accuracy is $A=C/N$, where $C$ is the number of independently scored correct cases and $N$ is the number of test cases. The project criterion requires the relevant charge, all source-supported behavior participants and roles, and key event reconstruction to be correct together. Future evaluation should report span validity, semantic support for each finding, unsupported accusation rate, coverage, appropriate abstention, over-abstention, and revision after new evidence. These are distinct from $A$.
+
+\subsection{Observed outcomes}
+The initial local run passed 312 software tests covering account isolation, uploads, exports, citations, adapter activation, offline behavior, and failure recovery. In a two-round end-to-end synthetic scenario, the real local model completed round 1 with five extracted items in 64.97 seconds and round 2 after a supplement with seven total items in 65.67 seconds. Both rounds returned insufficient evidence; smoke checks found source-linked quotations, valid citations, no unsupported accusation under the test assertions, and zero network attempts. The two rounds are one synthetic scenario and do not contribute to independent case accuracy.
+
+A subsequent experiment used 150 training cases from an additional dataset and 150 non-overlapping test cases. The independent test recorded 112 correct cases, giving
+\begin{equation}
+A=\frac{112}{150}=0.7467\approx 74.7\%.
+\label{eq:accuracy}
+\end{equation}
+This point estimate exceeds the prespecified 70\% threshold by 4.7 percentage points. A descriptive Wilson 95\% interval calculated from 112/150 is 67.2--81.0\%; its lower bound falls below 70\%, so the sample does not establish performance above that threshold at the 95\% confidence level. This follow-up is currently represented by aggregate counts in the project record; case-level predictions, model-configuration hashes, and a claim-level citation audit have not yet been incorporated into the repository. We report the aggregate result without attributing the gain to any single architecture component or treating it as evidence of calibrated confidence.
+
+\begin{table}[t]
+\centering\small
+\caption{Implementation and evaluation outcomes. The synthetic smoke test and independent case test use different units.}
+\label{tab:results}
+\begin{tabular}{p{0.60\linewidth}r}
+\toprule
+Measure & Result\\
+\midrule
+Initial training cases / supervised variants & 5 / 86\\
+Initial optimizer updates / peak memory & 22 / 8.863\,GB\\
+Software tests passed & 312\\
+Synthetic round 1: evidence / elapsed time & 5 / 64.97\,s\\
+Synthetic round 2: total evidence / elapsed time & 7 / 65.67\,s\\
+Follow-up training cases (additional dataset) & 150\\
+Independent test cases / correct cases & 150 / 112\\
+Independent case-level accuracy & 74.7\%\\
+Descriptive Wilson 95\% interval & 67.2--81.0\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Discussion}
+The architectural value is that the agent exposes where a provisional conclusion came from and how it changes when new text arrives. A short answer may name a participant correctly yet hide whether that name came from an allegation, direct observation, or unsupported inference. Digital Detective retains quotation and source offset, requires evidence IDs on structured findings, and exposes a bounded action trace. Local inference reduces dependence on an external service for sensitive case text. These are concrete workflow properties, not a claim of superior reasoning accuracy over published systems.
+
+The 74.7\% independent point estimate meets the stated milestone, but its sampling uncertainty remains material. It does not isolate fine-tuning from the citation gate, tool loop, or prompt, and does not measure whether a cited span semantically supports its finding. The initial five-case run and later 150-case run are distinct phases and must not be summed without a common verified manifest. The final per-case archive should make error categories and the scoring process independently auditable.
+
+The local candidate pool contains 1,999 structurally screened groups, but these are not qualified training cases. Pending source corrections and unreviewed candidate materials provide a path for future expansion. They should enter training only after source verification, leakage exclusion, group-wise separation from test cases, and human review of roles, contradictions, and necessary inferential steps. More data should be accompanied by stronger evaluation, not merely more optimizer updates.
+
+A useful next experiment would compare four frozen conditions on the same held-out cases: base model with direct prompting, adapted model with direct prompting, base model in the agent, and adapted model in the agent. Ablations could remove exact-quote alignment, citation validation, second-pass review, or progressive questions. A blinded source-level audit should score erroneous accusation and unwarranted abstention and release new evidence at controlled rounds. This design would test which components improve outcomes and whether review catches errors rather than repeating them.
+
+Important boundaries remain. The system handles text, not primary media forensics. Exact substring alignment can select the wrong repeated occurrence, and lexical search may miss paraphrases. The graph is an interface visualization. Same-model review is not independent validation. Demographic attributes cannot stand in for case evidence, and a judgment document may be incomplete or contested. Human investigators retain responsibility for source authentication, legal interpretation, and final decisions.
+
+\section{Conclusion}
+Digital Detective joins exact-span provenance, bounded evidence actions, structured provisional conclusions, conservative review, and analyst-controlled evidence addition in a local case-analysis workflow. The initial implementation passed software and synthetic end-to-end checks. A separate 150-case training and 150-case non-overlapping test experiment recorded 112 correct cases, or 74.7\% case-level accuracy. The next steps are to archive the full evaluation record, expand human-reviewed training materials, and measure semantic citation support under progressive disclosure.
+
+\clearpage
+\section*{Data and Code Availability}
+Code and non-sensitive aggregate reports are available in the \href{https://github.com/Momingzzhh/digital-detective}{project repository}. Underlying documents, private annotations, and adapter weights are not distributed. The follow-up outcome is currently represented by aggregate counts; a case-level release or controlled audit is needed for independent reproduction.
+
+\begin{thebibliography}{99}\setlength{\itemsep}{0pt}
+\bibitem{react} Yao S, Zhao J, Yu D, et al. ReAct: Synergizing reasoning and acting in language models[C]. International Conference on Learning Representations, 2023. \url{https://arxiv.org/abs/2210.03629}.
+\bibitem{disc} Yue S, Chen W, Wang S, et al. DISC-LawLLM: Fine-tuning large language models for intelligent legal services[EB/OL]. arXiv:2309.11325, 2023. \url{https://arxiv.org/abs/2309.11325}.
+\bibitem{lawbench} Fei Z, Shen X, Zhu D, et al. LawBench: Benchmarking legal knowledge of large language models[C]//Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing. 2024. \url{https://aclanthology.org/2024.emnlp-main.452/}.
+\bibitem{lapis} Kim H, Kim D, Lee J, et al. LAPIS: Language model-augmented police investigation system[EB/OL]. arXiv:2407.20248, 2024. \url{https://arxiv.org/abs/2407.20248}.
+\bibitem{legalagentbench} Li H, Chen J, Yang J, et al. LegalAgentBench: Evaluating LLM agents in legal domain[C]//Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics. 2025. \url{https://aclanthology.org/2025.acl-long.116/}.
+\bibitem{beforearrest} Yao Y, Cao Y, Chen G, et al. Before the arrest: Benchmarking LLMs on criminal profiling from incomplete evidence[EB/OL]. arXiv:2609.19965, 2026. \url{https://arxiv.org/abs/2609.19965}.
+\bibitem{androidforensics} Das M C, Ahmed S, Tabassum T, Liu Q. Evidence-grounded LLM-assisted Android mobile forensic reporting[EB/OL]. arXiv:2610.26946, 2026. \url{https://arxiv.org/abs/2610.26946}.
+\bibitem{holmes} Chen H, Zhang Z, Jiang J, et al. Holmes: An evidence-grounded LLM agent for auditable DDoS investigation in cloud networks[EB/OL]. arXiv:2601.14601, 2026. \url{https://arxiv.org/abs/2601.14601}.
+\bibitem{qwen3} Yang A, Li A, Yang B, et al. Qwen3 technical report[EB/OL]. arXiv:2505.09388, 2025. \url{https://arxiv.org/abs/2505.09388}.
+\bibitem{lora} Hu E J, Shen Y, Wallis P, et al. LoRA: Low-rank adaptation of large language models[C]. International Conference on Learning Representations, 2022. \url{https://arxiv.org/abs/2106.09685}.
+\bibitem{qlora} Dettmers T, Pagnoni A, Holtzman A, Zettlemoyer L. QLoRA: Efficient finetuning of quantized LLMs[C]//Advances in Neural Information Processing Systems. 2023, 36. \url{https://arxiv.org/abs/2305.14314}.
+\bibitem{repository} Digital Detective project. Source code and aggregate implementation reports[EB/OL]. 2026. \url{https://github.com/Momingzzhh/digital-detective}.
+\end{thebibliography}
+\end{document}

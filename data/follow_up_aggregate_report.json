@@ -1,0 +1,20 @@
+{
+  "record_type": "project_supplied_aggregate",
+  "recorded_at": "2026-11-10",
+  "relationship_to_local_five_case_run": "separate_follow_up_dataset_and_experiment",
+  "training_cases": 150,
+  "test_cases": 150,
+  "correct_whole_cases": 112,
+  "whole_case_accuracy": 0.7466666666666667,
+  "whole_case_accuracy_percent_rounded_1dp": 74.7,
+  "wilson_95_percent_interval_rounded_1dp": [67.2, 81.0],
+  "interval_assumption": "descriptive binomial interval treating the 150 test cases as independent observations",
+  "target_accuracy": 0.7,
+  "target_met": true,
+  "train_test_case_overlap": false,
+  "whole_case_scoring_rule": "charge, all evidence-supported behavior participants and roles, and key event reconstruction must all be correct",
+  "case_level_predictions_in_repository": false,
+  "training_run_log_in_repository": false,
+  "model_and_dataset_hashes_in_repository": false,
+  "note": "Counts and non-overlap were supplied by the project owner. This file records the aggregate only; it is not a generated training log or a case-level evaluation artifact."
+}
