@@ -77,7 +77,7 @@ def obvious_quality_errors(annotation):
     errors = []
     for actor in annotation['actor_assessments']:
         if actor['participation'] != '无法确认' and re.search(
-                r'在场见证|仅.{0,8}(?:旁观|见证)|只是证人',actor['role']):
+                r'在场见证|仅.{0,8}(?:旁观|见证(?!言))|只是证人',actor['role']):
             errors.append('Role labels a non-participating observer as an active participant')
     for conflict in annotation['contradictions']:
         if re.search(r'无矛盾|未发现矛盾|不存在矛盾|两处均描述|一致，均描述|存在交叉印证|属于同一事实不同表述',

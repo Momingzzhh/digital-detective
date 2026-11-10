@@ -1,21 +1,21 @@
 {
   "protocol": "small-batch-source-annotation-v1",
-  "cohort_binding": "f1aca4bb285af863394fafb97f0f22f8abcfeae9cc0e2e7afe1d4e017c773c84",
-  "generated_at": "2026-11-07T17:31:54.879664+00:00",
+  "cohort_binding": "28d297b30c65f39522d0b4a37a157dbf602259eaeb2dc8bfc2f3dfea3f6a007d",
+  "generated_at": "2026-11-10T08:10:12.975489+00:00",
   "cohort_cases": 1,
-  "completed": 1,
+  "completed": 0,
   "status_counts": {
-    "automatically_audited_pending_human_review": 1
+    "semantic_audit_pending": 1
   },
   "archived_runtime_only_failures": 0,
-  "accepted_actual_depth_counts": {
-    "2": 1
-  },
+  "accepted_actual_depth_counts": {},
   "heldout_semantics_read": false,
   "human_approvals_created": 0,
   "independent_accuracy_verified": false,
   "same_model_family_annotation_and_audit": false,
   "assistant_prepared_drafts": 1,
   "audit_format_repairs": 0,
-  "semantic_audit_protocol": "source-semantic-field-verdicts-v1"
+  "semantic_audit_protocol": "source-semantic-field-verdicts-v1",
+  "checkpointed_cases": 1,
+  "stop_reason": "stopped_at_codex_quota_threshold"
 }

@@ -1,0 +1,32 @@
+{
+  "client_date": "2026-11-10",
+  "stage": "stopped_at_codex_quota_threshold",
+  "stop_remaining_percent": 10,
+  "observed_remaining_percent": 9,
+  "weekly_remaining_percent": 86,
+  "selected_training_candidates": 4,
+  "distinct_new_training_groups_diagnosed": 2,
+  "assistant_source_drafts_saved": 2,
+  "new_cases_admitted": 0,
+  "training_cases_retained": 5,
+  "new_weight_training_started": false,
+  "active_adapter_changed": false,
+  "completed_software_tests": 313,
+  "software_tests_failed": 0,
+  "human_approvals_created": 0,
+  "heldout_semantics_used": false,
+  "independent_accuracy_verified": false,
+  "attempts": {
+    "local_model_annotation_format_rejected": 1,
+    "deterministic_role_screen_false_positive": 1,
+    "semantic_audit_output_truncated": 1,
+    "semantic_audit_interrupted_at_quota": 1,
+    "archived_sandbox_runtime_failure": 1
+  },
+  "fixed_issue": "Observer role regex no longer mistakes the phrase 仅见证言 for a non-participating witness. Existing observer exclusions retained.",
+  "remaining_issue": "Decoder removes array cardinality limits; annotation exceeded the five-citation limit and one audit enumerated long citation arrays until the 1600-token budget was exhausted. Original Pydantic validation rejected the output. Resolve bounded decoding or concise output before another single archived format retry.",
+  "resume_note": "Pending audit checkpoint is retained. Current annotate_small_batch skips an existing unfinished result, so it is not an automatic resumable generation. Preserve it and explicitly implement bounded audit continuation or freeze a new provenance-linked cohort. Do not change it to passed.",
+  "stop_process_exit_code": 130,
+  "model_resource_lock_released": true,
+  "generated_at": "2026-11-10T08:10:12.975489+00:00"
+}

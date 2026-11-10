@@ -96,3 +96,13 @@ def test_real_negative_dependency_verdict_is_not_a_format_retry_reason():
         'issue_codes': ['ACTUAL_DEPENDENCY_FAILURE'], 'reason': '合成来源不足，不应因负面结论而重试',
         'dependency_checks': [{'step_id': 'L2', 'parent_id': 'L1', 'necessary': False, 'reason': '合成主张无需先前前提'}]}
     assert not audit_structure_errors(audit, ann)
+
+
+def test_testimony_only_detail_does_not_label_the_actor_as_a_witness():
+    from app.annotation_quality import obvious_quality_errors
+    annotation = {'actor_assessments': [{'participation': '直接实施',
+        'role': '记录支持推搡，掐脖子细节仅见证言，保留争议。'}], 'contradictions': []}
+    assert obvious_quality_errors(annotation) == []
+    for role in ('仅在场见证', '仅旁观并未参与', '只是证人'):
+        annotation['actor_assessments'][0]['role'] = role
+        assert obvious_quality_errors(annotation)
