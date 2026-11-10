@@ -2,9 +2,19 @@
 
 面向研究人员的中文刑事案件研究工作台。输入或上传文字材料，Agent从原文提取线索、核查证据、提出关键问题，并形成可引用依据的暂定结论或“证据不足”。
 
-**采用本地离线方案** 本轮目标为500+复杂刑案、五维标注、实际权重微调，首轮完整验证与独立测试的整案准确率门槛为70%。尚未达到的指标不会因代码完成或训练损失下降而宣称通过。
+**当前交付：本机可用的离线 Agent（2026年11月10日）。** 已核验并启用现有五案微调权重：86条训练示例、88个微迭代、22次参数更新。支持材料上传、证据提取、工具核查、第二轮复核、补充线索、图谱与记录导出。无需模型 API Key。
 
-**最新进度（2026年11月8日）：** 已完成5案正式小批量训练，86条完整示例、88个微迭代、22次优化器更新，56个LoRA B张量非零；新权重通过断网及空证据注入检查。5案实际深度均为2，其中3案自动审核后待人工复核，单行为人无矛盾1案单列。新诊断7个不同训练组中3案纳入、4案未通过。600案三层基准仍为0，完整真人验证和独立测试未完成。完整状态及下一步见[当前进度](docs/progress.md)。原文、反馈和权重保留本机。
+本轮沿用已完成的真实训练，没有重复训练相同五案，也没有新增合格案件数。修复了真实流程中结构化提取的解码约束膨胀问题，并补齐权重激活、校验、中断恢复和运行版本记录。运行和验证方式见[本机交付说明](docs/local_delivery.md)，当前状态见[进度](docs/progress.md)。
+
+600案及整案准确率70%保留为后续研究目标；本轮按“先完整跑通、后续提高准确率”交付。**尚无独立准确率结论**，小批量训练完成、软件检查和合成流程测试均不等于研究验收通过。
+
+这台已准备好的 Mac 可直接启动：
+
+```bash
+sh run_offline.sh
+```
+
+打开 http://127.0.0.1:8765 ，注册本机账户后可先点击“填入合成示例”。下方“一次联网准备”供新机器使用；私有案源和微调权重不在 GitHub 中。
 
 ## Mac离线运行
 
@@ -30,7 +40,7 @@ sh run_offline.sh
 
 打开 http://127.0.0.1:8765 ，首次注册本机账户。无需任何模型API Key。准备阶段只下载公开文件；标注、训练、推理均使用本地权重，禁止云端回退。断网检查见[data/five_dimensions_v2_offline_smoke.json](data/five_dimensions_v2_offline_smoke.json)，它是软件机制测试，不计入真实案件数量或准确率。
 
-基座采用Apache-2.0许可的[Qwen3 4B Instruct 2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507)及固定修订的[MLX四位转换](https://huggingface.co/mlx-community/Qwen3-4B-Instruct-2507-4bit)。模型文件逐一校验Git blob或LFS SHA-256，见[本地模型清单](data/local_model_manifest.json)。网页明确显示基座或已配置适配器，不能把基座推理冒充微调成果。
+基座采用Apache-2.0许可的[Qwen3 4B Instruct 2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507)及固定修订的[MLX四位转换](https://huggingface.co/mlx-community/Qwen3-4B-Instruct-2507-4bit)。模型文件逐一校验Git blob或LFS SHA-256，见[本地模型清单](data/local_model_manifest.json)。网页显示基座、未核验自定义适配器或已核验的小批量微调版本；已激活权重及配置按 SHA-256 校验。
 
 ## 五维复杂案件与实际训练
 
@@ -51,7 +61,7 @@ sh run_offline.sh
 .venv/bin/python scripts/smoke_offline.py --adapter artifacts/small_batch_formal/实际运行编号/adapters --output data/small_batch_offline_smoke_report.json
 ```
 
-当前五案均保持实际两层，包含45条单条证据训练变体，从固定4B基座新建适配器，峰值内存8.863GB；训练重放token损失2.221→1.669不代表独立准确率。见[小批量数据](data/small_batch_dataset_report.json)、[真实训练](data/latest_small_batch_training_report.json)和[同权重离线检查](data/small_batch_offline_smoke_report.json)。先前两案及三案的训练、引用修正和实际重训报告另存；5次运行只涉及5个不同训练组。旧辅助试训没有被改名，不同阶段复用的相同案件不重复累计。完整项目验收仍未完成，新适配器未自动激活。
+当前五案均保持实际两层，包含45条单条证据训练变体，从固定4B基座新建适配器，峰值内存8.863GB；训练重放token损失2.221→1.669不代表独立准确率。见[小批量数据](data/small_batch_dataset_report.json)、[真实训练](data/latest_small_batch_training_report.json)和[同权重离线检查](data/small_batch_offline_smoke_report.json)。先前两案及三案的训练、引用修正和实际重训报告另存；5次运行只涉及5个不同训练组。旧辅助试训没有被改名，不同阶段复用的相同案件不重复累计。完整研究验收仍未完成；该训练运行当时未自动激活，11月10日已通过显式核验启用。
 
 新增`scripts/annotate_small_batch.py --create-cohort 4`从未处理的训练来源按分组哈希冻结诊断组；随后用`--cohort`逐案生成标注和单独语义质检。材料、原始输出、失败和代码快照留本机，全部通过后才能加入新的训练政策版本。没有使用留出案语义或待测Agent成绩选案。完整规则见[训练规程](docs/local_training_protocol.md#2026年11月7日确认的正式小批量训练规则)。下列旧完整基准流程仍用于600案规模化准备。
 
@@ -107,7 +117,7 @@ QLoRA会实际更新适配器权重，记录参数、数据及权重哈希，检
 
 在.env设置RESEARCH_REVIEW_ENABLED=true，登录后打开 http://127.0.0.1:8765/research 。该页面向复核人员显示原文、隐藏答案及五维标注，至少验证与测试集合必须逐案人工核验；acting Agent只收到研究人员选择释放的原始证据。
 
-正式训练后将.env中的LOCAL_ADAPTER_PATH设置为run.json记录的适配器目录。完成真人验证集交互、评分后运行：
+小批量权重请按[交付说明](docs/local_delivery.md)使用激活脚本；它同时绑定权重及配置哈希。后续完整研究验收中，完成真人验证集交互、评分后运行：
 
 ```bash
 .venv/bin/python scripts/summarize_acceptance.py

@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-11-10T04:52:16.408229+00:00",
+  "synthetic_mechanism_test": true,
+  "accuracy_claim": false,
+  "included_in_dataset_count": false,
+  "real_model_inference": true,
+  "rounds": [
+    {
+      "round": 1,
+      "seconds": 64.97,
+      "evidence_count": 5,
+      "stages": [
+        "提取并核对原文证据",
+        "规划证据核查",
+        "分析假设、矛盾与待补线索",
+        "第二轮复核结论依据",
+        "分析完成"
+      ],
+      "status": "证据不足"
+    },
+    {
+      "round": 2,
+      "seconds": 65.67,
+      "evidence_count": 7,
+      "stages": [
+        "提取并核对原文证据",
+        "规划证据核查",
+        "分析假设、矛盾与待补线索",
+        "第二轮复核结论依据",
+        "分析完成"
+      ],
+      "status": "证据不足"
+    }
+  ],
+  "checks": {
+    "registration": true,
+    "login": true,
+    "local_model_configured": true,
+    "upload_text": true,
+    "create_case": true,
+    "round_1_started": true,
+    "round_1_completed": true,
+    "round_1_citations": true,
+    "round_1_original_quotes": true,
+    "round_1_no_unsupported_accusation": true,
+    "round_1_review_and_graph": true,
+    "add_evidence": true,
+    "round_2_started": true,
+    "round_2_completed": true,
+    "round_2_citations": true,
+    "round_2_original_quotes": true,
+    "round_2_no_unsupported_accusation": true,
+    "round_2_review_and_graph": true,
+    "supplement_extracted": true,
+    "export": true,
+    "model_provenance": true,
+    "delete": true,
+    "cloud_ledger_unchanged": true,
+    "logout": true,
+    "network_attempts_zero": true
+  },
+  "passed": true,
+  "code_sha256": {
+    "app/agent.py": "ac041e7c734e80187c0634da43c80d8a191b3170db1dc73464658bdc3a30e625",
+    "app/main.py": "a1f8c7216eca3ae980fdcc34fd5f1fa7b25d92eef40dcc57f305bf69d2e6bb3f",
+    "app/llm.py": "990ec9a1fd0e2f8a48cfc8d9cf4c455dda7673378886e0c2f0d5bd057060bdb8",
+    "app/local_model.py": "c269ba1bbd1aa43d93df550587614f304ebf2b562834dc9eec31be69b6ca3d1f",
+    "app/local_context.py": "b674c7e006c060c3b2a3e925778127a7858e3c9ed4619df0d783a9af4920655a",
+    "app/model_release.py": "9c08a7573109d2d187bdce5b8709192178f47dc63a76f9c39ce2fa8c8c4695c7",
+    "app/models.py": "99e1ea1187f417f4aaa2ac4009a831043e471016219b8c2173d4e61c61c94b86",
+    "scripts/smoke_agent.py": "2ba2f5aa74849b2bc8da657cc5900c27853b9e6f70d56f98ffe042d0ac707fc7"
+  },
+  "adapter_sha256": "ee4e9344b957114cedcbe57c22fb2e3acc6e9656f5a8b95b7e3078de5d1b1282",
+  "network_attempts": 0
+}

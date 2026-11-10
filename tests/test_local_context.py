@@ -5,6 +5,20 @@ from app import local_model
 from scripts import annotate_five_dimensions_batch as batch
 
 
+def test_decoder_avoids_large_finite_repetitions_but_original_validation_stays_strict():
+    import json
+    from pydantic import ValidationError
+    from app.local_context import decoder_schema
+    from app.models import Extraction
+    original = Extraction.model_json_schema()
+    decoded = decoder_schema(Extraction)
+    assert 'maxLength' not in json.dumps(decoded) and 'maxItems' not in json.dumps(decoded)
+    assert decoded['additionalProperties'] is False and decoded['required'] == original['required']
+    assert Extraction.model_json_schema() == original
+    with pytest.raises(ValidationError):
+        Extraction.model_validate({'evidence': [{'quote': 'x' * 5001, 'kind': 'test', 'summary': 'test'}]})
+
+
 class ChangedDefaultTokenizer:
     def apply_chat_template(self, messages, **options):
         # transformers 5 defaults to a mapping, whose length is just two fields.

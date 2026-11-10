@@ -162,3 +162,37 @@ def test_delete_and_message(client):
     assert len(r.json()['sources'])==2
     assert client.delete('/api/cases/'+c['id'],headers=h).status_code==200
     assert client.get('/api/cases/'+c['id']).status_code==404
+
+
+def test_failed_analysis_keeps_extracted_evidence_and_error_after_restart(client, monkeypatch):
+    import time
+    from app.main import jobs
+    monkeypatch.setattr('app.main.local_available', lambda: True)
+    monkeypatch.setattr('app.main.adapter_status', lambda: {'ready': True, 'mode': 'base'})
+    async def failing(case, stage):
+        case['evidence'] = [{'id': 'E1', 'quote': '原始证据', 'source_id': 'S-1'}]
+        case['sources'][0]['extracted'] = True
+        stage('第二轮复核结论依据')
+        raise llm.ModelError('合成测试：复核失败')
+    monkeypatch.setattr('app.main.analyze', failing)
+    h = account(client)
+    cid = client.post('/api/cases', headers=h, json={'title': '恢复检查', 'text': '这里是原始证据。'}).json()['id']
+    assert client.post(f'/api/cases/{cid}/analyze', headers=h).status_code == 200
+    for _ in range(100):
+        saved = client.get(f'/api/cases/{cid}').json()
+        if saved['job']['state'] != 'running': break
+        time.sleep(.01)
+    assert saved['job']['state'] == 'error'
+    assert saved['sources'][0]['extracted'] and saved['evidence'][0]['id'] == 'E1'
+    jobs.pop(cid, None)  # Simulate the empty in-memory registry after restart.
+    assert client.get(f'/api/cases/{cid}').json()['job']['state'] == 'error'
+
+
+def test_invalid_adapter_rejected_before_starting_job(client, monkeypatch):
+    monkeypatch.setattr('app.main.local_available', lambda: True)
+    monkeypatch.setattr('app.main.adapter_status', lambda: {
+        'ready': False, 'mode': 'adapter', 'error': '适配器校验失败'})
+    h = account(client)
+    cid = client.post('/api/cases', headers=h, json={'title': '权重检查', 'text': '这是合成检查材料。'}).json()['id']
+    assert not client.get('/api/status').json()['configured']
+    assert client.post(f'/api/cases/{cid}/analyze', headers=h).status_code == 503

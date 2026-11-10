@@ -22,7 +22,7 @@
       <label for="case-title">案件名称</label><input id="case-title" required maxlength="120" placeholder="为这次研究起一个名称">
       <label for="case-text">已知案情与线索</label><textarea id="case-text" required minlength="5" maxlength="40000" rows="7" placeholder="描述案件背景、时间地点、已知人物和现有证据。未知或无法取得的线索请直接说明。"></textarea>
       <div class="form-footer"><label class="upload" for="case-file">↥ 导入材料 <small>TXT / DOCX / PDF</small></label><input type="file" id="case-file" accept=".txt,.md,.docx,.pdf" hidden><button class="primary" type="submit">创建研究案件 <span>↗</span></button></div>
-      <div class="fineprint">材料及推理均在本机完成，不调用外部模型API。</div>
+      <div class="fineprint">材料及推理均在本机完成，不调用外部模型API。<button type="button" class="plain" id="load-demo">填入合成示例</button></div>
     </form>
     <div class="workflow"><div><b>01</b><span>整理证据<small>每条线索定位到原文</small></span></div><div><b>02</b><span>交互核查<small>追问缺口，核对矛盾</small></span></div><div><b>03</b><span>形成分析<small>展示依据与未解问题</small></span></div></div>
   </section>
@@ -38,6 +38,6 @@
   <footer><span>数字神探 / 研究工作台</span><span>证据可溯源 · 分析可复核</span></footer>
 </main>
 <dialog id="auth-dialog"><form id="auth-form"><div class="brand-icon">◈</div><h2>进入研究工作空间</h2><p>创建本机账户，独立保存你的案件与分析。</p><label for="auth-name">用户名</label><input id="auth-name" autocomplete="username" required minlength="2" maxlength="60"><label for="auth-password">密码（至少 10 位）</label><input id="auth-password" type="password" autocomplete="current-password" minlength="10" maxlength="200" required><p id="auth-error" role="alert"></p><button type="submit" class="primary full">登录</button><button type="button" id="register" class="secondary full">首次使用：注册并登录</button></form></dialog>
-<dialog id="help-dialog"><h2>如何开展案件研究</h2><ol><li>输入案件文字，或导入文字版 PDF、DOCX、TXT。</li><li>点击分析，助手将提取原文证据并检查矛盾。</li><li>根据助手问题补充线索；不存在或未知的信息请明确说明。</li><li>查看证据图谱及结论，点击引用回到证据原文。</li><li>导出 JSON 记录，供研究复核。</li></ol><p>第一版只处理文字，不进行指纹图像、视频或 DNA 原始数据鉴定。输出是研究分析；证据不足时可以不作确定判断。</p><p>模型密钥：在项目 .env 中填写 DASHSCOPE_API_KEY，保存后无需重启。账号数据只保存在本机。</p><form method="dialog"><button class="primary">知道了</button></form></dialog>
+<dialog id="help-dialog"><h2>如何开展案件研究</h2><ol><li>输入案件文字，或导入文字版 PDF、DOCX、TXT；也可先使用首页的合成示例。</li><li>点击分析，助手将提取原文证据并检查矛盾。本机首次加载可能较慢，请留意上方进度。</li><li>根据助手问题补充线索；不存在或未知的信息请明确说明。发送补充后会自动开始下一轮分析。</li><li>查看证据图谱及结论，点击引用回到证据原文。</li><li>导出 JSON 记录，供研究复核。</li></ol><p>第一版只处理文字，不进行指纹图像、视频或 DNA 原始数据鉴定。输出是研究分析；证据不足时可以不作确定判断。</p><p>无需模型 API Key。模型、案件与账户保存在本机；“数据与评测”页显示当前微调状态和后续研究目标。小批量训练已完成不代表独立准确率达标。</p><form method="dialog"><button class="primary">知道了</button></form></dialog>
 <div id="toast" role="alert" hidden></div><script src="/static/app.js" defer></script>
 </body></html>

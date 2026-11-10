@@ -1,0 +1,28 @@
+{
+  "checked_at": "2026-11-10T04:52:17.360633+00:00",
+  "method": "manual_browser_actions_on_isolated_test_database",
+  "synthetic_material_only": true,
+  "accuracy_claim": false,
+  "real_model_inference": true,
+  "checks": {
+    "fixture_login": true,
+    "trained_version_visible": true,
+    "fill_synthetic_example": true,
+    "create_case": true,
+    "start_analysis": true,
+    "navigate_away_during_analysis": true,
+    "return_to_completed_case": true,
+    "conclusion_rendered": true,
+    "citation_opens_original_quote": true,
+    "graph_rendered": true,
+    "reload_preserves_case": true
+  },
+  "code_sha256": {
+    "static/index.html": "7685f09dfabf83e870806dbbf57ce2e35e8158b6a873c0cc13bdd429f8b1d4a2",
+    "static/app.js": "d7a0d1bd3c0919ff132654da90a2d0bc4904fd094c7e50d3d305da92cac8ecbe",
+    "static/style.css": "d6826c69adc5513cc93ea1597e18693e1eb018813246453f71dd60da1635843a"
+  },
+  "passed": true,
+  "test_server_stopped": true,
+  "screenshot_local_only": "artifacts/local-agent-ui-20261110.png"
+}

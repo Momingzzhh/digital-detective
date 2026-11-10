@@ -79,6 +79,8 @@ async def main(args):
     inputs = prepare_inputs(ROOT, run, plan)
     os.environ.update(LOCAL_MODEL_PATH=str(ROOT / run['model_path']),
                       LOCAL_ADAPTER_PATH=str(adapter.parent), MODEL_BACKEND='local',
+                      LOCAL_ADAPTER_SHA256=run['adapter_sha256'],
+                      LOCAL_ADAPTER_CONFIG_SHA256=hashlib.sha256((adapter.parent / 'adapter_config.json').read_bytes()).hexdigest(),
                       HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', HF_HUB_DISABLE_TELEMETRY='1')
     from app.local_model import verify_model_files
     if fingerprint(verify_model_files()) != run['base_manifest_binding']:

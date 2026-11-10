@@ -18,7 +18,13 @@ from app.store import initialize, budget_status
 
 
 async def main(args):
-    if args.adapter: os.environ['LOCAL_ADAPTER_PATH'] = args.adapter
+    if args.adapter:
+        from app.model_release import file_sha256
+        directory = (ROOT / args.adapter).resolve()
+        # An explicit candidate must not inherit the currently activated run's pins.
+        os.environ.update(LOCAL_ADAPTER_PATH=str(directory),
+                          LOCAL_ADAPTER_SHA256=file_sha256(directory / 'adapters.safetensors'),
+                          LOCAL_ADAPTER_CONFIG_SHA256=file_sha256(directory / 'adapter_config.json'))
     initialize(); before = budget_status(); denied = []
     def blocked(*args, **kwargs):
         denied.append('network_attempt'); raise RuntimeError('Network disabled for offline proof')

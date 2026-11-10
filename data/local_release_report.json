@@ -1,0 +1,18 @@
+{
+  "activated_at": "2026-11-10T04:44:03.921568+00:00",
+  "stage": "local_usable_small_batch",
+  "adapter_activated": true,
+  "adapter_path": "artifacts/small_batch_formal/20261107T173318311149Z/adapters",
+  "adapter_sha256": "ee4e9344b957114cedcbe57c22fb2e3acc6e9656f5a8b95b7e3078de5d1b1282",
+  "config_sha256": "1d795ebd2775638122b993d03b219c448393f8c1c58325294c2a31392d3a7553",
+  "training_verified": true,
+  "run_id": "20261107T173318311149Z",
+  "training_cases": 5,
+  "train_examples": 86,
+  "optimizer_updates": 22,
+  "base_manifest_binding": "c8d59f8fef532011156c61f60f511ad185907a2547e3977ee43ee21db980d644",
+  "nonzero_lora_b_tensors_rechecked": 56,
+  "offline_report_sha256": "00839440857b148dc778d85d6bdd3b289c002b37c23f3075ec7ed2e7483d61e6",
+  "independent_accuracy_verified": false,
+  "benchmark_acceptance_completed": false
+}

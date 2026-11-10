@@ -6,7 +6,8 @@ from pathlib import Path
 import threading
 from .config import ROOT, settings
 from .local_resource import model_resource
-from .local_context import chat_token_ids, check_context
+from .local_context import chat_token_ids, check_context, decoder_schema
+from .model_release import inspect_adapter, require_adapter
 
 _lock = threading.RLock()
 _loaded = None
@@ -30,6 +31,12 @@ def adapter_path():
     return str((ROOT / path).resolve() if not path.is_absolute() else path.resolve())
 
 
+def adapter_status():
+    cfg = settings()
+    return inspect_adapter(adapter_path(), cfg.get('LOCAL_ADAPTER_SHA256', ''),
+                           cfg.get('LOCAL_ADAPTER_CONFIG_SHA256', ''))
+
+
 def verify_model_files():
     if not available(): raise ValueError('本地模型尚未下载并校验，请先运行 scripts/download_local_model.py。')
     directory = model_path()
@@ -47,9 +54,10 @@ def verify_model_files():
 def _load():
     global _loaded
     adapter = adapter_path()
-    weights = Path(adapter) / 'adapters.safetensors' if adapter else None
-    signature = (str(model_path()), adapter,
-                 (weights.stat().st_mtime_ns, weights.stat().st_size) if weights and weights.exists() else None)
+    cfg = settings()
+    state = require_adapter(adapter, cfg.get('LOCAL_ADAPTER_SHA256', ''),
+                            cfg.get('LOCAL_ADAPTER_CONFIG_SHA256', ''))
+    signature = (str(model_path()), adapter, state.get('adapter_sha256'), state.get('config_sha256'))
     if _loaded and _loaded[0] == signature: return _loaded[1:]
     verify_model_files()
     directory = model_path()
@@ -81,7 +89,7 @@ def complete(messages, max_tokens=4096, schema=None):
             import outlines
             if _outlines_model is None or _outlines_model[0] is not model:
                 _outlines_model = (model, outlines.from_mlxlm(model, tokenizer))
-            constraint = outlines.Generator(_outlines_model[1], schema).logits_processor
+            constraint = outlines.Generator(_outlines_model[1], outlines.json_schema(decoder_schema(schema))).logits_processor
             constraint.reset()
             processors = [constraint]
         # Pass the exact checked IDs, rather than re-rendering through a second
@@ -108,7 +116,7 @@ def complete_batch(requests, max_tokens=3000, progress=None):
             prompt = chat_token_ids(tokenizer, messages, thinking=False)
             check_context(prompt, max_tokens, limit, index)
             prompts.append(prompt)
-            generator = outlines.Generator(wrapped, schema)
+            generator = outlines.Generator(wrapped, outlines.json_schema(decoder_schema(schema)))
             generator.logits_processor.reset()
             processors.append([generator.logits_processor])
         generator = BatchGenerator(model, sampler=make_sampler(temp=0.0), stop_tokens=tokenizer.eos_token_ids,

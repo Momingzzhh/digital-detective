@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from .agent import analyze
 from .auth import hash_password, verify_password, session
 from .config import ROOT, settings
-from .local_model import available as local_available, adapter_path
+from .local_model import available as local_available, adapter_status
 from .store import initialize, db, save_case, load_case, budget_status
 
 tasks = {}
@@ -129,14 +129,18 @@ def logout(response: Response, user=Depends(session)):
 @app.get('/api/status')
 def status(user=Depends(session)):
     cfg = settings()
+    deployment = adapter_status()
     report = ROOT / 'data/dataset_report.json'
     five = ROOT / 'data/five_dimensions_report.json'
     five_status = json.loads(five.read_text()) if five.exists() else None
     if five_status:
         from .research import records, approved
         five_status['human_reviewed'] = sum(bool(approved(row)) for row in records())
-    return {'model': '本地Qwen3 4B' + (' · 已配置适配器' if adapter_path() else ' · 基座模型'),
-            'configured': local_available(), 'backend': 'local', 'external_api_enabled': False,
+    label = (f" · {deployment.get('training_cases', '?')}案微调" if deployment.get('training_verified')
+             else ' · 自定义适配器' if deployment['mode'] == 'adapter' else ' · 基座模型')
+    return {'model': '本地Qwen3 4B' + label,
+            'configured': local_available() and deployment['ready'], 'deployment': deployment,
+            'backend': 'local', 'external_api_enabled': False,
             'budget': budget_status(), 'limit': min(float(cfg.get('BUDGET_CNY', '500')), 500),
             'dataset': json.loads(report.read_text()) if report.exists() else {'qualified': 0, 'status': '案源核验中'},
             'five_dimensions': five_status,
@@ -182,7 +186,10 @@ def create_case(value: CaseInput, user=Depends(session)):
 @app.get('/api/cases/{cid}')
 def get_case(cid: str, user=Depends(session)):
     case = owned(user, cid)
-    case['job'] = jobs.get(cid, {'state': 'idle'})
+    job = jobs.get(cid, case.get('last_job', {'state': 'idle'}))
+    if cid not in jobs and job['state'] == 'running':
+        job = {'state': 'error', 'error': '上轮分析因服务重启中断，已保存材料和完成提取的证据，请重新分析。'}
+    case['job'] = job
     return case
 
 
@@ -216,6 +223,9 @@ async def start_analysis(cid: str, user=Depends(session)):
     assert_idle(cid)
     if not local_available():
         raise HTTPException(503, '请先下载并校验本地模型后重试。')
+    deployment = adapter_status()
+    if not deployment['ready']:
+        raise HTTPException(503, deployment['error'])
     if sum(not t.done() for t in tasks.values()) >= 1:
         raise HTTPException(429, '本地模型已有分析任务运行，请稍后重试。')
     if case.get('research'):
@@ -229,18 +239,34 @@ async def start_analysis(cid: str, user=Depends(session)):
             raise HTTPException(409, '验收每案最多12轮分析，请结束评分。')
         case['research']['analysis_attempts'] += 1
         save_case(user['user_id'], case)
-    jobs[cid] = {'state': 'running', 'stage': '准备材料'}
+    jobs[cid] = {'state': 'running', 'stage': '准备材料', 'started_at': time.time()}
+    case['last_job'] = dict(jobs[cid])
+    save_case(user['user_id'], case)
+
+    def progress(stage):
+        jobs[cid].update(stage=stage)
+        case['last_job'] = dict(jobs[cid])
+        save_case(user['user_id'], case)
 
     async def run():
         try:
-            result = await analyze(case, lambda s: jobs[cid].update(stage=s))
+            result = await analyze(case, progress)
             result['messages'].append({'role': 'assistant', 'text': result['analysis']['summary'] + '\n' + '\n'.join(result['analysis']['questions']), 'time': time.time()})
-            save_case(user['user_id'], result)
             jobs[cid] = {'state': 'completed', 'stage': '分析完成'}
+            result['last_job'] = dict(jobs[cid])
+            result.setdefault('model_history', []).append({**deployment, 'completed_at': time.time(),
+                                                         'round': len(result.get('confidence_history', []))})
+            save_case(user['user_id'], result)
+        except asyncio.CancelledError:
+            case['last_job'] = {'state': 'error', 'error': '服务已停止，已保存材料和已提取证据，请重新分析。'}
+            save_case(user['user_id'], case)
+            raise
         except Exception as exc:
             from .llm import ModelError
             message = str(exc) if isinstance(exc, (ModelError, ValueError)) else '分析服务异常；已保存此前材料，请重试。'
             jobs[cid] = {'state': 'error', 'error': message}
+            case['last_job'] = dict(jobs[cid])
+            save_case(user['user_id'], case)
         finally:
             tasks.pop(cid, None)
     tasks[cid] = asyncio.create_task(run())

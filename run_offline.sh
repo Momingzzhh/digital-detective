@@ -10,4 +10,5 @@ export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export HF_HUB_DISABLE_TELEMETRY=1
 export TOKENIZERS_PARALLELISM=false
+.venv/bin/python scripts/check_local_setup.py
 exec .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8765
