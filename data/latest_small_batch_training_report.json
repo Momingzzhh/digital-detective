@@ -1,16 +1,16 @@
 {
   "protocol": "small-batch-formal-training-v1",
   "training_stage": "small_batch_formal",
-  "training_cases": 5,
+  "training_cases": 7,
   "split_counts": {
-    "train": 5
+    "train": 7
   },
   "actual_depth_counts": {
-    "2": 5
+    "2": 7
   },
   "review_status_counts": {
-    "user_accepted_corrected_version_pending_benchmark_review": 2,
-    "automatically_audited_pending_human_review": 3
+    "automatically_audited_pending_human_review": 5,
+    "user_accepted_corrected_version_pending_benchmark_review": 2
   },
   "minimum_depth": 2,
   "preferred_depth": 3,
@@ -18,8 +18,8 @@
   "strict_three_level_benchmark_cases_added": 0,
   "heldout_cases_used_for_training": 0,
   "independent_accuracy_verified": false,
-  "single_actor_without_conflict_cases": 1,
-  "run_id": "20261107T173318311149Z",
+  "single_actor_without_conflict_cases": 2,
+  "run_id": "20261111T113749687528Z",
   "stage": "completed",
   "pilot": false,
   "formal_training_started": true,
@@ -27,12 +27,12 @@
   "model_path": "models/qwen3-4b-instruct-2507-4bit",
   "base_manifest_binding": "c8d59f8fef532011156c61f60f511ad185907a2547e3977ee43ee21db980d644",
   "source_manifest": {
-    "path": "data/processed/small_batch_formal/4bfd42fbd1af3a1f/manifest.private.json",
-    "sha256": "6a278396fbf16635722f9f5d2481f7d543168f59e2a1cfe55a9594e6916716be"
+    "path": "data/processed/small_batch_formal/9f52b61a0e3c27f5/manifest.private.json",
+    "sha256": "37e6f0e5f65c0b85101e42311f713577f81a522f9efd81004ef04217ddac7f42"
   },
-  "dataset_binding": "3dd4dd6a88af289fb63669aa174d4967b7f47d99309234fc772c8b0e944b5240",
+  "dataset_binding": "80d7351836cd8b620f6717208c2ef9ef46aa5cc7fba14fc56097172e7c705f43",
   "code_file_sha256": {
-    "scripts/train_small_batch.py": "e7c070ab735728412f2682ff9bb0a55f21305b71fd5d3c76708039e047c00f96",
+    "scripts/train_small_batch.py": "87cab19654cdd558afdda987ad27dd3a5a4488004491c33f633e0fe63c014fcf",
     "scripts/train_local.py": "5af3f31c039d7a37cb782d7d224a7760a14c6b865e1b1e09a5726ac31c7da853",
     "scripts/train_auxiliary.py": "28ccb66f0964dc4e6824f750e983fb8c31a96e91a7dda550738fe19e5022bd24",
     "scripts/prepare_small_batch_training.py": "1495056387ca770fbeeac297aaf134bf888606bc33a4ecbae635b2074d57e67e",
@@ -40,45 +40,46 @@
     "app/small_batch_training.py": "1397cc3e60cb44e5d56ff11874f0653a2fc4a51b663f804ca6f530a311720a98",
     "app/auxiliary_training.py": "8146bd90beac13d6bfcf61a5a93f61caa14716ef074352a6590f2747e53f85af",
     "app/five_dimensions.py": "9265fd593a03a0284b1d432d0ca398a599da861453967d073441f3f80ee70844",
-    "app/annotation_quality.py": "19d6722336b3380eb341685ddc8c95cb7aa1d6d064eff2d2cbe90d237e8e3976",
+    "app/annotation_quality.py": "994120b739df019b7a1c5d459c290db786c22a202a97b2f5a22a217d72c7fa03",
     "app/complexity_review.py": "bf3a7d5615e667b09731facf4a10df301fec4b093d00cc8084d68e518c2ce15e",
     "app/source_policy.py": "ffcfe96cf9ceb36dbba32e7998be8697f3870e149acc7fb6ef8f46e6ab53e448",
-    "app/local_context.py": "cb9d7d706b8dc7c9b498cfb59fdaa3f4cecba283d5d077cc4298559d7533e3dc",
-    "app/local_model.py": "c2563034f8a323cd7f66754a247b2feb36d9f23fc993b2603483485f2a22758c",
+    "app/local_context.py": "3a89255b0c51dd30683ce24f15898bf0a4b4a35c919a8d236edc3fe208e38d3d",
+    "app/local_model.py": "c269ba1bbd1aa43d93df550587614f304ebf2b562834dc9eec31be69b6ca3d1f",
     "scripts/prepare_training_source_revision.py": "4d15312e261d3c3413630d89a6dc9d82acc3f1adcaacb43fd2fa06c81a904903",
     "scripts/build_v3.py": "bb3da912e0fda29ac110af5e5f8aba7710980e8378ebd664f943ea912d76e849",
     "app/field_semantic.py": "abc9032feb6c1d7c223ef015930159cd5dbb65ff5bc79c1533729414413e971e",
     "requirements-mac.lock": "f9757e766bc8145cd6df7a50924d7c6beb58779988bc8695f8bf02728b03bfa0"
   },
   "training_file_sha256": {
-    "data/train.jsonl": "3b0a94169c5f345ba26fe1d128381f4798d792ea4e6338fe173945bc9da1df58",
-    "data/valid.jsonl": "112450e3512c0601e0825817e899ca837ff486a5675bb37844a04ca00684f785",
-    "config.yaml": "82c3aa3a29e0f9d6a3ca9f159201a1095ab6737ff9f1734e62752a93fc5a0f1a",
-    "policy.private.json": "09ed53ac663fa2267c51c718c562b8f1ad6369222283990df61c2e5cc5bb65d3"
+    "data/train.jsonl": "05b750f2bfe289a7f433b0528592027b84b254ea2036c4bb5fbe7d8de4328930",
+    "data/valid.jsonl": "19c0938b6e03d14257fb62221815e3bfc78e004559cb664bcfde61a41020a242",
+    "config.yaml": "f694d377edba4abcc8bf47d989cac095020d1a363e114b424c5f9c36ee6d5ec9",
+    "policy.private.json": "1e6f917fa01f6cb956b2d25a8a4dd866821f4f9d84a0f9fb672f5f9a2b4db7cb"
   },
   "guarded_file_sha256": {
-    ".env": "61dd3b87849d4d716c3de8e791ea99f63fc9ae524acb1869c785c7a4b77bc832",
+    ".env": "69c900af23c10d795435429e8177fc8eb5f90350a3accf124d16852535f69787",
     "data/five_dimensions_report.json": "55d05285ddec55b853477820e15ff3b8705ec93d256354d526244040c8c91500",
     "data/latest_training_report.json": "ea541f23105afa20e2dd5f7cdfdfe6302730488099540accfcb7a02fd3f6620d",
     "data/auxiliary_calibration_report.json": "5d652216107a34e386662f318dbc3e54eaf36206aefe3e0313f95ce5f3bb4535",
     "data/latest_auxiliary_training_report.json": "3fe0312df9e2d058624335f8c0256468b95ee913d19cc5b5860d8af16c443ef2"
   },
   "token_length_policy": "explicit-flat-chat-token-ids-v1",
-  "train_examples": 86,
+  "train_examples": 114,
   "single_evidence_training_variants": true,
   "variant_counts": {
-    "source_complete": 5,
-    "evidence_order_reversed": 5,
-    "all_evidence_withheld": 5,
-    "synthetic_instruction_injection": 5,
-    "source_bound_simulated_dialogue": 21,
-    "single_source_incomplete_case": 45
+    "source_complete": 7,
+    "evidence_order_reversed": 7,
+    "all_evidence_withheld": 7,
+    "synthetic_instruction_injection": 7,
+    "source_bound_simulated_dialogue": 28,
+    "single_source_incomplete_case": 58
   },
   "max_example_tokens": 6978,
-  "iters": 88,
+  "iters": 116,
   "requested_passes": 1,
-  "minimum_iters_for_requested_passes": 88,
+  "minimum_iters_for_requested_passes": 116,
   "grad_accumulation_steps": 4,
+  "checkpoint_every_micro_iterations": 8,
   "validation_kind": "training_replay_probe_not_independent_validation",
   "test_examples_in_training_directory": 0,
   "actual_weight_update_verified": true,
@@ -86,23 +87,23 @@
   "validation_accuracy_verified": false,
   "test_accuracy_verified": false,
   "adapter_activated": false,
-  "started_at": "2026-11-07T17:33:55.867791+00:00",
-  "observed_peak_memory_gb": 8.863,
+  "started_at": "2026-11-11T11:38:39.190090+00:00",
+  "observed_peak_memory_gb": 8.892,
   "observed_validation_token_losses": [
     {
       "micro_iteration": 1,
-      "token_loss": 2.221
+      "token_loss": 2.786
     },
     {
-      "micro_iteration": 88,
-      "token_loss": 1.669
+      "micro_iteration": 116,
+      "token_loss": 1.919
     }
   ],
-  "completed_micro_iterations": 88,
-  "optimizer_updates": 22,
+  "completed_micro_iterations": 116,
+  "optimizer_updates": 29,
   "nonzero_lora_b_tensors": 56,
-  "adapter_sha256": "ee4e9344b957114cedcbe57c22fb2e3acc6e9656f5a8b95b7e3078de5d1b1282",
-  "adapter_path": "artifacts/small_batch_formal/20261107T173318311149Z/adapters",
+  "adapter_sha256": "3c2db2873018aace1b1ca2a0e7f9eaf6ac26254bd91d2cef49178cb021749e4c",
+  "adapter_path": "artifacts/small_batch_formal/20261111T113749687528Z/adapters",
   "historical_and_active_files_unchanged": true,
-  "finished_at": "2026-11-07T17:55:02.447656+00:00"
+  "finished_at": "2026-11-11T12:03:45.774231+00:00"
 }

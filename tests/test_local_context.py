@@ -19,6 +19,36 @@ def test_decoder_avoids_large_finite_repetitions_but_original_validation_stays_s
         Extraction.model_validate({'evidence': [{'quote': 'x' * 5001, 'kind': 'test', 'summary': 'test'}]})
 
 
+def test_decoder_bounds_citations_but_not_repeated_large_objects():
+    import json
+    import re
+    from typing import Literal
+    from typing_extensions import TypeAliasType
+    from pydantic import BaseModel, Field
+    from outlines_core.json_schema import build_regex_from_schema
+    from app.local_context import decoder_schema
+    Sid = TypeAliasType('TestCitation', Literal['S1', 'S2'])
+
+    class Citation(BaseModel):
+        sentence_ids: list[Sid] = Field(min_length=1, max_length=5)
+
+    decoded = decoder_schema(Citation)
+    pattern = build_regex_from_schema(json.dumps(decoded))
+    assert re.fullmatch(pattern, json.dumps({'sentence_ids': ['S1'] * 5}))
+    assert not re.fullmatch(pattern, json.dumps({'sentence_ids': ['S1'] * 6}))
+    assert not re.fullmatch(pattern, json.dumps({'sentence_ids': []}))
+    assert not re.fullmatch(pattern, json.dumps({'sentence_ids': ['unknown']}))
+
+    class Nested(BaseModel):
+        items: list[Citation] = Field(max_length=5)
+        many: list[str] = Field(max_length=80)
+
+    nested = decoder_schema(Nested)
+    assert 'maxItems' not in nested['properties']['items']
+    assert 'maxItems' not in nested['properties']['many']
+    assert nested['$defs']['Citation']['properties']['sentence_ids']['maxItems'] == 5
+
+
 class ChangedDefaultTokenizer:
     def apply_chat_template(self, messages, **options):
         # transformers 5 defaults to a mapping, whose length is just two fields.

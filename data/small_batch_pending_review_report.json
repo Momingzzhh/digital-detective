@@ -1,9 +1,9 @@
 {
   "protocol": "small-batch-pending-human-reading-v1",
-  "dataset_binding": "3dd4dd6a88af289fb63669aa174d4967b7f47d99309234fc772c8b0e944b5240",
-  "pending_training_cases_in_reading_pack": 3,
-  "single_actor_without_conflict_cases": 1,
-  "bundle_binding": "c5e9658870e81b4151ac909607d3475d8b8878c708ce2291df079c452924fced",
+  "dataset_binding": "80d7351836cd8b620f6717208c2ef9ef46aa5cc7fba14fc56097172e7c705f43",
+  "pending_training_cases_in_reading_pack": 5,
+  "single_actor_without_conflict_cases": 2,
+  "bundle_binding": "37b0b7d56b3609d3277cecfaa3b25c764c53d81f541f0ca5273572974f15d886",
   "contains_only_train": true,
   "human_reviews_completed": 0,
   "human_approvals_created": 0,

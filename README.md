@@ -1,14 +1,14 @@
 # 数字神探 Digital Detective
 
-**11月10日最新续跑：**继续筛选与标注后，Codex 5小时额度剩余9%时已停止。保存2份新案草稿及失败／中断记录，修复一处角色误拦截，313项软件测试通过；新增合格案例及权重更新均为0，原五案权重继续可用。后续先修复审核引用输出超长问题，见[续跑汇总](data/local_training_continuation_report.json)与[进度](docs/progress.md)。
+**11月11日本批训练完成并停止：**固定7案、114条样例已完成116步、29次参数更新。新权重断网检查及2项固定局部证据检查均通过；318项软件测试通过。新权重保留本机，网页继续使用原五案模型。此前额度停止的检查点单独留档，本次因缺少优化器状态，从同一基座重新完整训练，不计新增案件。见[续跑汇总](data/local_training_continuation_report.json)与[进度](docs/progress.md)。
 
-**后续独立评测汇总：**另一个数据集上完成150案训练；150个与训练案不重叠的测试案中112案按整案标准正确，准确率为**74.7%**，达到70%阶段门槛。该结果与下述本机五案小批量运行分开统计。当前仓库保存[汇总记录](data/follow_up_aggregate_report.json)和[结果说明](docs/follow_up_evaluation.md)，尚未包含逐案评分与对应训练日志。
+**后续独立评测汇总：**另一个数据集上完成150案训练；150个与训练案不重叠的测试案中112案按整案标准正确，准确率为**74.7%**，达到70%阶段门槛。该结果与本机七案小批量运行分开统计。当前仓库保存[汇总记录](data/follow_up_aggregate_report.json)和[结果说明](docs/follow_up_evaluation.md)，尚未包含逐案评分与对应训练日志。
 
 面向研究人员的中文刑事案件研究工作台。输入或上传文字材料，Agent从原文提取线索、核查证据、提出关键问题，并形成可引用依据的暂定结论或“证据不足”。
 
 **当前交付：本机可用的离线 Agent（2026年11月10日）。** 已核验并启用现有五案微调权重：86条训练示例、88个微迭代、22次参数更新。支持材料上传、证据提取、工具核查、第二轮复核、补充线索、图谱与记录导出。无需模型 API Key。
 
-本轮沿用已完成的真实训练，没有重复训练相同五案，也没有新增合格案件数。修复了真实流程中结构化提取的解码约束膨胀问题，并补齐权重激活、校验、中断恢复和运行版本记录。运行和验证方式见[本机交付说明](docs/local_delivery.md)，当前状态见[进度](docs/progress.md)。
+11月10日交付沿用当时已完成的五案真实训练；11月11日另完成上述七案训练，尚未切换网页权重。修复了真实流程中结构化提取的解码约束膨胀问题，并补齐权重激活、校验、中断恢复和运行版本记录。运行和验证方式见[本机交付说明](docs/local_delivery.md)，当前状态见[进度](docs/progress.md)。
 
 600案复杂基准仍是后续研究目标；本机五案小批量按“先完整跑通、后续提高准确率”交付，**单就该五案运行尚无独立准确率结论**。上方74.7%来自分开的150案训练与独立测试汇总。软件检查和合成流程测试均不等于研究验收通过。
 
@@ -65,11 +65,11 @@ sh run_offline.sh
 .venv/bin/python scripts/smoke_offline.py --adapter artifacts/small_batch_formal/实际运行编号/adapters --output data/small_batch_offline_smoke_report.json
 ```
 
-当前五案均保持实际两层，包含45条单条证据训练变体，从固定4B基座新建适配器，峰值内存8.863GB；训练重放token损失2.221→1.669不代表独立准确率。见[小批量数据](data/small_batch_dataset_report.json)、[真实训练](data/latest_small_batch_training_report.json)和[同权重离线检查](data/small_batch_offline_smoke_report.json)。先前两案及三案的训练、引用修正和实际重训报告另存；5次运行只涉及5个不同训练组。旧辅助试训没有被改名，不同阶段复用的相同案件不重复累计。完整研究验收仍未完成；该训练运行当时未自动激活，11月10日已通过显式核验启用。
+最新七案均保持实际两层，包含58条单条证据训练变体，从固定4B基座新建适配器，峰值内存8.892GB；训练重放token损失2.786→1.919不代表独立准确率。见[小批量数据](data/small_batch_dataset_report.json)、[真实训练](data/latest_small_batch_training_report.json)和[同权重离线检查](data/small_batch_offline_smoke_report.json)。6次已完成运行仅涉及7个不同训练组，另有1次额度停止记录；相同案件不重复累计。新权重未激活，网页继续使用11月10日启用的五案版本，完整研究验收仍未完成。
 
 新增`scripts/annotate_small_batch.py --create-cohort 4`从未处理的训练来源按分组哈希冻结诊断组；随后用`--cohort`逐案生成标注和单独语义质检。材料、原始输出、失败和代码快照留本机，全部通过后才能加入新的训练政策版本。没有使用留出案语义或待测Agent成绩选案。完整规则见[训练规程](docs/local_training_protocol.md#2026年11月7日确认的正式小批量训练规则)。下列旧完整基准流程仍用于600案规模化准备。
 
-纠正后两项固定局部证据检查为2项通过、0项未通过；[原失败及相同输入比较](data/small_batch_probe_comparison.json)完整保留，不能作为独立准确率。
+本次七案新权重的[两项固定局部证据检查](data/small_batch_source_probe_report.json)均通过，只使用训练来源，不能作为独立准确率。早期五案检查的[原失败及相同输入比较](data/small_batch_probe_comparison.json)继续保留。
 
 新阶段另记录[历次运行及去重统计](data/small_batch_run_history.json)、[实际训练分词与库版本](data/small_batch_runtime_audit.json)及[待人工复核阅读包状态](data/small_batch_pending_review_report.json)。原始阅读包只留在本机，不产生签署。训练结论的引用包含所有必要前提，修改目标后须实际重训；旧运行保留并标明是否已被新目标替代。
 

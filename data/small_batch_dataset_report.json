@@ -1,16 +1,16 @@
 {
   "protocol": "small-batch-formal-training-v1",
   "training_stage": "small_batch_formal",
-  "training_cases": 5,
+  "training_cases": 7,
   "split_counts": {
-    "train": 5
+    "train": 7
   },
   "actual_depth_counts": {
-    "2": 5
+    "2": 7
   },
   "review_status_counts": {
-    "user_accepted_corrected_version_pending_benchmark_review": 2,
-    "automatically_audited_pending_human_review": 3
+    "automatically_audited_pending_human_review": 5,
+    "user_accepted_corrected_version_pending_benchmark_review": 2
   },
   "minimum_depth": 2,
   "preferred_depth": 3,
@@ -18,7 +18,7 @@
   "strict_three_level_benchmark_cases_added": 0,
   "heldout_cases_used_for_training": 0,
   "independent_accuracy_verified": false,
-  "single_actor_without_conflict_cases": 1,
-  "manifest": "data/processed/small_batch_formal/4bfd42fbd1af3a1f/manifest.private.json",
-  "dataset_binding": "3dd4dd6a88af289fb63669aa174d4967b7f47d99309234fc772c8b0e944b5240"
+  "single_actor_without_conflict_cases": 2,
+  "manifest": "data/processed/small_batch_formal/9f52b61a0e3c27f5/manifest.private.json",
+  "dataset_binding": "80d7351836cd8b620f6717208c2ef9ef46aa5cc7fba14fc56097172e7c705f43"
 }

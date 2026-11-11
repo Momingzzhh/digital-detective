@@ -1,32 +1,81 @@
 {
-  "client_date": "2026-11-10",
-  "stage": "stopped_at_codex_quota_threshold",
-  "stop_remaining_percent": 10,
-  "observed_remaining_percent": 9,
-  "weekly_remaining_percent": 86,
-  "selected_training_candidates": 4,
-  "distinct_new_training_groups_diagnosed": 2,
-  "assistant_source_drafts_saved": 2,
-  "new_cases_admitted": 0,
-  "training_cases_retained": 5,
-  "new_weight_training_started": false,
+  "client_date": "2026-11-11",
+  "stage": "completed_and_stopped",
+  "current_run_id": "20261111T113749687528Z",
+  "new_cases_admitted": 2,
+  "training_cases": 7,
+  "actual_depth_counts": {
+    "2": 7
+  },
+  "train_examples": 114,
+  "planned_micro_iterations": 116,
+  "planned_optimizer_updates": 29,
+  "truncated_examples": 0,
+  "new_weight_training_started": true,
   "active_adapter_changed": false,
-  "completed_software_tests": 313,
+  "activate_new_adapter": false,
+  "completed_software_tests": 318,
   "software_tests_failed": 0,
   "human_approvals_created": 0,
   "heldout_semantics_used": false,
   "independent_accuracy_verified": false,
-  "attempts": {
-    "local_model_annotation_format_rejected": 1,
-    "deterministic_role_screen_false_positive": 1,
-    "semantic_audit_output_truncated": 1,
-    "semantic_audit_interrupted_at_quota": 1,
-    "archived_sandbox_runtime_failure": 1
+  "assistant_source_holds_added": 6,
+  "resolved_previous_audits": {
+    "bounded_format_retry": 1,
+    "quota_interrupted_audit_continued": 1
   },
-  "fixed_issue": "Observer role regex no longer mistakes the phrase 仅见证言 for a non-participating witness. Existing observer exclusions retained.",
-  "remaining_issue": "Decoder removes array cardinality limits; annotation exceeded the five-citation limit and one audit enumerated long citation arrays until the 1600-token budget was exhausted. Original Pydantic validation rejected the output. Resolve bounded decoding or concise output before another single archived format retry.",
-  "resume_note": "Pending audit checkpoint is retained. Current annotate_small_batch skips an existing unfinished result, so it is not an automatic resumable generation. Preserve it and explicitly implement bounded audit continuation or freeze a new provenance-linked cohort. Do not change it to passed.",
-  "stop_process_exit_code": 130,
-  "model_resource_lock_released": true,
-  "generated_at": "2026-11-10T08:10:12.975489+00:00"
+  "audit_output_tokens": [
+    606,
+    597
+  ],
+  "current_source_probe_plan_binding": "10cd6fdf462dcb2774d0ed005efe2e786ca2d65520b9e11511e23698fa2dd443",
+  "limitations": [
+    "New labels remain automatically audited pending human review; machine audit notes can be general and do not replace sentence-level human checking.",
+    "Training replay token loss and training-source boundary probes are not independent case accuracy.",
+    "Partial training checkpoints contain weights but not optimizer/RNG state; no exact-resume claim."
+  ],
+  "generated_at": "2026-11-11T00:23:20.977256+00:00",
+  "completed_micro_iterations": 116,
+  "small_batch_training_completed": true,
+  "full_dataset_pass_completed": true,
+  "observed_peak_memory_gb": 8.892,
+  "predefined_source_probes_executed": true,
+  "active_and_historical_guarded_files_unchanged": true,
+  "model_resource_released": true,
+  "updated_at": "2026-11-11T12:06:42.727696+00:00",
+  "recovery_of_run_id": "20261111T001901235984Z",
+  "restart_from_base": true,
+  "exact_training_resume": false,
+  "stop_policy": "Complete this frozen batch, publish results to GitHub, then stop; no new cases or epochs.",
+  "previous_quota_stop": {
+    "current_run_id": "20261111T001901235984Z",
+    "completed_micro_iterations": 113,
+    "retained_weight_checkpoint": {
+      "checkpoint_micro_iteration": 112,
+      "checkpoint_optimizer_updates": 28,
+      "checkpoint_path": "adapters/0000112_adapters.safetensors",
+      "checkpoint_sha256": "d4a9625b1af6706d82ed3b669afe759b9b173021757df0059a0eeb0ab091affc",
+      "nonzero_lora_b_tensors": 56,
+      "optimizer_state_saved": false,
+      "exact_training_resume_available": false
+    },
+    "checkpoint_offline_smoke_passed": true,
+    "observed_remaining_percent": 10
+  },
+  "optimizer_updates": 29,
+  "adapter_sha256": "3c2db2873018aace1b1ca2a0e7f9eaf6ac26254bd91d2cef49178cb021749e4c",
+  "observed_validation_token_losses": [
+    {
+      "micro_iteration": 1,
+      "token_loss": 2.786
+    },
+    {
+      "micro_iteration": 116,
+      "token_loss": 1.919
+    }
+  ],
+  "source_probes_passed": 2,
+  "source_probes_failed": 0,
+  "offline_smoke_passed": true,
+  "network_attempts": 0
 }

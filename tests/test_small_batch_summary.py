@@ -20,3 +20,13 @@ def test_changed_audit_protocol_or_retry_is_not_an_additional_case():
 def test_summary_rejects_accidentally_included_heldout_semantics():
     with pytest.raises(ValueError, match='training diagnostics only'):
         summarize([{'split': 'test'}])
+
+
+def test_source_reader_hold_is_not_a_model_semantic_audit():
+    from scripts.summarize_small_batch import summarize
+    row = {'split': 'train', 'group_id': 'synthetic-screen', 'source_binding': 'synthetic-source',
+           'status': 'source_reader_hold', 'model_generation_performed': False}
+    report = summarize([row])
+    assert report['diagnostic_results_by_audit_protocol'] == {'source-reader-screen-no-model': 1}
+    assert report['semantic_audit_calls_including_format_repair'] == 0
+    assert report['model_annotation_generations'] == 0

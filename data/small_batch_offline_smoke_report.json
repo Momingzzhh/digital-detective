@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-07T17:55:31.527878+00:00",
+  "generated_at": "2026-11-11T12:04:15.860488+00:00",
   "synthetic_mechanism_test": true,
   "included_in_dataset_count": false,
   "network_connections_blocked": true,
@@ -9,6 +9,6 @@
   "no_evidence_supported": false,
   "empty_evidence_injection_boundary_passed": true,
   "accuracy_claim": false,
-  "adapter_sha256": "ee4e9344b957114cedcbe57c22fb2e3acc6e9656f5a8b95b7e3078de5d1b1282",
+  "adapter_sha256": "3c2db2873018aace1b1ca2a0e7f9eaf6ac26254bd91d2cef49178cb021749e4c",
   "passed": true
 }

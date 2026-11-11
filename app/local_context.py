@@ -4,20 +4,41 @@ TOKEN_POLICY = 'explicit-flat-chat-token-ids-v1'
 
 
 def decoder_schema(schema):
-    """Keep JSON structure in the decoder; validate size limits after generation.
+    """Bound short citation lists without expanding large nested repetitions.
 
     Finite repetitions such as 80 evidence items of 5,000 characters can expand
     the regex decoder into an enormous state index. The token budget still
     bounds generation, and the original Pydantic schema remains authoritative.
+    Small scalar lists retain their bounds so a citation field cannot enumerate
+    the entire source and consume the output budget before the audit finishes.
     """
+    original = schema.model_json_schema()
+
+    def scalar(item, seen=frozenset()):
+        if '$ref' in item:
+            ref = item['$ref']
+            if not ref.startswith('#/$defs/') or ref in seen:
+                return False
+            return scalar(original.get('$defs', {}).get(ref[8:], {}), seen | {ref})
+        if 'anyOf' in item:
+            return all(scalar(branch, seen) for branch in item['anyOf'])
+        return item.get('type') in ('string', 'integer', 'number', 'boolean', 'null')
+
     def visit(value):
         if isinstance(value, dict):
+            maximum = value.get('maxItems')
+            bounded = (value.get('type') == 'array' and type(maximum) is int
+                       and 0 <= maximum <= 8
+                       and (maximum <= 1 or scalar(value.get('items', {}))))
+            removed = {'minLength', 'maxLength'}
+            if not bounded:
+                removed |= {'minItems', 'maxItems'}
             return {k: visit(v) for k, v in value.items()
-                    if k not in {'minLength', 'maxLength', 'minItems', 'maxItems'}}
+                    if k not in removed}
         if isinstance(value, list):
             return [visit(item) for item in value]
         return value
-    return visit(schema.model_json_schema())
+    return visit(original)
 
 
 def chat_token_ids(tokenizer, messages, *, generation=True, thinking=None):

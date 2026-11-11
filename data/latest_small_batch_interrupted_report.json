@@ -1,0 +1,111 @@
+{
+  "protocol": "small-batch-formal-training-v1",
+  "training_stage": "small_batch_formal",
+  "training_cases": 7,
+  "split_counts": {
+    "train": 7
+  },
+  "actual_depth_counts": {
+    "2": 7
+  },
+  "review_status_counts": {
+    "automatically_audited_pending_human_review": 5,
+    "user_accepted_corrected_version_pending_benchmark_review": 2
+  },
+  "minimum_depth": 2,
+  "preferred_depth": 3,
+  "human_approvals_created": 0,
+  "strict_three_level_benchmark_cases_added": 0,
+  "heldout_cases_used_for_training": 0,
+  "independent_accuracy_verified": false,
+  "single_actor_without_conflict_cases": 2,
+  "run_id": "20261111T001901235984Z",
+  "stage": "stopped",
+  "pilot": false,
+  "formal_training_started": true,
+  "small_batch_training_completed": false,
+  "model_path": "models/qwen3-4b-instruct-2507-4bit",
+  "base_manifest_binding": "c8d59f8fef532011156c61f60f511ad185907a2547e3977ee43ee21db980d644",
+  "source_manifest": {
+    "path": "data/processed/small_batch_formal/9f52b61a0e3c27f5/manifest.private.json",
+    "sha256": "37e6f0e5f65c0b85101e42311f713577f81a522f9efd81004ef04217ddac7f42"
+  },
+  "dataset_binding": "80d7351836cd8b620f6717208c2ef9ef46aa5cc7fba14fc56097172e7c705f43",
+  "code_file_sha256": {
+    "scripts/train_small_batch.py": "87cab19654cdd558afdda987ad27dd3a5a4488004491c33f633e0fe63c014fcf",
+    "scripts/train_local.py": "5af3f31c039d7a37cb782d7d224a7760a14c6b865e1b1e09a5726ac31c7da853",
+    "scripts/train_auxiliary.py": "28ccb66f0964dc4e6824f750e983fb8c31a96e91a7dda550738fe19e5022bd24",
+    "scripts/prepare_small_batch_training.py": "1495056387ca770fbeeac297aaf134bf888606bc33a4ecbae635b2074d57e67e",
+    "scripts/export_review_bundle.py": "6cdb3dde8b826da3711c3c8a9aaed5a218f682242fdddeeff8af9662c7450ca0",
+    "app/small_batch_training.py": "1397cc3e60cb44e5d56ff11874f0653a2fc4a51b663f804ca6f530a311720a98",
+    "app/auxiliary_training.py": "8146bd90beac13d6bfcf61a5a93f61caa14716ef074352a6590f2747e53f85af",
+    "app/five_dimensions.py": "9265fd593a03a0284b1d432d0ca398a599da861453967d073441f3f80ee70844",
+    "app/annotation_quality.py": "994120b739df019b7a1c5d459c290db786c22a202a97b2f5a22a217d72c7fa03",
+    "app/complexity_review.py": "bf3a7d5615e667b09731facf4a10df301fec4b093d00cc8084d68e518c2ce15e",
+    "app/source_policy.py": "ffcfe96cf9ceb36dbba32e7998be8697f3870e149acc7fb6ef8f46e6ab53e448",
+    "app/local_context.py": "3a89255b0c51dd30683ce24f15898bf0a4b4a35c919a8d236edc3fe208e38d3d",
+    "app/local_model.py": "c269ba1bbd1aa43d93df550587614f304ebf2b562834dc9eec31be69b6ca3d1f",
+    "scripts/prepare_training_source_revision.py": "4d15312e261d3c3413630d89a6dc9d82acc3f1adcaacb43fd2fa06c81a904903",
+    "scripts/build_v3.py": "bb3da912e0fda29ac110af5e5f8aba7710980e8378ebd664f943ea912d76e849",
+    "app/field_semantic.py": "abc9032feb6c1d7c223ef015930159cd5dbb65ff5bc79c1533729414413e971e",
+    "requirements-mac.lock": "f9757e766bc8145cd6df7a50924d7c6beb58779988bc8695f8bf02728b03bfa0"
+  },
+  "training_file_sha256": {
+    "data/train.jsonl": "05b750f2bfe289a7f433b0528592027b84b254ea2036c4bb5fbe7d8de4328930",
+    "data/valid.jsonl": "19c0938b6e03d14257fb62221815e3bfc78e004559cb664bcfde61a41020a242",
+    "config.yaml": "fda5e95d5e61908f126394e46c8b80f1c5678d53ab47546fb85e9444ea6b8f23",
+    "policy.private.json": "1e6f917fa01f6cb956b2d25a8a4dd866821f4f9d84a0f9fb672f5f9a2b4db7cb"
+  },
+  "guarded_file_sha256": {
+    ".env": "69c900af23c10d795435429e8177fc8eb5f90350a3accf124d16852535f69787",
+    "data/five_dimensions_report.json": "55d05285ddec55b853477820e15ff3b8705ec93d256354d526244040c8c91500",
+    "data/latest_training_report.json": "ea541f23105afa20e2dd5f7cdfdfe6302730488099540accfcb7a02fd3f6620d",
+    "data/auxiliary_calibration_report.json": "5d652216107a34e386662f318dbc3e54eaf36206aefe3e0313f95ce5f3bb4535",
+    "data/latest_auxiliary_training_report.json": "3fe0312df9e2d058624335f8c0256468b95ee913d19cc5b5860d8af16c443ef2"
+  },
+  "token_length_policy": "explicit-flat-chat-token-ids-v1",
+  "train_examples": 114,
+  "single_evidence_training_variants": true,
+  "variant_counts": {
+    "source_complete": 7,
+    "evidence_order_reversed": 7,
+    "all_evidence_withheld": 7,
+    "synthetic_instruction_injection": 7,
+    "source_bound_simulated_dialogue": 28,
+    "single_source_incomplete_case": 58
+  },
+  "max_example_tokens": 6978,
+  "iters": 116,
+  "requested_passes": 1,
+  "minimum_iters_for_requested_passes": 116,
+  "grad_accumulation_steps": 4,
+  "checkpoint_every_micro_iterations": 8,
+  "validation_kind": "training_replay_probe_not_independent_validation",
+  "test_examples_in_training_directory": 0,
+  "actual_weight_update_verified": false,
+  "training_complete": false,
+  "validation_accuracy_verified": false,
+  "test_accuracy_verified": false,
+  "adapter_activated": false,
+  "started_at": "2026-11-11T00:19:23.087388+00:00",
+  "observed_peak_memory_gb": 8.892,
+  "observed_validation_token_losses": [
+    {
+      "micro_iteration": 1,
+      "token_loss": 2.786
+    }
+  ],
+  "completed_micro_iterations": 113,
+  "stop_reason": "explicit_stop_request",
+  "subprocess_returncode": -15,
+  "retained_weight_checkpoint": {
+    "checkpoint_micro_iteration": 112,
+    "checkpoint_optimizer_updates": 28,
+    "checkpoint_path": "adapters/0000112_adapters.safetensors",
+    "checkpoint_sha256": "d4a9625b1af6706d82ed3b669afe759b9b173021757df0059a0eeb0ab091affc",
+    "nonzero_lora_b_tensors": 56,
+    "optimizer_state_saved": false,
+    "exact_training_resume_available": false
+  },
+  "finished_at": "2026-11-11T00:39:53.692319+00:00"
+}

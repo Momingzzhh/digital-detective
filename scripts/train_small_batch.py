@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -75,7 +76,7 @@ def prepare(args):
         'batch_size': 1, 'iters': iters, 'learning_rate': 1e-5,
         'max_seq_length': args.max_seq_length, 'grad_checkpoint': True,
         'grad_accumulation_steps': 4, 'mask_prompt': True, 'seed': 20261107,
-        'steps_per_report': 1, 'steps_per_eval': iters, 'save_every': iters,
+        'steps_per_report': 1, 'steps_per_eval': iters, 'save_every': min(8, iters),
         'val_batches': 1, 'lora_parameters': {'rank': 8, 'dropout': 0.05, 'scale': 16.0},
         'report_to': None, 'test': False}
     import yaml
@@ -100,6 +101,7 @@ def prepare(args):
         'variant_counts': dict(Counter(e['variant'] for e in examples)),
         'max_example_tokens': max(counts), 'iters': iters, 'requested_passes': args.epochs,
         'minimum_iters_for_requested_passes': minimum, 'grad_accumulation_steps': 4,
+        'checkpoint_every_micro_iterations': min(8, iters),
         'validation_kind': 'training_replay_probe_not_independent_validation',
         'test_examples_in_training_directory': 0, 'actual_weight_update_verified': False,
         'training_complete': False, 'validation_accuracy_verified': False, 'test_accuracy_verified': False,
@@ -123,23 +125,81 @@ def verify_prepared(out, report):
             raise ValueError('Prepared small-batch inputs changed; prepare a new run')
 
 
+def retained_checkpoint(out, report):
+    """Only a numbered checkpoint confirmed fully saved in the log is usable.
+
+    These are weight checkpoints, not optimizer/RNG state for exact resumption.
+    A partially overwritten adapters.safetensors must never stand in for one.
+    """
+    matches = re.findall(r'^Iter (\d+): Saved adapter weights to ',
+                         (out / 'training.log').read_text(), re.MULTILINE)
+    from safetensors.numpy import load_file
+    from safetensors import SafetensorError
+    for iteration in sorted(map(int, matches), reverse=True):
+        if iteration % report['grad_accumulation_steps'] or iteration > report['iters']:
+            continue
+        checkpoint = out / 'adapters' / f'{iteration:07d}_adapters.safetensors'
+        if not checkpoint.exists():
+            continue
+        try:
+            tensors = load_file(str(checkpoint))
+        except (OSError, SafetensorError):
+            continue
+        nonzero = sum(bool((v != 0).any()) for k, v in tensors.items() if k.endswith('lora_b'))
+        if not nonzero:
+            continue
+        return {'checkpoint_micro_iteration': iteration,
+                'checkpoint_optimizer_updates': iteration // report['grad_accumulation_steps'],
+                'checkpoint_path': str(checkpoint.relative_to(out)),
+                'checkpoint_sha256': sha_file(checkpoint), 'nonzero_lora_b_tensors': nonzero,
+                'optimizer_state_saved': False, 'exact_training_resume_available': False}
+    return None
+
+
+def stop_child(process):
+    if process is not None and process.poll() is None:
+        process.terminate()
+        try:
+            process.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            process.kill(); process.wait()
+
+
 def run(out):
     report = json.loads((out / 'run.json').read_text())
     verify_prepared(out, report)
+    if (out / 'stop.requested').exists():
+        raise ValueError('Run already has a stop request; do not start GPU training')
     os.environ.update(HF_HUB_OFFLINE='1', TRANSFORMERS_OFFLINE='1', HF_HUB_DISABLE_TELEMETRY='1')
     bootstrap = 'import mlx.core as mx; mx.set_memory_limit(17*1024**3); from mlx_lm.lora import main; main()'
     command = [sys.executable, '-u', '-c', bootstrap, '--config', str(out / 'config.yaml')]
     report.update(stage='running', formal_training_started=True,
                   started_at=datetime.now(timezone.utc).isoformat())
     save(out / 'run.json', report)
+    process = None
+    stopped = False
     try:
         with (out / 'training.log').open('w') as log:
             process = subprocess.Popen(command, env=os.environ.copy(), stdout=subprocess.PIPE,
                                        stderr=subprocess.STDOUT, text=True, bufsize=1)
             for line in process.stdout:
                 log.write(line); log.flush(); print(line, end='', flush=True)
+                if (out / 'stop.requested').exists():
+                    stopped = True
+                    stop_child(process)
+                    break
             returncode = process.wait()
         report.update(observed_metrics(out / 'training.log'))
+        if stopped:
+            report.update(stage='stopped', stop_reason='explicit_stop_request',
+                          subprocess_returncode=returncode,
+                          retained_weight_checkpoint=retained_checkpoint(out, report),
+                          finished_at=datetime.now(timezone.utc).isoformat())
+            save(out / 'run.json', report)
+            save(ROOT / 'data/latest_small_batch_interrupted_report.json', report)
+            print(json.dumps({'stage': 'stopped', 'training_complete': False,
+                              'checkpoint_retained': bool(report['retained_weight_checkpoint'])}), flush=True)
+            return
         if returncode or report['completed_micro_iterations'] != report['iters']:
             raise RuntimeError(f'Small-batch training did not finish (exit {returncode})')
         from safetensors.numpy import load_file
@@ -156,9 +216,13 @@ def run(out):
                       adapter_path=str(adapter.parent.relative_to(ROOT)),
                       historical_and_active_files_unchanged=True,
                       finished_at=datetime.now(timezone.utc).isoformat())
-    except Exception as exc:
+    except BaseException as exc:
+        stop_child(process)
         report.update(stage='failed', error=str(exc)[:400],
                       finished_at=datetime.now(timezone.utc).isoformat())
+        if (out / 'training.log').exists():
+            report.update(observed_metrics(out / 'training.log'))
+            report['retained_weight_checkpoint'] = retained_checkpoint(out, report)
         save(out / 'run.json', report)
         raise
     save(out / 'run.json', report)

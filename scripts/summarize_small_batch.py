@@ -24,7 +24,7 @@ def summarize(records):
             'latest_status_counts': dict(Counter(r['status'] for r in values)),
             'accepted_actual_depth_counts': dict(Counter(str(r['five_dimensions']['reasoning_depth'])
                 for r in values if r['status'] == 'automatically_audited_pending_human_review')),
-            'diagnostic_results_by_audit_protocol': dict(Counter(r.get('semantic_audit_protocol', 'legacy-global-flags') for r in records)),
+            'diagnostic_results_by_audit_protocol': dict(Counter(r.get('semantic_audit_protocol', 'source-reader-screen-no-model' if r.get('model_generation_performed') is False else 'legacy-global-flags') for r in records)),
             'model_annotation_generations': sum(bool(r.get('raw_output')) for r in records),
             'semantic_audit_calls_including_format_repair': sum(bool(r.get('semantic_audit_raw')) + r.get('audit_format_repair_attempts', 0) for r in records),
             'archived_runtime_only_failures': sum(bool(r.get('previous_runtime_failure')) for r in records),
