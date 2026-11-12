@@ -1,0 +1,65 @@
+{
+  "protocol": "development-v1-2026-11-12",
+  "status": "development_design_only_not_a_runnable_trial",
+  "data": {
+    "population": "modern_chinese_criminal_text",
+    "split_policy": "preserve_case_groups",
+    "manifest": "pending_T06_T13",
+    "test_access": false
+  },
+  "environment": {
+    "version": "planned_T17",
+    "user_channel": "source_bound_simulator",
+    "release": "action_conditioned"
+  },
+  "actions": {
+    "schema": "planned_T07",
+    "environment_budget": 8,
+    "user_request_budget": 2,
+    "invalid_and_duplicate_calls_consume_budget": true
+  },
+  "model": {
+    "repository": "mlx-community/Qwen3-4B-Instruct-2507-4bit",
+    "revision": "50d427756c6b1b2fe0c0a10f67fbda1fc8e82c1b",
+    "local_only": true
+  },
+  "adapter": {
+    "mode": "base_for_future_baselines",
+    "current_web_release_unchanged": true
+  },
+  "prompts": {
+    "version": "pending_T23",
+    "training_examples_from_test": false
+  },
+  "decoding": {
+    "temperature": 0,
+    "max_output_tokens": 2048,
+    "context_tokens": 12288,
+    "status": "development_defaults_pending_resource_check"
+  },
+  "scorer": {
+    "version": "planned_T38",
+    "primary": "evidence_constrained_task_success",
+    "strata_weights": {
+      "solvable": 0.5,
+      "unresolved": 0.5
+    },
+    "failed_runs_in_denominator": true
+  },
+  "code": {
+    "baseline_commit": "76574d3419b07498179d08f7da8a40aa6727bc6b",
+    "effective_source_files_must_be_bound": true
+  },
+  "seeds": {
+    "python": 42,
+    "model": 42,
+    "environment": 42,
+    "bootstrap": 1729
+  },
+  "runtime": {
+    "platform": "Apple_Silicon_M4_24GB",
+    "python": "3.12",
+    "dependency_lock": "requirements-mac.lock",
+    "no_concurrent_models": true
+  }
+}

@@ -1,0 +1,853 @@
+{
+  "schema_version": "research-task-ledger-v1",
+  "updated_at": "2026-11-12",
+  "scope": [
+    "T01",
+    "T02",
+    "T03",
+    "T04",
+    "T05"
+  ],
+  "base_commit": "76574d3419b07498179d08f7da8a40aa6727bc6b",
+  "branch": "main",
+  "user_authorization": {
+    "scope": "T01-T05 only",
+    "direct_main_push": true,
+    "no_training_or_formal_evaluation": true,
+    "quota_stop_remaining_percent": 15
+  },
+  "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+  "quota_observations": [
+    {
+      "window_minutes": 300,
+      "used_percent": 15,
+      "remaining_percent": 85,
+      "phase": "start"
+    },
+    {
+      "window_minutes": 300,
+      "used_percent": 42,
+      "remaining_percent": 58,
+      "phase": "local_tests"
+    },
+    {
+      "window_minutes": 300,
+      "used_percent": 52,
+      "remaining_percent": 48,
+      "phase": "prepare_delivery"
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "T01",
+      "status": "done",
+      "dependencies": [],
+      "input_fingerprint": {
+        "baseline_manifest_sha256": "e7015bd974ea04e0d00566554918f6f69daf00b60b8fc9cb13e58e815e8178f9",
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "76574d3419b07498179d08f7da8a40aa6727bc6b"
+      },
+      "artifact_snapshot_sha256": "ea911c4df213e9fe29e8e892d6d7fcd84b80c4ebb1fdf256fc60bd4e5b15486e",
+      "modified_files": [
+        "docs/research_v2/baseline_audit.md",
+        "scripts/audit_research_baseline.py"
+      ],
+      "commands": [
+        ".venv/bin/python scripts/audit_research_baseline.py",
+        ".venv/bin/python scripts/check_local_setup.py --verify"
+      ],
+      "acceptance_outputs": [
+        "artifacts/research_v2/baseline_manifest.initial.json"
+      ],
+      "acceptance": "83 files accessible; expected model/adapter hashes match; training identities indexed",
+      "limitations": [
+        "Group index conservatively includes candidates and aliases; semantic/group audit deferred to T06."
+      ],
+      "next_step": "Stop at T05; later tasks require a new user request"
+    },
+    {
+      "task_id": "T02",
+      "status": "done",
+      "dependencies": [
+        "T01"
+      ],
+      "input_fingerprint": {
+        "baseline_manifest_sha256": "e7015bd974ea04e0d00566554918f6f69daf00b60b8fc9cb13e58e815e8178f9",
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "76574d3419b07498179d08f7da8a40aa6727bc6b"
+      },
+      "artifact_snapshot_sha256": "a09e0a76a0cfbc06b71a9323f3a65e497ea1fffb0a91734c6fc461e7b15cc547",
+      "modified_files": [
+        "README.md",
+        "docs/progress.md",
+        "docs/follow_up_evaluation.md",
+        "paper/main.tex",
+        "paper/README.md",
+        "docs/research_v2/historical_results.md"
+      ],
+      "commands": [
+        "git diff --check",
+        "git diff -- data/follow_up_aggregate_report.json"
+      ],
+      "acceptance_outputs": [
+        "docs/research_v2/historical_results.md"
+      ],
+      "acceptance": "Unverified aggregate excluded from current results; original JSON unchanged",
+      "limitations": [
+        "Old PDF explicitly archived, no current compiled PDF supplied; full paper rewriting is T52-T53."
+      ],
+      "next_step": "Stop at T05; later tasks require a new user request"
+    },
+    {
+      "task_id": "T03",
+      "status": "local_pass_pending_ci",
+      "dependencies": [
+        "T01"
+      ],
+      "input_fingerprint": {
+        "baseline_manifest_sha256": "e7015bd974ea04e0d00566554918f6f69daf00b60b8fc9cb13e58e815e8178f9",
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "76574d3419b07498179d08f7da8a40aa6727bc6b"
+      },
+      "artifact_snapshot_sha256": "6d43cfce8cd0dad37ac37acf83b30ac62b45d43a6e459c21fcfa013d5e3e7036",
+      "modified_files": [
+        "requirements.lock",
+        "requirements.txt",
+        ".github/workflows/test.yml",
+        "run.sh",
+        "scripts/test_cpu.py",
+        "tests/test_offline_entrypoints.py",
+        "docs/research_v2/setup.md"
+      ],
+      "commands": [
+        "python -m venv /private/tmp/dd-research-v2-cpu",
+        "/private/tmp/dd-research-v2-cpu/bin/python -m pip install -r requirements.lock",
+        "/private/tmp/dd-research-v2-cpu/bin/python -m pip check",
+        "/private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py --junitxml=artifacts/research_v2/cpu-tests.xml",
+        "sh -n run.sh run_offline.sh"
+      ],
+      "acceptance_outputs": [
+        "artifacts/research_v2/cpu-install.log",
+        "artifacts/research_v2/cpu-tests.log",
+        "artifacts/research_v2/cpu-tests.xml"
+      ],
+      "acceptance": "339 clean CPU tests passed; Mac preflight passed; awaiting remote CI",
+      "limitations": [
+        "One Starlette/httpx deprecation warning; no real model generation or Docker build this turn."
+      ],
+      "next_step": "Wait for GitHub CI"
+    },
+    {
+      "task_id": "T04",
+      "status": "done",
+      "dependencies": [
+        "T01"
+      ],
+      "input_fingerprint": {
+        "baseline_manifest_sha256": "e7015bd974ea04e0d00566554918f6f69daf00b60b8fc9cb13e58e815e8178f9",
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "76574d3419b07498179d08f7da8a40aa6727bc6b"
+      },
+      "artifact_snapshot_sha256": "d76eafb291e70528fce4c08d6a01014e44eed5ac66bc3a1fa141877c81657590",
+      "modified_files": [
+        "app/experiment_manifest.py",
+        "scripts/prepare_experiment_manifest.py",
+        "configs/research_v2/development.json",
+        "tests/test_experiment_manifest.py",
+        "docs/research_v2/experiment_identity.md"
+      ],
+      "commands": [
+        "/private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py"
+      ],
+      "acceptance_outputs": [
+        "artifacts/research_v2/cpu-tests.xml"
+      ],
+      "acceptance": "Critical changes invalidate run IDs/resume; relocation/key order stable; tampered cache rejected",
+      "limitations": [
+        "All effective dependencies must be supplied by caller; legacy evaluator integration deferred to T40; no GPU bitwise determinism claim."
+      ],
+      "next_step": "Stop at T05; later tasks require a new user request"
+    },
+    {
+      "task_id": "T05",
+      "status": "done",
+      "dependencies": [
+        "T01",
+        "T02"
+      ],
+      "input_fingerprint": {
+        "baseline_manifest_sha256": "e7015bd974ea04e0d00566554918f6f69daf00b60b8fc9cb13e58e815e8178f9",
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "76574d3419b07498179d08f7da8a40aa6727bc6b"
+      },
+      "artifact_snapshot_sha256": "a7e1f45b278f8ea37984c88c68bcb76aede1a3c2813ec1b967c06380fb2c638f",
+      "modified_files": [
+        "docs/research_v2/related_work_matrix.md",
+        "docs/research_v2/protocol_draft.md",
+        "configs/research_v2/development.json"
+      ],
+      "commands": [
+        "Read original full-text sources linked in related_work_matrix.md"
+      ],
+      "acceptance_outputs": [
+        "docs/research_v2/related_work_matrix.md",
+        "docs/research_v2/protocol_draft.md"
+      ],
+      "acceptance": "11 external cited works located and relevant sections read; H1-H4 and controls defined",
+      "limitations": [
+        "Development protocol only; expert legal labels, sample size and final test freeze unresolved; no algorithm novelty or superiority claimed."
+      ],
+      "next_step": "Stop at T05; later tasks require a new user request"
+    },
+    {
+      "task_id": "T06",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T07",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T08",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T09",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T10",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T11",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T12",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T13",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T14",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T15",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T16",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T17",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T18",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T19",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T20",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T21",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T22",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T23",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T24",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T25",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T26",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T27",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T28",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T29",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T30",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T31",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T32",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T33",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T34",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T35",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T36",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T37",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T38",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T39",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T40",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T41",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T42",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T43",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T44",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T45",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T46",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T47",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T48",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T49",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T50",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T51",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T52",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T53",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T54",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    },
+    {
+      "task_id": "T55",
+      "status": "not_started_out_of_scope",
+      "dependencies_source": "taskbook",
+      "input_fingerprint": null,
+      "modified_files": [],
+      "commands": [],
+      "acceptance_outputs": [],
+      "limitations": [
+        "Not authorized in this turn"
+      ],
+      "next_step": "Await follow-up scope"
+    }
+  ]
+}

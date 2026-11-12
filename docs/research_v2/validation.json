@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-12",
+  "cpu_environment": "fresh Python 3.12 venv, no system-site-packages",
+  "lock_sha256": "e3e616d07616465c89b2be4db9671d01cbd3bae8300ea8c94b37bd2a69d7af92",
+  "cpu_tests": {
+    "passed": 339,
+    "failed": 0,
+    "warnings": 1,
+    "junit_sha256": "11b0a80961544afa102a98e9af7aa2f5a620cc111b9bd3c81d3e5c76a6de11a2",
+    "log_sha256": "c35827a9e5f6fcb8b3cfb933efdf3b91b0bffa9a98f2bd64239ea1e5b2437200",
+    "real_mlx_imports_forbidden": true,
+    "outbound_socket_connections_forbidden": true
+  },
+  "pip_check": "No broken requirements found",
+  "mac_preflight": "passed; activated five-case run 20261107T173318311149Z; --verify hashes model files",
+  "shell_syntax": "passed",
+  "original_aggregate_unchanged": true,
+  "formal_evaluation_run": false,
+  "training_run": false,
+  "new_model_activation": false,
+  "remote_ci": {
+    "status": "pending_push"
+  },
+  "limitations": [
+    "No new LaTeX build; prior PDF archived as withdrawn historical copy",
+    "No Docker build",
+    "CPU tests do not establish accuracy or GPU determinism"
+  ],
+  "publication_transport": "Git HTTPS failed; fallback exact-tree Git Data API, no force push; archive PDF reuses already-public blob"
+}

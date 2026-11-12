@@ -25,3 +25,8 @@ starlette==1.8.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 uvicorn==0.54.0
+# CPU tests and metadata checks; no MLX/Metal dependency.
+numpy==2.5.4
+safetensors==0.8.0
+outlines_core==0.2.14
+PyYAML==6.0.3

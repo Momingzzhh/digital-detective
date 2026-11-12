@@ -1,11 +1,9 @@
-# English manuscript
+# Research manuscript status
 
-The file main.tex is the editable English journal-style manuscript; main.pdf is its compiled reading copy. The structure follows a general science/engineering journal pattern (title, abstract, keywords, numbered sections, figures and tables, discussion, conclusion, and numbered references). It is not the template of a specific journal. The author line should be replaced before submission.
+`main.tex` is the current editable manuscript. On 2026-11-12 the unverified follow-up aggregate was removed from results and conclusions. Five-case active and seven-case inactive training are distinguished; training replay is not independent validation.
 
-The related formatting examples were the [CNKI-hosted paper template](https://cbck.cbpt.cnki.net/EditorAN/PromptPageInfo.aspx?c=3&t=v) and [science and technology academic writing guide](https://www.publishmedia.cbpt.cnki.net/portal/minio/webs/hcrh/media/web/2024/07/26/%E7%A7%91%E6%8A%80%E5%AD%A6%E6%9C%AF%E8%AE%BA%E6%96%87%E5%86%99%E4%BD%9C%E6%8C%87%E5%8D%97%E5%8F%8A%E6%A0%BC%E5%BC%8F%E5%8F%82%E8%80%83%EF%BC%88%E5%90%88%E6%88%90%E6%B6%A6%E6%BB%91%E6%9D%90%E6%96%99%EF%BC%89.pdf). Journal-specific requirements may differ.
+`archive/main_pre_research_v2_unverified.pdf` is the superseded, previously compiled PDF. It contains withdrawn evaluation claims and MUST NOT be used as the current manuscript or submitted. The previous source is available at commit `76574d3419b07498179d08f7da8a40aa6727bc6b`. No newly compiled reading copy is claimed until a LaTeX build is verified.
 
-The initial five-case local run and the separate 150-case experiment are reported independently. The 150-case aggregate is recorded in the follow-up report at ../data/follow_up_aggregate_report.json; the paper does not invent per-case predictions or training logs. The manuscript states the exact 112/150 = 74.7% whole-case result and the remaining audit materials needed for reproducibility.
+References and their limits are documented in `../docs/research_v2/related_work_matrix.md`. The development protocol is `../docs/research_v2/protocol_draft.md`. Full experimental paper rewriting is T52–T53 and is outside T01–T05.
 
-Compile with Tectonic or another compatible LaTeX tool:
-
-    tectonic main.tex
+Compile in a prepared LaTeX environment with `tectonic main.tex`. Author information remains to be supplied before submission.

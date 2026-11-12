@@ -6,3 +6,7 @@ python-docx>=1.1,<2
 pypdf>=5,<7
 pytest>=8,<10
 pyarrow>=26,<27
+numpy>=2.5,<3
+safetensors>=0.8,<1
+outlines_core==0.2.14
+PyYAML>=6,<7

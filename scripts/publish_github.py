@@ -65,6 +65,15 @@ def main(args):
     if metadata.get('parent') != ref:
         raise ValueError('Remote main is not the direct parent; reconcile local/remote changes before publishing')
     names = [n.decode() for n in git('diff-tree','--no-commit-id','--name-only','-r','-z',ref,local).split(b'\0') if n]
+    # A rename of an already-public binary (e.g. an archived PDF) can reuse its
+    # existing Git blob. New binaries remain prohibited by the UTF-8 check.
+    public_blobs = set()
+    for entry in git('ls-tree', '-r', '-z', ref).split(b'\0'):
+        if not entry: continue
+        header, old_name = entry.decode().split('\t', 1)
+        try: allowed_public_file(old_name, b'')
+        except ValueError: continue
+        if header.split()[1] == 'blob': public_blobs.add(header.split()[2])
     tree = []
     for name in names:
         entry = git('ls-tree',local,'--',name).decode().strip()
@@ -72,6 +81,9 @@ def main(args):
             tree.append({'path':name,'mode':'100644','type':'blob','sha':None}); continue
         mode,kind,blob = entry.split('\t',1)[0].split()
         if kind != 'blob' or mode not in ('100644','100755'): raise ValueError('Unsupported tree entry')
+        allowed_public_file(name, b'')
+        if blob in public_blobs:
+            tree.append({'path':name,'mode':mode,'type':'blob','sha':blob}); continue
         content = git('cat-file','blob',blob)
         allowed_public_file(name,content)
         tree.append({'path':name,'mode':mode,'type':'blob','content':content.decode()})
