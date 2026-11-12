@@ -1,0 +1,98 @@
+{
+  "$defs": {
+    "Finding": {
+      "additionalProperties": false,
+      "properties": {
+        "claim": {
+          "title": "Claim",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "claim",
+        "evidence_ids"
+      ],
+      "title": "Finding",
+      "type": "object"
+    },
+    "Hypothesis": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "supporting": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting",
+          "type": "array"
+        },
+        "opposing": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Opposing",
+          "type": "array"
+        }
+      },
+      "required": [
+        "description",
+        "supporting",
+        "opposing"
+      ],
+      "title": "Hypothesis",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Separate from legacy single-conclusion output; unresolved is legitimate.",
+  "properties": {
+    "status": {
+      "enum": [
+        "暂定结论",
+        "证据不足",
+        "存在多个合理解释"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "alternatives": {
+      "items": {
+        "$ref": "#/$defs/Hypothesis"
+      },
+      "title": "Alternatives",
+      "type": "array"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "unknowns": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unknowns",
+      "type": "array"
+    }
+  },
+  "required": [
+    "status",
+    "alternatives",
+    "findings",
+    "unknowns"
+  ],
+  "title": "InteractiveConclusion",
+  "type": "object"
+}

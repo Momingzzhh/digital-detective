@@ -1,0 +1,83 @@
+{
+  "$defs": {
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "case_token": {
+          "title": "Case Token",
+          "type": "string"
+        },
+        "briefing": {
+          "title": "Briefing",
+          "type": "string"
+        },
+        "released": {
+          "items": {
+            "$ref": "#/$defs/ReleasedEvidence"
+          },
+          "title": "Released",
+          "type": "array"
+        },
+        "remaining_actions": {
+          "minimum": 0,
+          "title": "Remaining Actions",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "case_token",
+        "briefing",
+        "released",
+        "remaining_actions"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "ReleasedEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "kind"
+      ],
+      "title": "ReleasedEvidence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "enum": [
+        "released",
+        "no_match",
+        "prerequisite_missing",
+        "budget_exhausted"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "observation": {
+      "$ref": "#/$defs/Observation"
+    }
+  },
+  "required": [
+    "status",
+    "observation"
+  ],
+  "title": "ActionResult",
+  "type": "object"
+}

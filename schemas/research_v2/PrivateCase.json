@@ -1,0 +1,299 @@
+{
+  "$defs": {
+    "PrivateEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceSpan"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "kind",
+        "source"
+      ],
+      "title": "PrivateEvidence",
+      "type": "object"
+    },
+    "ReleaseRule": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "person": {
+          "default": "",
+          "title": "Person",
+          "type": "string"
+        },
+        "time": {
+          "default": "",
+          "title": "Time",
+          "type": "string"
+        },
+        "prerequisites": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Prerequisites",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "evidence_ids"
+      ],
+      "title": "ReleaseRule",
+      "type": "object"
+    },
+    "SentenceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "start",
+        "end",
+        "text"
+      ],
+      "title": "SentenceReference",
+      "type": "object"
+    },
+    "SourceSpan": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "const": "ajjbqk",
+          "default": "ajjbqk",
+          "title": "Field",
+          "type": "string"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "quote": {
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "quote"
+      ],
+      "title": "SourceSpan",
+      "type": "object"
+    },
+    "SupportedClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "event",
+            "actor",
+            "inference",
+            "legal_element"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "claim": {
+          "title": "Claim",
+          "type": "string"
+        },
+        "support_sets": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Support Sets",
+          "type": "array"
+        },
+        "support_citations": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/SentenceReference"
+            },
+            "type": "array"
+          },
+          "title": "Support Citations",
+          "type": "array"
+        },
+        "counterevidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Counterevidence",
+          "type": "array"
+        },
+        "unknown_reason": {
+          "default": "",
+          "title": "Unknown Reason",
+          "type": "string"
+        },
+        "quality": {
+          "default": "source_bound_unverified",
+          "enum": [
+            "source_bound_unverified",
+            "unknown"
+          ],
+          "title": "Quality",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "category",
+        "claim",
+        "support_sets",
+        "support_citations"
+      ],
+      "title": "SupportedClaim",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "interactive-curation-v1",
+      "default": "interactive-curation-v1",
+      "title": "Version",
+      "type": "string"
+    },
+    "case_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "group_id": {
+      "title": "Group Id",
+      "type": "string"
+    },
+    "split": {
+      "const": "train",
+      "title": "Split",
+      "type": "string"
+    },
+    "source_sha256": {
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "source_fact_sha256": {
+      "title": "Source Fact Sha256",
+      "type": "string"
+    },
+    "source_row_sha256": {
+      "title": "Source Row Sha256",
+      "type": "string"
+    },
+    "briefing": {
+      "title": "Briefing",
+      "type": "string"
+    },
+    "initial_evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Initial Evidence Ids",
+      "type": "array"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/PrivateEvidence"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "release_rules": {
+      "items": {
+        "$ref": "#/$defs/ReleaseRule"
+      },
+      "title": "Release Rules",
+      "type": "array"
+    },
+    "claims": {
+      "items": {
+        "$ref": "#/$defs/SupportedClaim"
+      },
+      "title": "Claims",
+      "type": "array"
+    },
+    "review_status": {
+      "const": "pending_human_review",
+      "default": "pending_human_review",
+      "title": "Review Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "case_id",
+    "group_id",
+    "split",
+    "source_sha256",
+    "source_fact_sha256",
+    "source_row_sha256",
+    "briefing",
+    "initial_evidence_ids",
+    "evidence",
+    "release_rules",
+    "claims"
+  ],
+  "title": "PrivateCase",
+  "type": "object"
+}

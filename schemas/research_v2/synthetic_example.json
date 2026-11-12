@@ -1,0 +1,191 @@
+{
+  "warning": "Synthetic mechanism example only; not real-case data or a benchmark.",
+  "private_case": {
+    "version": "interactive-curation-v1",
+    "case_id": "synthetic-only",
+    "group_id": "synthetic-group",
+    "split": "train",
+    "source_sha256": "fixture",
+    "source_fact_sha256": "fixture",
+    "source_row_sha256": "fixture",
+    "briefing": "有一宗待核查事件。可按材料类型申请查阅，核实陈述来源和事实，不要将陈述等同于已证实事实。查询未命中时保持未知。",
+    "initial_evidence_ids": [],
+    "evidence": [
+      {
+        "id": "E1",
+        "text": "甲称看见乙。",
+        "kind": "证言",
+        "source": {
+          "field": "ajjbqk",
+          "start": 0,
+          "end": 6,
+          "quote": "甲称看见乙。"
+        }
+      },
+      {
+        "id": "E2",
+        "text": "视频显示有人。",
+        "kind": "证言",
+        "source": {
+          "field": "ajjbqk",
+          "start": 0,
+          "end": 7,
+          "quote": "视频显示有人。"
+        }
+      },
+      {
+        "id": "E3",
+        "text": "甲更正先前说法。",
+        "kind": "证言",
+        "source": {
+          "field": "ajjbqk",
+          "start": 0,
+          "end": 8,
+          "quote": "甲更正先前说法。"
+        }
+      }
+    ],
+    "release_rules": [
+      {
+        "kind": "证言",
+        "person": "",
+        "time": "",
+        "prerequisites": [],
+        "evidence_ids": [
+          "E1"
+        ]
+      },
+      {
+        "kind": "视听记录",
+        "person": "乙",
+        "time": "21:00",
+        "prerequisites": [
+          "E1"
+        ],
+        "evidence_ids": [
+          "E2"
+        ]
+      },
+      {
+        "kind": "书面记录",
+        "person": "",
+        "time": "",
+        "prerequisites": [],
+        "evidence_ids": [
+          "E3"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "id": "claim",
+        "category": "event",
+        "claim": "合成支持关系",
+        "support_sets": [
+          [
+            "E1"
+          ],
+          [
+            "E2"
+          ]
+        ],
+        "support_citations": [
+          [
+            {
+              "evidence_id": "E1",
+              "start": 0,
+              "end": 6,
+              "text": "甲称看见乙。"
+            }
+          ],
+          [
+            {
+              "evidence_id": "E2",
+              "start": 0,
+              "end": 7,
+              "text": "视频显示有人。"
+            }
+          ]
+        ],
+        "counterevidence": [
+          "E3"
+        ],
+        "unknown_reason": "",
+        "quality": "source_bound_unverified"
+      },
+      {
+        "id": "conjunction",
+        "category": "event",
+        "claim": "合成联合关系",
+        "support_sets": [
+          [
+            "E1",
+            "E2"
+          ]
+        ],
+        "support_citations": [
+          [
+            {
+              "evidence_id": "E1",
+              "start": 0,
+              "end": 6,
+              "text": "甲称看见乙。"
+            },
+            {
+              "evidence_id": "E2",
+              "start": 0,
+              "end": 7,
+              "text": "视频显示有人。"
+            }
+          ]
+        ],
+        "counterevidence": [],
+        "unknown_reason": "",
+        "quality": "source_bound_unverified"
+      },
+      {
+        "id": "unknown",
+        "category": "legal_element",
+        "claim": "未知",
+        "support_sets": [],
+        "support_citations": [],
+        "counterevidence": [],
+        "unknown_reason": "未审查",
+        "quality": "unknown"
+      }
+    ],
+    "review_status": "pending_human_review"
+  },
+  "initial_observation": {
+    "case_token": "03aa83a85d699498",
+    "briefing": "有一宗待核查事件。可按材料类型申请查阅，核实陈述来源和事实，不要将陈述等同于已证实事实。查询未命中时保持未知。",
+    "released": [],
+    "remaining_actions": 8
+  },
+  "request": {
+    "action": "request_material",
+    "kind": "视听记录",
+    "person": "乙",
+    "time": "21:00"
+  },
+  "result_before_prerequisite": {
+    "status": "prerequisite_missing",
+    "observation": {
+      "case_token": "03aa83a85d699498",
+      "briefing": "有一宗待核查事件。可按材料类型申请查阅，核实陈述来源和事实，不要将陈述等同于已证实事实。查询未命中时保持未知。",
+      "released": [],
+      "remaining_actions": 7
+    }
+  },
+  "partial_state_support": {
+    "supported_claim_ids": [
+      "claim"
+    ],
+    "unresolved_claim_ids": [
+      "conjunction",
+      "unknown"
+    ],
+    "disputed_claim_ids": [],
+    "legal_conclusion": "unresolved"
+  }
+}

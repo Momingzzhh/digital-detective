@@ -1,0 +1,34 @@
+{
+  "generated_at": "2026-11-12T13:50:38.127252+00:00",
+  "bundle_binding": "0c7fc11f351d53e603545319732374d122606ff9c8148e77574f2c88a8b3b872",
+  "train_cases": 7,
+  "train_groups": 7,
+  "evidence_items": 58,
+  "claim_candidates": 90,
+  "claims_with_alternative_support": 1,
+  "all_version_attempt_statuses": {
+    "machine_audited_unverified": 3,
+    "error": 2
+  },
+  "current_version_attempt_statuses": {
+    "machine_audited_unverified": 1
+  },
+  "current_machine_decisions": {
+    "no_issue_found": 1
+  },
+  "human_receipt_statuses": {
+    "not_reviewed": 7
+  },
+  "cases_with_assistant_audit_holds": 1,
+  "formal_benchmark_eligible": false,
+  "heldout_text_accessed": false,
+  "new_model_training": false,
+  "new_candidates_added": 0,
+  "expansion": "held_until_first_batch_semantic_and_human_review",
+  "source_snapshot_sha256": "e8227c875f0619ff20ba10e19fb5e651b17a42f70ba2ecaa862cdab5c01d551c",
+  "limits": [
+    "Machine no_issue_found is not acceptance; prior proposals failed attribution/atomicity review.",
+    "One case has assistant source-bound refinement; remaining cases retain legacy event granularity.",
+    "Legal elements unresolved; concrete person/time query design incomplete; dev/test deferred."
+  ]
+}

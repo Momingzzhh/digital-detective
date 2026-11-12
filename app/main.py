@@ -41,6 +41,8 @@ app = FastAPI(title='数字神探 · 研究工作台', lifespan=lifespan, docs_u
 app.mount('/static', StaticFiles(directory=ROOT / 'static'), name='static')
 from .research import router as research_router
 app.include_router(research_router)
+from .research_v2_review import router as research_v2_router
+app.include_router(research_v2_router)
 
 
 @app.middleware('http')
@@ -69,6 +71,11 @@ def home():
 @app.get('/research')
 def research_home():
     return FileResponse(ROOT / 'static/research.html')
+
+
+@app.get('/research/v2')
+def research_v2_home():
+    return FileResponse(ROOT / 'static/research_v2.html')
 
 
 @app.get('/health')

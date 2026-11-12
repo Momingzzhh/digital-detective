@@ -1,0 +1,45 @@
+{
+  "version": "metadata-group-registry-v1",
+  "method": "Reuse exact-byte-bound case-number/full/fact-hash transitive audit; project identity fields only",
+  "audit_sha256": "acf48c208baea4951fc87da969ceadc90e3c4c94649c07965ce0aaaa25389295",
+  "baseline_sha256": "e7015bd974ea04e0d00566554918f6f69daf00b60b8fc9cb13e58e815e8178f9",
+  "source_files_sha256": {
+    "candidates.jsonl": "c8b7e29fe1d0c32486d63fc5eecd1fe838be2d66212c708f2a5d6ab94c95e77e",
+    "lecardv2_candidates.jsonl": "4b8d9848802ca95d5fd4533716e71816b91285cc235a3a6495941e933f5131de",
+    "lecardv2_mteb_candidates.jsonl": "f19af5eb5e49cbcb4d254ddf3a4954095bf7208c03e0cfec1a1425ad83a2fab8",
+    "mnbvc_candidates.jsonl": "ab5c01f8cd45806a671256fca755941f54cd97b2cd2b2a52ffd2dd05f56c8d9b"
+  },
+  "counts": {
+    "source_documents": 47558,
+    "linked_groups": 47244,
+    "cross_split_conflict_groups": 76,
+    "quarantined_documents": 177,
+    "cluster_size_distribution": {
+      "1": 46965,
+      "2": 254,
+      "3": 21,
+      "4": 2,
+      "9": 1,
+      "5": 1
+    }
+  },
+  "historical_exposed_linked_groups": 32997,
+  "historical_case_ids_not_in_modern_registry": 6696,
+  "metadata_split_counts": {
+    "train": 33203,
+    "test": 7131,
+    "dev": 7224
+  },
+  "heldout_documents_excluded": 92,
+  "heldout_text_deserialized": false,
+  "limitations": [
+    "Historical registry conservatively includes candidates, not proof of actual optimizer exposure.",
+    "Frozen linkage can miss paraphrases/unmentioned related cases or overmerge prior convictions.",
+    "No heldout semantic re-audit performed; no independence certification.",
+    "External historical identities remain excluded; no cross-domain semantic linkage inferred."
+  ],
+  "external_historical_group_count": 5076,
+  "external_historical_source_counts": {
+    "oldbailey": 6696
+  }
+}

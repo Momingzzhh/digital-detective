@@ -68,3 +68,11 @@ class Decision(StrictModel):
     query: str = ''
     evidence_ids: list[str] = Field(default_factory=list)
     purpose: str
+
+
+class InteractiveConclusion(StrictModel):
+    """Separate from legacy single-conclusion output; unresolved is legitimate."""
+    status: Literal['暂定结论', '证据不足', '存在多个合理解释']
+    alternatives: list[Hypothesis]
+    findings: list[Finding]
+    unknowns: list[str]

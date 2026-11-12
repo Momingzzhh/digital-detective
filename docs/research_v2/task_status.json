@@ -2,45 +2,80 @@
   "schema_version": "research-task-ledger-v1",
   "updated_at": "2026-11-12",
   "scope": [
-    "T01",
-    "T02",
-    "T03",
-    "T04",
-    "T05"
+    "T06",
+    "T07",
+    "T08",
+    "T09",
+    "T10",
+    "T11",
+    "T12",
+    "T13"
   ],
-  "base_commit": "76574d3419b07498179d08f7da8a40aa6727bc6b",
+  "base_commit": "f551157af312e01699f66b8f0b23ed09a0b61eb7",
   "branch": "main",
   "user_authorization": {
-    "scope": "T01-T05 only",
+    "scope": "T06-T13, train only; existing seven cases first",
     "direct_main_push": true,
+    "local_qwen3_14b_generation_and_audit": true,
     "no_training_or_formal_evaluation": true,
+    "heldout_text_sealed": true,
     "quota_stop_remaining_percent": 15
   },
   "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
   "quota_observations": [
     {
       "window_minutes": 300,
-      "used_percent": 15,
-      "remaining_percent": 85,
-      "phase": "start"
+      "used_percent": 9,
+      "remaining_percent": 91,
+      "phase": "initial_confirmation"
     },
     {
       "window_minutes": 300,
-      "used_percent": 42,
-      "remaining_percent": 58,
-      "phase": "local_tests"
+      "used_percent": 23,
+      "remaining_percent": 77,
+      "phase": "implementation_start"
     },
     {
       "window_minutes": 300,
-      "used_percent": 52,
-      "remaining_percent": 48,
-      "phase": "prepare_delivery"
+      "used_percent": 31,
+      "remaining_percent": 69,
+      "phase": "first_bundle"
     },
     {
       "window_minutes": 300,
-      "used_percent": 86,
-      "remaining_percent": 14,
-      "phase": "stopped_and_saving"
+      "used_percent": 39,
+      "remaining_percent": 61,
+      "phase": "review_api"
+    },
+    {
+      "window_minutes": 300,
+      "used_percent": 47,
+      "remaining_percent": 53,
+      "phase": "first_machine_audit"
+    },
+    {
+      "window_minutes": 300,
+      "used_percent": 57,
+      "remaining_percent": 43,
+      "phase": "atomicity_revision"
+    },
+    {
+      "window_minutes": 300,
+      "used_percent": 65,
+      "remaining_percent": 35,
+      "phase": "source_revision"
+    },
+    {
+      "window_minutes": 300,
+      "used_percent": 72,
+      "remaining_percent": 28,
+      "phase": "validation_and_save_preparation"
+    },
+    {
+      "window_minutes": 300,
+      "used_percent": 83,
+      "remaining_percent": 17,
+      "phase": "stopped_new_work_saving"
     }
   ],
   "tasks": [
@@ -209,107 +244,204 @@
     },
     {
       "task_id": "T06",
-      "status": "not_started_out_of_scope",
+      "status": "done_metadata_scope",
       "dependencies_source": "taskbook",
-      "input_fingerprint": null,
-      "modified_files": [],
-      "commands": [],
-      "acceptance_outputs": [],
-      "limitations": [
-        "Not authorized in this turn"
+      "input_fingerprint": {
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "f551157af312e01699f66b8f0b23ed09a0b61eb7"
+      },
+      "modified_files": [
+        "scripts/build_interactive_cases.py",
+        "app/sealed_metadata.py",
+        "docs/research_v2/group_registry_report.json"
       ],
-      "next_step": "Await follow-up scope"
+      "commands": [
+        ".venv/bin/python scripts/build_interactive_cases.py --revision data/processed/research_v2/first_case_revision.private.json",
+        "/private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py"
+      ],
+      "acceptance_outputs": [
+        "docs/research_v2/curation_validation.json"
+      ],
+      "limitations": [
+        "Retain conservative exclusions; no claim of semantic group independence."
+      ],
+      "next_step": "Retain conservative exclusions; no claim of semantic group independence.",
+      "acceptance": "Frozen source hashes, linkage conflicts, historical/external exposure indexed; no heldout text decoded."
     },
     {
       "task_id": "T07",
-      "status": "not_started_out_of_scope",
+      "status": "done",
       "dependencies_source": "taskbook",
-      "input_fingerprint": null,
-      "modified_files": [],
-      "commands": [],
-      "acceptance_outputs": [],
-      "limitations": [
-        "Not authorized in this turn"
+      "input_fingerprint": {
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "f551157af312e01699f66b8f0b23ed09a0b61eb7"
+      },
+      "modified_files": [
+        "app/environment_models.py",
+        "app/models.py",
+        "schemas/research_v2"
       ],
-      "next_step": "Await follow-up scope"
+      "commands": [
+        ".venv/bin/python scripts/build_interactive_cases.py --revision data/processed/research_v2/first_case_revision.private.json",
+        "/private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py"
+      ],
+      "acceptance_outputs": [
+        "docs/research_v2/curation_validation.json"
+      ],
+      "limitations": [
+        "Integrate into future acting agent under T14+; old model output preserved."
+      ],
+      "next_step": "Integrate into future acting agent under T14+; old model output preserved.",
+      "acceptance": "Strict private/visible/action/result/support schemas and synthetic example exported."
     },
     {
       "task_id": "T08",
-      "status": "not_started_out_of_scope",
+      "status": "mechanical_checks_passed_semantic_review_pending",
       "dependencies_source": "taskbook",
-      "input_fingerprint": null,
-      "modified_files": [],
-      "commands": [],
-      "acceptance_outputs": [],
-      "limitations": [
-        "Not authorized in this turn"
+      "input_fingerprint": {
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "f551157af312e01699f66b8f0b23ed09a0b61eb7"
+      },
+      "modified_files": [
+        "scripts/build_interactive_cases.py"
       ],
-      "next_step": "Await follow-up scope"
+      "commands": [
+        ".venv/bin/python scripts/build_interactive_cases.py --revision data/processed/research_v2/first_case_revision.private.json",
+        "/private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py"
+      ],
+      "acceptance_outputs": [
+        "docs/research_v2/curation_validation.json"
+      ],
+      "limitations": [
+        "Human boundary/meaning review required; mechanical pass is not acceptance."
+      ],
+      "next_step": "Human boundary/meaning review required; mechanical pass is not acceptance.",
+      "acceptance": "Seven source hashes and exact quote/offset transforms checked; 58 evidence items preserved."
     },
     {
       "task_id": "T09",
-      "status": "not_started_out_of_scope",
+      "status": "prototype_complete_case_design_pending",
       "dependencies_source": "taskbook",
-      "input_fingerprint": null,
-      "modified_files": [],
-      "commands": [],
-      "acceptance_outputs": [],
-      "limitations": [
-        "Not authorized in this turn"
+      "input_fingerprint": {
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "f551157af312e01699f66b8f0b23ed09a0b61eb7"
+      },
+      "modified_files": [
+        "app/interactive_curation.py"
       ],
-      "next_step": "Await follow-up scope"
+      "commands": [
+        ".venv/bin/python scripts/build_interactive_cases.py --revision data/processed/research_v2/first_case_revision.private.json",
+        "/private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py"
+      ],
+      "acceptance_outputs": [
+        "docs/research_v2/curation_validation.json"
+      ],
+      "limitations": [
+        "Design source-backed initial report and person/time queries per case; no invented scene metadata."
+      ],
+      "next_step": "Design source-backed initial report and person/time queries per case; no invented scene metadata.",
+      "acceptance": "Type-only deterministic retrieval, exact filters, prerequisites and failures; hidden directory omitted from observation."
     },
     {
       "task_id": "T10",
-      "status": "not_started_out_of_scope",
+      "status": "first_case_refined_remaining_pending",
       "dependencies_source": "taskbook",
-      "input_fingerprint": null,
-      "modified_files": [],
-      "commands": [],
-      "acceptance_outputs": [],
-      "limitations": [
-        "Not authorized in this turn"
+      "input_fingerprint": {
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "f551157af312e01699f66b8f0b23ed09a0b61eb7"
+      },
+      "modified_files": [
+        "scripts/build_interactive_cases.py",
+        "scripts/audit_interactive_cases.py"
       ],
-      "next_step": "Await follow-up scope"
+      "commands": [
+        ".venv/bin/python scripts/build_interactive_cases.py --revision data/processed/research_v2/first_case_revision.private.json",
+        "/private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py"
+      ],
+      "acceptance_outputs": [
+        "docs/research_v2/curation_validation.json"
+      ],
+      "limitations": [
+        "Review identity links and event atomicity on all cases; legal elements remain unknown."
+      ],
+      "next_step": "Review identity links and event atomicity on all cases; legal elements remain unknown.",
+      "acceptance": "First case source-read refinement has 17 finer event/inference candidates; source citations validated; other six retain legacy annotations."
     },
     {
       "task_id": "T11",
-      "status": "not_started_out_of_scope",
+      "status": "mechanism_verified_semantic_rules_pending",
       "dependencies_source": "taskbook",
-      "input_fingerprint": null,
-      "modified_files": [],
-      "commands": [],
-      "acceptance_outputs": [],
-      "limitations": [
-        "Not authorized in this turn"
+      "input_fingerprint": {
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "f551157af312e01699f66b8f0b23ed09a0b61eb7"
+      },
+      "modified_files": [
+        "app/interactive_curation.py",
+        "tests/test_interactive_curation.py"
       ],
-      "next_step": "Await follow-up scope"
+      "commands": [
+        ".venv/bin/python scripts/build_interactive_cases.py --revision data/processed/research_v2/first_case_revision.private.json",
+        "/private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py"
+      ],
+      "acceptance_outputs": [
+        "docs/research_v2/curation_validation.json"
+      ],
+      "limitations": [
+        "Expert/human review of sufficient supports and unresolved conditions; no formal gold."
+      ],
+      "next_step": "Expert/human review of sufficient supports and unresolved conditions; no formal gold.",
+      "acceptance": "Alternative conjunctions, missing decisive evidence and counterevidence exercised; first case has two support paths for one behavior."
     },
     {
       "task_id": "T12",
-      "status": "not_started_out_of_scope",
+      "status": "implementation_complete_real_human_review_pending",
       "dependencies_source": "taskbook",
-      "input_fingerprint": null,
-      "modified_files": [],
-      "commands": [],
-      "acceptance_outputs": [],
-      "limitations": [
-        "Not authorized in this turn"
+      "input_fingerprint": {
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "f551157af312e01699f66b8f0b23ed09a0b61eb7"
+      },
+      "modified_files": [
+        "app/research_v2_review.py",
+        "static/research_v2.html",
+        "static/research_v2.js",
+        "tests/test_research_v2_review.py"
       ],
-      "next_step": "Await follow-up scope"
+      "commands": [
+        ".venv/bin/python scripts/build_interactive_cases.py --revision data/processed/research_v2/first_case_revision.private.json",
+        "/private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py"
+      ],
+      "acceptance_outputs": [
+        "docs/research_v2/curation_validation.json"
+      ],
+      "limitations": [
+        "User must perform actual review; agent has created no real human signature."
+      ],
+      "next_step": "User must perform actual review; agent has created no real human signature.",
+      "acceptance": "Authenticated item-level checks, unselected boxes, versioned receipts, actual user IDs, source-change invalidation and human minutes."
     },
     {
       "task_id": "T13",
-      "status": "not_started_out_of_scope",
+      "status": "fixed_train_pilot_pending_dev_deferred",
       "dependencies_source": "taskbook",
-      "input_fingerprint": null,
-      "modified_files": [],
-      "commands": [],
-      "acceptance_outputs": [],
-      "limitations": [
-        "Not authorized in this turn"
+      "input_fingerprint": {
+        "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
+        "base_commit": "f551157af312e01699f66b8f0b23ed09a0b61eb7"
+      },
+      "modified_files": [
+        "docs/research_v2/train_curation_report.json"
       ],
-      "next_step": "Await follow-up scope"
+      "commands": [
+        ".venv/bin/python scripts/build_interactive_cases.py --revision data/processed/research_v2/first_case_revision.private.json",
+        "/private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py"
+      ],
+      "acceptance_outputs": [
+        "docs/research_v2/curation_validation.json"
+      ],
+      "limitations": [
+        "Complete initial batch semantic/human checks before new train candidates; dev/test deferred by user."
+      ],
+      "next_step": "Complete initial batch semantic/human checks before new train candidates; dev/test deferred by user.",
+      "acceptance": "Seven train cases frozen before generation; no new cases or heldout text; expansion gated."
     },
     {
       "task_id": "T14",
@@ -858,18 +990,80 @@
       "next_step": "Await follow-up scope"
     }
   ],
-  "status": "T01-T05_complete_stopped_at_quota_threshold",
+  "status": "T06-T13_partial_saved_no_new_work",
   "remote_ci": {
-    "status": "completed",
-    "conclusion": "success",
-    "head_sha": "411afab8992eb29c68a522b906e8b1b4fd77442e",
-    "run_id": 43155202756,
-    "url": "https://github.com/Momingzzhh/digital-detective/actions/runs/43155202756"
+    "status": "pending_current_changes",
+    "previous_success": {
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "411afab8992eb29c68a522b906e8b1b4fd77442e",
+      "run_id": 43155202756,
+      "url": "https://github.com/Momingzzhh/digital-detective/actions/runs/43155202756"
+    }
   },
-  "next_action": "Await user request before T06; no active model training or research evaluation",
+  "next_action": "After quota reset, resume T09-T11 detailed case design and identity-aware semantic audit; complete real human review before expansion. Dev/test remain sealed.",
   "publication_helper_change": {
     "file": "scripts/publish_github.py",
     "reason": "Git HTTPS failed; reuse existing public binary blob for PDF archive rename, new binary uploads still refused",
     "verified": "exact remote tree and commit SHA; no force update"
+  },
+  "previous_phase": {
+    "scope": [
+      "T01",
+      "T02",
+      "T03",
+      "T04",
+      "T05"
+    ],
+    "base_commit": "76574d3419b07498179d08f7da8a40aa6727bc6b",
+    "user_authorization": {
+      "scope": "T01-T05 only",
+      "direct_main_push": true,
+      "no_training_or_formal_evaluation": true,
+      "quota_stop_remaining_percent": 15
+    },
+    "quota_observations": [
+      {
+        "window_minutes": 300,
+        "used_percent": 15,
+        "remaining_percent": 85,
+        "phase": "start"
+      },
+      {
+        "window_minutes": 300,
+        "used_percent": 42,
+        "remaining_percent": 58,
+        "phase": "local_tests"
+      },
+      {
+        "window_minutes": 300,
+        "used_percent": 52,
+        "remaining_percent": 48,
+        "phase": "prepare_delivery"
+      },
+      {
+        "window_minutes": 300,
+        "used_percent": 86,
+        "remaining_percent": 14,
+        "phase": "stopped_and_saving"
+      }
+    ],
+    "status": "T01-T05_complete_stopped_at_quota_threshold",
+    "remote_ci": {
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "411afab8992eb29c68a522b906e8b1b4fd77442e",
+      "run_id": 43155202756,
+      "url": "https://github.com/Momingzzhh/digital-detective/actions/runs/43155202756"
+    }
+  },
+  "local_validation": {
+    "cpu_tests": 347,
+    "cpu_result": "passed",
+    "warning": "One existing Starlette/httpx deprecation",
+    "javascript_syntax": "passed",
+    "real_human_receipts": 0,
+    "new_training": false,
+    "local_model_processes_remaining": 0
   }
 }

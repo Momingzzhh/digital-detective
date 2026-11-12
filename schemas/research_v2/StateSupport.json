@@ -1,0 +1,39 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "supported_claim_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Supported Claim Ids",
+      "type": "array"
+    },
+    "unresolved_claim_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unresolved Claim Ids",
+      "type": "array"
+    },
+    "disputed_claim_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Disputed Claim Ids",
+      "type": "array"
+    },
+    "legal_conclusion": {
+      "const": "unresolved",
+      "default": "unresolved",
+      "title": "Legal Conclusion",
+      "type": "string"
+    }
+  },
+  "required": [
+    "supported_claim_ids",
+    "unresolved_claim_ids",
+    "disputed_claim_ids"
+  ],
+  "title": "StateSupport",
+  "type": "object"
+}

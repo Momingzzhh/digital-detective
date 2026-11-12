@@ -1,0 +1,36 @@
+{
+  "version": "train-curation-manifest-v1",
+  "binding": "0c7fc11f351d53e603545319732374d122606ff9c8148e77574f2c88a8b3b872",
+  "source_sha256": "7b55bc255ba6188d81ea231492e0456adc4a1d9493f13b42ca596151d2006237",
+  "case_count": 7,
+  "group_count": 7,
+  "held_count": 0,
+  "selection": "Existing seven train cases fixed before model generation; no answer/accuracy selection",
+  "public_action_kinds": [
+    "陈述",
+    "证言",
+    "辨认记录",
+    "鉴定记录",
+    "现场记录",
+    "书面记录",
+    "视听记录"
+  ],
+  "semantic_audit": "pending",
+  "human_review": "pending",
+  "formal_benchmark_eligible": false,
+  "dev": "deferred_user_train_only",
+  "test": "sealed_no_text_read",
+  "expansion": "blocked_until_first_batch_audited",
+  "assistant_revision": {
+    "sha256": "ad7eb40c9ca1b183f45faf3f2216028e5bff67c8d64de0d45fa5289920354afa",
+    "parent_case_binding": "96d7125b3e54930b9dac4120d90fe62a639f3facfab58b0b328b8e5ad1f93796",
+    "author_type": "assistant_source_reader",
+    "human_approval": false
+  },
+  "known_limitations": [
+    "Events inherited from legacy annotations may be compound; atomization pending.",
+    "Single conjunctive support set inherited per claim; alternatives/counterevidence need semantic review.",
+    "Generic type-only requests are a pilot; concrete person/time availability is not invented.",
+    "Reachability checks are structural, not semantic solvability or formal scoring."
+  ]
+}
