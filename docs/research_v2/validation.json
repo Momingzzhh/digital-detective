@@ -19,12 +19,23 @@
   "training_run": false,
   "new_model_activation": false,
   "remote_ci": {
-    "status": "pending_push"
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "411afab8992eb29c68a522b906e8b1b4fd77442e",
+    "run_id": 43155202756,
+    "url": "https://github.com/Momingzzhh/digital-detective/actions/runs/43155202756"
   },
   "limitations": [
     "No new LaTeX build; prior PDF archived as withdrawn historical copy",
     "No Docker build",
     "CPU tests do not establish accuracy or GPU determinism"
   ],
-  "publication_transport": "Git HTTPS failed; fallback exact-tree Git Data API, no force push; archive PDF reuses already-public blob"
+  "publication_transport": "Git HTTPS failed; fallback exact-tree Git Data API, no force push; archive PDF reuses already-public blob",
+  "stop": {
+    "reason": "five_hour_remaining_at_or_below_15_percent",
+    "remaining_percent": 14,
+    "new_work_stopped": true,
+    "scope_completed": "T01-T05",
+    "next_tasks_started": false
+  }
 }
