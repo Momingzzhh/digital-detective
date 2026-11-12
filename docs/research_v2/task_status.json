@@ -76,6 +76,12 @@
       "used_percent": 83,
       "remaining_percent": 17,
       "phase": "stopped_new_work_saving"
+    },
+    {
+      "window_minutes": 300,
+      "used_percent": 88,
+      "remaining_percent": 12,
+      "phase": "threshold_reached_saving_only"
     }
   ],
   "tasks": [
@@ -990,16 +996,12 @@
       "next_step": "Await follow-up scope"
     }
   ],
-  "status": "T06-T13_partial_saved_no_new_work",
+  "status": "T06-T13_partial_stopped_at_quota_threshold",
   "remote_ci": {
-    "status": "pending_current_changes",
-    "previous_success": {
-      "status": "completed",
-      "conclusion": "success",
-      "head_sha": "411afab8992eb29c68a522b906e8b1b4fd77442e",
-      "run_id": 43155202756,
-      "url": "https://github.com/Momingzzhh/digital-detective/actions/runs/43155202756"
-    }
+    "status": "in_progress_at_stop",
+    "head_sha": "c3794be1ca246fa42a96a4fe9e6cc66bf8b2d7a8",
+    "url": "https://github.com/Momingzzhh/digital-detective/actions/runs/43231356802",
+    "local_cpu_tests": 347
   },
   "next_action": "After quota reset, resume T09-T11 detailed case design and identity-aware semantic audit; complete real human review before expansion. Dev/test remain sealed.",
   "publication_helper_change": {
@@ -1065,5 +1067,6 @@
     "real_human_receipts": 0,
     "new_training": false,
     "local_model_processes_remaining": 0
-  }
+  },
+  "published_implementation_commit": "c3794be1ca246fa42a96a4fe9e6cc66bf8b2d7a8"
 }
