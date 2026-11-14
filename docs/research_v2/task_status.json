@@ -302,7 +302,7 @@
     },
     {
       "task_id": "T08",
-      "status": "mechanical_checks_passed_semantic_review_pending",
+      "status": "source_boundary_remediation_pending_review",
       "dependencies_source": "taskbook",
       "input_fingerprint": {
         "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
@@ -321,8 +321,8 @@
       "limitations": [
         "Human boundary/meaning review required; mechanical pass is not acceptance."
       ],
-      "next_step": "Human boundary/meaning review required; mechanical pass is not acceptance.",
-      "acceptance": "Seven source hashes and exact quote/offset transforms checked; 58 evidence items preserved."
+      "next_step": "Review remaining source boundaries and quarantined material; no formal approval.",
+      "acceptance": "Fourth case quarantines E4/E5/E6/E10; 54 visible items remain across seven train cases. Full source preserved; dependent claims unknown."
     },
     {
       "task_id": "T09",
@@ -346,11 +346,11 @@
         "Design source-backed initial report and person/time queries per case; no invented scene metadata."
       ],
       "next_step": "Design source-backed initial report and person/time queries per case; no invented scene metadata.",
-      "acceptance": "Type-only deterministic retrieval, exact filters, prerequisites and failures; hidden directory omitted from observation."
+      "acceptance": "First-case initial statement and named query require previously visible source; remaining case designs incomplete."
     },
     {
       "task_id": "T10",
-      "status": "first_case_refined_remaining_pending",
+      "status": "three_cases_refined_remaining_pending",
       "dependencies_source": "taskbook",
       "input_fingerprint": {
         "taskbook_sha256": "c8ba0b85cee372022613467cd33bf5042f45f08135c34e4f0582b9e70c65c20d",
@@ -370,8 +370,8 @@
       "limitations": [
         "Review identity links and event atomicity on all cases; legal elements remain unknown."
       ],
-      "next_step": "Review identity links and event atomicity on all cases; legal elements remain unknown.",
-      "acceptance": "First case source-read refinement has 17 finer event/inference candidates; source citations validated; other six retain legacy annotations."
+      "next_step": "Validate revisions; finish remaining cases without treating machine no_issue_found as acceptance.",
+      "acceptance": "First/second/third cases have 17/19/20 finer source-bound event/inference candidates; explicit identity screening and one-proposal constrained generation added."
     },
     {
       "task_id": "T11",
@@ -996,14 +996,12 @@
       "next_step": "Await follow-up scope"
     }
   ],
-  "status": "T06-T13_partial_stopped_at_quota_threshold",
+  "status": "T06-T13_partial_stopped_at_15_percent_20261115",
   "remote_ci": {
-    "status": "in_progress_at_stop",
-    "head_sha": "c3794be1ca246fa42a96a4fe9e6cc66bf8b2d7a8",
-    "url": "https://github.com/Momingzzhh/digital-detective/actions/runs/43231356802",
-    "local_cpu_tests": 347
+    "status": "pending_new_commit",
+    "local_cpu_tests": 353
   },
-  "next_action": "After quota reset, resume T09-T11 detailed case design and identity-aware semantic audit; complete real human review before expansion. Dev/test remain sealed.",
+  "next_action": "Resume only after user instruction: validate revised cases, finish cases 5-7, complete source-bound query design and real human review; dev/test remain sealed.",
   "publication_helper_change": {
     "file": "scripts/publish_github.py",
     "reason": "Git HTTPS failed; reuse existing public binary blob for PDF archive rename, new binary uploads still refused",
@@ -1060,7 +1058,7 @@
     }
   },
   "local_validation": {
-    "cpu_tests": 347,
+    "cpu_tests": 353,
     "cpu_result": "passed",
     "warning": "One existing Starlette/httpx deprecation",
     "javascript_syntax": "passed",
@@ -1068,5 +1066,44 @@
     "new_training": false,
     "local_model_processes_remaining": 0
   },
-  "published_implementation_commit": "c3794be1ca246fa42a96a4fe9e6cc66bf8b2d7a8"
+  "published_implementation_commit": "c3794be1ca246fa42a96a4fe9e6cc66bf8b2d7a8",
+  "resume_20261115": {
+    "authorization": "Continue T06-T13 unfinished work; seven train cases only; local14B allowed; no model training; dev/test sealed",
+    "quota_observations": [
+      {
+        "used_percent": 11,
+        "remaining_percent": 89
+      },
+      {
+        "used_percent": 26,
+        "remaining_percent": 74
+      },
+      {
+        "used_percent": 41,
+        "remaining_percent": 59
+      },
+      {
+        "used_percent": 73,
+        "remaining_percent": 27
+      },
+      {
+        "used_percent": 83,
+        "remaining_percent": 17
+      },
+      {
+        "used_percent": 85,
+        "remaining_percent": 15
+      }
+    ],
+    "status": "stopped_at_quota_threshold",
+    "changes": [
+      "Explicit known-name identity citation gate",
+      "One proposal decoder bound regression",
+      "Source-backed initial evidence and query prerequisites for first case"
+    ],
+    "cpu_tests_passed": 353,
+    "quota_stop_remaining_percent": 15,
+    "model_stop": "SIGINT requested for authenticated local audit PID 35360; checkpoint retained",
+    "current_bundle_binding": "2d5ca99fc5a46fbfcf11e5d63f3f54ad510846dd6fabc0ec55a10527692a1fed"
+  }
 }

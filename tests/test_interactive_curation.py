@@ -81,6 +81,41 @@ def test_reject_dangling_empty_and_ambiguous_rules():
     case = synthetic_case().model_dump()
     case['claims'][0]['support_sets'] = [[]]
     with pytest.raises(ValidationError): PrivateCase.model_validate(case)
+
+
+def test_environment_query_values_require_prior_visible_source():
+    from app.interactive_curation import apply_environment_patch
+    case = synthetic_case()
+    patch = {'initial_evidence_ids':['E1'], 'release_rules':[
+        {'kind':'视听记录','person':'乙','time':'','prerequisites':['E1'],'evidence_ids':['E2']},
+        {'kind':'书面记录','prerequisites':['E1'],'evidence_ids':['E3']}]}
+    updated = apply_environment_patch(case, patch)
+    assert reachability(updated)['unreachable'] == []
+    patch['release_rules'][0]['person'] = '未公开姓名'
+    with pytest.raises(ValueError, match='prior visible'): apply_environment_patch(case, patch)
+
+
+def test_revisions_bind_parent_and_reject_duplicate_case_or_fake_approval():
+    from app.interactive_curation import apply_case_revisions
+    from app.experiment_manifest import digest
+    case = synthetic_case()
+    revision = {'case_id':case.case_id,'author_type':'assistant_source_reader','human_approval':False,
+                'parent_case_binding':digest(case.model_dump()),'claims':[c.model_dump() for c in case.claims]}
+    assert apply_case_revisions([case],[revision])[0] == case
+    with pytest.raises(ValueError,match='Duplicate'): apply_case_revisions([case],[revision,revision])
+    with pytest.raises(ValueError,match='parent'): apply_case_revisions([case],[revision | {'parent_case_binding':'stale'}])
+    with pytest.raises(ValueError,match='nonhuman'): apply_case_revisions([case],[revision | {'human_approval':True}])
+
+
+def test_quarantine_removes_visible_outcome_and_never_relaxes_prerequisite():
+    from app.interactive_curation import quarantine_evidence
+    case = synthetic_case()
+    changed = quarantine_evidence(case,['E1'])
+    assert 'E1' not in {e.id for e in changed.evidence}
+    assert all('E1' not in r.evidence_ids for r in changed.release_rules)
+    assert not any('E2' in r.evidence_ids for r in changed.release_rules)
+    assert state_support(changed,['E2']).supported_claim_ids == []
+    with pytest.raises(ValueError): observe(changed,['E1'],8)
     case = synthetic_case().model_dump(); case['claims'][0]['support_citations'][0][0]['text'] = '被改写'
     with pytest.raises(ValidationError): PrivateCase.model_validate(case)
     case = synthetic_case().model_dump(); case['release_rules'][0]['evidence_ids'] = ['MISSING']

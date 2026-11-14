@@ -36,7 +36,7 @@ RESEARCH_REVIEW_ENABLED=true ./run_offline.sh
 # 首次从冻结七案构建（已有修订时拒绝回退）
 .venv/bin/python scripts/build_interactive_cases.py
 # 当前首案修订版的重建命令
-.venv/bin/python scripts/build_interactive_cases.py --revision data/processed/research_v2/first_case_revision.private.json
+.venv/bin/python scripts/build_interactive_cases.py --revision data/processed/research_v2/four_case_revisions_20261115.private.json
 .venv/bin/python scripts/audit_interactive_cases.py --limit 1 --attempt 2
 /private/tmp/dd-research-v2-cpu/bin/python scripts/test_cpu.py
 ```
@@ -56,3 +56,11 @@ RESEARCH_REVIEW_ENABLED=true ./run_offline.sh
 T12 真实人工签署必须由用户产生。T13 独立开发集及测试候选文本本轮按授权封存；训练材料尚不具备正式研究验收资格。
 
 本次首案助手修订已保存17项事件/行为候选，另有角色与法律未知项，版本见current.json。最终14B建议仍遗漏身份上下文，已在该版本的assistant_audit_disposition.private.json中标记不采纳；模型原始输出与助手处置同时出现在复核页面。全部7案均无真实人工签署，尚未扩充数据。
+
+## 2026-11-15 续作
+
+首案起始释放原始陈述E1，后续对其中已出现人物的陈述查询须满足可见来源前置条件；无来源姓名或时间索引被拒绝。其余六案仍待逐案设计。新增身份筛查：候选提到已知行为人时，身份引用必须包含其名字；这不证明别名对应、陈述归属或事实真实性。
+
+为避免嵌套候选列表的长度约束被现有解码器移除，每次最多生成一条事件建议，并由实际解码schema的回归测试核对限制。未覆盖事件必须保持待复核；不将一条建议误作整案原子化完成。
+
+本轮继续对第二案37句、第三案52句来源直接核对，分别形成19项、20项较细的事件陈述。第四案E4/E5/E6/E10混入事后纪律处理或罚没结果，在新版本中整体隔离，相关支持/反证依赖降为未知；完整来源保留供复核。这些是助手整理和边界整改，不是人工签署或法律专家认证。新版本需要重新核验，旧版本机器审查不得冒充新版本通过。

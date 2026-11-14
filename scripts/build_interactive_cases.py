@@ -13,7 +13,7 @@ from app.sealed_metadata import project
 from app.environment_models import (PrivateCase, PrivateEvidence, SourceSpan, ReleaseRule,
     SupportedClaim, SentenceReference, Observation, InvestigationAction, ActionResult, StateSupport)
 from app.models import InteractiveConclusion
-from app.interactive_curation import PUBLIC_BRIEFING, PUBLIC_KINDS, reachability
+from app.interactive_curation import PUBLIC_BRIEFING, PUBLIC_KINDS, reachability, apply_environment_patch, apply_case_revisions
 from app.source_policy import require_clean_evidence
 from scripts.export_review_bundle import verify
 
@@ -155,15 +155,11 @@ def main():
     revision_info = None
     if args.revision:
         revision = json.loads(args.revision.read_text())
-        if revision.get('author_type') != 'assistant_source_reader' or revision.get('human_approval') is not False:
-            raise ValueError('Revision must explicitly be nonhuman and unapproved')
-        matches = [i for i,c in enumerate(cases) if c.case_id == revision['case_id']]
-        if len(matches) != 1: raise ValueError('Revision is outside this fixed training cohort')
-        i = matches[0]; original = cases[i]
-        if digest(original.model_dump()) != revision['parent_case_binding']: raise ValueError('Revision parent changed')
-        cases[i] = PrivateCase.model_validate(original.model_dump() | {'claims': revision['claims']})
-        revision_info = {'sha256': file_digest(args.revision), 'parent_case_binding': revision['parent_case_binding'],
-                         'author_type': revision['author_type'], 'human_approval': False}
+        entries = revision.get('revisions', [revision])
+        cases = apply_case_revisions(cases, entries)
+        revision_info = {'sha256': file_digest(args.revision),
+                         'parent_case_bindings': [r['parent_case_binding'] for r in entries],
+                         'author_type': 'assistant_source_reader', 'human_approval': False}
     values = [c.model_dump() for c in cases]
     binding = digest({'source_file': EXPECTED_TRAIN, 'cases': values})
     version = OUT / binding[:16]

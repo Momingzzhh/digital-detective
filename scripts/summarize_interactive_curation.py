@@ -15,6 +15,9 @@ from app.experiment_manifest import file_digest
 
 def main():
     folder, cases = bundle()
+    revision_path = folder/'assistant_revision.private.json'
+    revision = json.loads(revision_path.read_text()) if revision_path.exists() else {}
+    entries = revision.get('revisions', [revision] if revision else [])
     attempts = Counter(); current_attempts = Counter(); decisions = Counter()
     for path in OUT.glob('*/local_audits/*/*.json'):
         row = json.loads(path.read_text()); attempts[row['status']] += 1
@@ -26,6 +29,8 @@ def main():
     report = {'generated_at': datetime.now(timezone.utc).isoformat(),
         'bundle_binding': json.loads((folder/'manifest.private.json').read_text())['binding'],
         'train_cases': len(cases), 'train_groups': len({c.group_id for c in cases}),
+        'assistant_revised_cases': len(entries),
+        'cases_with_evidence_quarantine': sum(bool(r.get('withhold_evidence_ids')) for r in entries),
         'evidence_items': sum(len(c.evidence) for c in cases),
         'claim_candidates': sum(len(c.claims) for c in cases),
         'claims_with_alternative_support': sum(len(claim.support_sets)>1 for c in cases for claim in c.claims),
@@ -36,7 +41,7 @@ def main():
         'new_candidates_added': 0, 'expansion': 'held_until_first_batch_semantic_and_human_review',
         'source_snapshot_sha256': file_digest(folder/'sources.private.json'),
         'limits': ['Machine no_issue_found is not acceptance; prior proposals failed attribution/atomicity review.',
-                   'One case has assistant source-bound refinement; remaining cases retain legacy event granularity.',
+                   'Assistant refinements and evidence quarantine remain unapproved; untouched cases retain legacy granularity.',
                    'Legal elements unresolved; concrete person/time query design incomplete; dev/test deferred.']}
     save(ROOT/'docs/research_v2/curation_validation.json', report)
     print(json.dumps(report, ensure_ascii=False, indent=2))

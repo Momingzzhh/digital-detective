@@ -14,6 +14,7 @@ from pydantic import Field
 from app.models import StrictModel
 from app.environment_models import PrivateCase
 from app.experiment_manifest import digest, file_digest
+from app.curation_identity import identity_errors
 from scripts.build_interactive_cases import save, OUT
 
 
@@ -36,7 +37,7 @@ class AuditIssue(StrictModel):
 class CurationAudit(StrictModel):
     decision: Literal['needs_revision', 'no_issue_found']
     issues: list[AuditIssue]
-    atomic_event_proposals: list[AtomicProposal] = Field(max_length=6)
+    atomic_event_proposals: list[AtomicProposal] = Field(max_length=1)
     unresolved: list[str]
 
 
@@ -49,7 +50,8 @@ PROMPT = '''你是案件训练材料审查员。只根据给定证据和句子�
 PROMPT += '''\n每个候选须填写source_attribution（如“陈某某供述”），epistemic_status固定为source_statement_unverified。
 identity_sentence_ids必须引用说明陈述者、或将“我/男子/老板”对应具体名字的原文句子；不能只引用含代词的动作句。
 claim本身也须保留来源限定。身份对应不明确则保留“该陈述中的男子/老板”，并在unknowns注明，不凭全案答案填名字。
-只生成最多六个最重要事件以便人工核查，其余未覆盖内容写入unresolved，不宣称完整覆盖。'''
+只生成最多一个最重要事件以便人工核查，其余未覆盖内容写入unresolved，不宣称完整覆盖。
+identity_reference_candidates仅列文本直接含该名字的句子，必须检查这些引用能否支持身份对应，不能只引含代词的动作句。'''
 
 
 def main():
@@ -78,15 +80,20 @@ def main():
     for case in cases[:args.limit]:
         if (ROOT/'runtime/research_v2.stop').exists(): break
         row = sources[case.case_id]
+        visible_ids = {e.id for e in case.evidence}
+        sentences = [s for s in row['sentence_spans'] if s['evidence_id'] in visible_ids]
         material = {'evidence': [{'id': e.id, 'text': e.text} for e in case.evidence],
-            'sentence_spans': row['sentence_spans'],
+            'identity_reference_candidates': {name: [s['id'] for s in sentences if name in s['text']]
+                for name in row['five_dimensions']['candidate_names']},
+            'sentence_spans': sentences,
             'claims': [c.model_dump(exclude={'support_citations'}) for c in case.claims]}
         request = [{'role': 'system', 'content': PROMPT},
                    {'role': 'user', 'content': json.dumps(material, ensure_ascii=False)}]
         identity = {'case_binding': digest(case.model_dump()), 'request': digest(request),
             'schema': digest(schema), 'model_manifest': file_digest(model/'local_manifest.json'),
             'code': {p: file_digest(ROOT/p) for p in ('scripts/audit_interactive_cases.py',
-                      'scripts/annotate_five_dimensions_batch.py', 'app/local_model.py', 'app/local_context.py')},
+                      'scripts/annotate_five_dimensions_batch.py', 'app/local_model.py', 'app/local_context.py',
+                      'app/curation_identity.py')},
             'max_tokens': args.max_tokens, 'context_limit': 16384, 'adapter': None, 'attempt': args.attempt}
         key = digest(identity)
         target = folder/'local_audits'/case.case_id/(key+'.json')
@@ -106,7 +113,7 @@ def main():
             else:
                 text = generated[0][1]; result['raw_output'] = text
                 parsed = CurationAudit.model_validate_json(text)
-                ids = {s['id'] for s in row['sentence_spans']}
+                ids = {s['id'] for s in sentences}
                 for item in parsed.atomic_event_proposals:
                     if set(item.sentence_ids+item.counter_sentence_ids+item.identity_sentence_ids)-ids:
                         raise ValueError('Unknown sentence')
@@ -114,7 +121,11 @@ def main():
                 for issue in parsed.issues:
                     if set(issue.sentence_ids)-ids: raise ValueError('Unknown issue reference')
                 if parsed.decision == 'no_issue_found' and parsed.issues: raise ValueError('Contradictory audit')
-                result.update(status='machine_audited_unverified', audit=parsed.model_dump())
+                problems = identity_errors([p.model_dump() for p in parsed.atomic_event_proposals],
+                    sentences, row['five_dimensions']['candidate_names'])
+                result.update(status='identity_support_held' if problems else 'machine_audited_unverified',
+                              audit=parsed.model_dump(), identity_screen_errors=problems,
+                              identity_screen_limitations='Explicit known actor names only; aliases, attribution and entailment still require source review.')
         except (Exception, KeyboardInterrupt) as exc:
             result.update(status='interrupted' if isinstance(exc, KeyboardInterrupt) else 'error',
                           error=type(exc).__name__+': '+str(exc))

@@ -1,6 +1,6 @@
 {
   "version": "train-curation-manifest-v1",
-  "binding": "0c7fc11f351d53e603545319732374d122606ff9c8148e77574f2c88a8b3b872",
+  "binding": "2d5ca99fc5a46fbfcf11e5d63f3f54ad510846dd6fabc0ec55a10527692a1fed",
   "source_sha256": "7b55bc255ba6188d81ea231492e0456adc4a1d9493f13b42ca596151d2006237",
   "case_count": 7,
   "group_count": 7,
@@ -22,8 +22,13 @@
   "test": "sealed_no_text_read",
   "expansion": "blocked_until_first_batch_audited",
   "assistant_revision": {
-    "sha256": "ad7eb40c9ca1b183f45faf3f2216028e5bff67c8d64de0d45fa5289920354afa",
-    "parent_case_binding": "96d7125b3e54930b9dac4120d90fe62a639f3facfab58b0b328b8e5ad1f93796",
+    "sha256": "c8e58f9b7009a1d74110afa71347bc6035b25d3b80ba2c47eb84b15c38ea03c3",
+    "parent_case_bindings": [
+      "96d7125b3e54930b9dac4120d90fe62a639f3facfab58b0b328b8e5ad1f93796",
+      "e5f4f9fc640cc3ac0c3ac20dbb7e2db6e4844ae7a09784509ed0303d94e5d802",
+      "bdc7b23d39b1287343df3fee7bc7604dcbe8d82ed7046ffb4f4d9d24f854d38e",
+      "19132740048aa0f7ad133d18481962b89e4fcf9a3db02624039712848abd8e6e"
+    ],
     "author_type": "assistant_source_reader",
     "human_approval": false
   },

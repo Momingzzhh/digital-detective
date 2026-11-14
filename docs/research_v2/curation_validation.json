@@ -1,25 +1,24 @@
 {
-  "generated_at": "2026-11-12T13:50:38.127252+00:00",
-  "bundle_binding": "0c7fc11f351d53e603545319732374d122606ff9c8148e77574f2c88a8b3b872",
+  "generated_at": "2026-11-14T17:35:12.119471+00:00",
+  "bundle_binding": "2d5ca99fc5a46fbfcf11e5d63f3f54ad510846dd6fabc0ec55a10527692a1fed",
   "train_cases": 7,
   "train_groups": 7,
-  "evidence_items": 58,
-  "claim_candidates": 90,
+  "assistant_revised_cases": 4,
+  "cases_with_evidence_quarantine": 1,
+  "evidence_items": 54,
+  "claim_candidates": 115,
   "claims_with_alternative_support": 1,
   "all_version_attempt_statuses": {
-    "machine_audited_unverified": 3,
-    "error": 2
+    "machine_audited_unverified": 7,
+    "interrupted": 1,
+    "error": 3
   },
-  "current_version_attempt_statuses": {
-    "machine_audited_unverified": 1
-  },
-  "current_machine_decisions": {
-    "no_issue_found": 1
-  },
+  "current_version_attempt_statuses": {},
+  "current_machine_decisions": {},
   "human_receipt_statuses": {
     "not_reviewed": 7
   },
-  "cases_with_assistant_audit_holds": 1,
+  "cases_with_assistant_audit_holds": 0,
   "formal_benchmark_eligible": false,
   "heldout_text_accessed": false,
   "new_model_training": false,
@@ -28,7 +27,7 @@
   "source_snapshot_sha256": "e8227c875f0619ff20ba10e19fb5e651b17a42f70ba2ecaa862cdab5c01d551c",
   "limits": [
     "Machine no_issue_found is not acceptance; prior proposals failed attribution/atomicity review.",
-    "One case has assistant source-bound refinement; remaining cases retain legacy event granularity.",
+    "Assistant refinements and evidence quarantine remain unapproved; untouched cases retain legacy granularity.",
     "Legal elements unresolved; concrete person/time query design incomplete; dev/test deferred."
   ]
 }
